@@ -1,9 +1,11 @@
 # Fabi
 
-**Universal AI Control Plane** — scans your machine's AI estate, writes an
-append-only ledger, and tells you the truth with numbers.
+**The honest eye on your PC's AI estate** — sees what exists, what's
+idle, what holds VRAM, what changed, and why it says what it says —
+all on one append-only ledger.
 
-Not an LLM. Not a launcher. The layer that makes every AI tool visible.
+Not an LLM. Not a launcher. The layer that makes every AI tool visible —
+including the ones hiding.
 
 ## Commands
 
