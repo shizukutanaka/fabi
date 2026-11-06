@@ -51,6 +51,8 @@ func main() {
 		runRun(os.Args[2:])
 	case "serve":
 		runServe()
+	case "unload":
+		runUnload(os.Args[2:])
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
@@ -77,6 +79,7 @@ func usage() {
 	fmt.Println("  bench    measure real inference latency on a live API")
 	fmt.Println("  status   one-line machine health from the ledger")
 	fmt.Println("  run      execute a prompt on a live local model, measure real tok/s")
-	fmt.Println("  serve    JSON API on :11435 (GET /status|/models · POST /run)")
+	fmt.Println("  serve    JSON API on :11435 (GET /status|/models|/ledger|/doctor · POST /run|/goal)")
+	fmt.Println("  unload   free VRAM — unload loaded models (first real control action)")
 	fmt.Println("  version  print version")
 }

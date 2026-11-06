@@ -224,6 +224,45 @@ func runCompare(prompt string) {
 	}
 }
 
+// runUnload frees VRAM by unloading loaded models (keep_alive:0).
+// This is fabi's first real control primitive — not observation,
+// resource control. After: /api/ps confirms the release.
+func runUnload(args []string) {
+	st, body, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second)
+	if err != nil || st != 200 {
+		fmt.Println("fabi unload: ollama not reachable on :11434")
+		return
+	}
+	var ps struct {
+		Models []struct {
+			Name     string `json:"name"`
+			SizeVRAM int64  `json:"size_vram"`
+		} `json:"models"`
+	}
+	if err := json.Unmarshal(body, &ps); err != nil || len(ps.Models) == 0 {
+		fmt.Println("fabi unload: nothing loaded — 0 VRAM held by models")
+		return
+	}
+	l := openLedger()
+	defer l.close()
+	var freed int64
+	all := len(args) == 0 || args[0] == "--all"
+	for _, m := range ps.Models {
+		if !all && len(args) > 0 && m.Name != args[0] {
+			continue
+		}
+		payload, _ := json.Marshal(map[string]any{"model": m.Name, "keep_alive": 0})
+		rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 10*time.Second)
+		freed += m.SizeVRAM
+		fmt.Printf("  unloaded %s (%.1f GB)\n", m.Name, float64(m.SizeVRAM)/1e9)
+		l.emit("model.unloaded", map[string]any{
+			"model": m.Name, "vram_freed": m.SizeVRAM,
+		})
+	}
+	fmt.Printf("\nfabi unload: %.1f GB VRAM freed (%d model(s))\n",
+		float64(freed)/1e9, len(ps.Models))
+}
+
 // runSweep measures real tok/s on every live ollama model — replaces
 // predicted physics with measured ranking in the ledger.
 func runSweep() {
