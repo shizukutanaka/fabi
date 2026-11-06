@@ -6,9 +6,10 @@ import (
 	"time"
 )
 
-// fabi diff — what changed between the last two scans. The ledger
-// holds every scan; nobody could see the delta until now.
-func runDiff() {
+// fabi diff — what changed between scans. The ledger holds every
+// scan; `fabi diff` compares last-2, `fabi diff N` compares the
+// latest against N scans back (a whole watch session's drift).
+func runDiff(args []string) {
 	l := openLedger()
 	defer l.close()
 	windows := loadScanWindows(l.allEvents())
@@ -16,7 +17,14 @@ func runDiff() {
 		fmt.Println("fabi diff — need at least 2 scans (run `fabi scan` twice)")
 		return
 	}
-	prev, latest := windows[len(windows)-2], windows[len(windows)-1]
+	back := 1
+	if len(args) > 0 {
+		fmt.Sscanf(args[0], "%d", &back)
+	}
+	if back < 1 || back >= len(windows) {
+		back = len(windows) - 1
+	}
+	prev, latest := windows[len(windows)-1-back], windows[len(windows)-1]
 
 	key := func(f findingRec) string {
 		if f.kind == "tool" {
@@ -47,9 +55,9 @@ func runDiff() {
 	}
 
 	fmt.Println()
-	fmt.Printf("FABI DIFF — %s → %s\n",
+	fmt.Printf("FABI DIFF — %s → %s (%d scans back)\n",
 		time.UnixMilli(prev.startTs).Format("15:04"),
-		time.UnixMilli(latest.startTs).Format("15:04"))
+		time.UnixMilli(latest.startTs).Format("15:04"), back)
 	fmt.Println("─────────────────────────────────────────────")
 	if len(added) == 0 && len(removed) == 0 {
 		fmt.Println("  no changes — estate is identical")

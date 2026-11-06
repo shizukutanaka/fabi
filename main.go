@@ -58,7 +58,7 @@ func main() {
 	case "pattern":
 		runPattern(os.Args[2:])
 	case "diff":
-		runDiff()
+		runDiff(os.Args[2:])
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
