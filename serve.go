@@ -225,6 +225,9 @@ func serveGoal(conn net.Conn, body string) {
 		resp["executed"] = stepNum
 		if len(skipped) > 0 {
 			resp["skipped"] = skipped
+			// Actionable: is the estate's image engine reachable?
+			st, _, err := rawHTTP("127.0.0.1:8188", "GET", "/", "", 2*time.Second)
+			resp["image_engine_up"] = err == nil && st > 0
 		}
 	}
 	writeJSON(conn, 200, resp)
