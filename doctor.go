@@ -9,6 +9,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 )
 
 // doctor turns ledger history into evidence-backed recommendations.
@@ -338,6 +339,50 @@ func runDoctor() {
 				confidence: "medium — measured regression in ledger timeseries",
 				evidence:   ev[:min(3, len(ev))],
 			})
+		}
+	}
+
+	// --- Rule 7: idle loaded models holding VRAM ---
+	// /api/ps knows what's resident; the ledger knows when it was last
+	// used. A model loaded but unused for a while is reclaimable VRAM —
+	// fabi can actually free it (unload), making this an actionable rec.
+	lastUse := map[string]int64{}
+	for _, e := range events {
+		if e.kind != "task.executed" && e.kind != "inference.measured" {
+			continue
+		}
+		var p map[string]any
+		if err := json.Unmarshal([]byte(e.payload), &p); err != nil {
+			continue
+		}
+		if m := strOf(p, "model"); m != "" && e.ts > lastUse[m] {
+			lastUse[m] = e.ts
+		}
+	}
+	st, psBody, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second)
+	if err == nil && st == 200 {
+		var ps struct {
+			Models []struct {
+				Name     string `json:"name"`
+				SizeVRAM int64  `json:"size_vram"`
+			} `json:"models"`
+		}
+		if err := json.Unmarshal(psBody, &ps); err == nil {
+			cutoff := time.Now().Add(-15 * time.Minute).UnixMilli()
+			for _, m := range ps.Models {
+				if lastUse[m.Name] > cutoff {
+					continue // recently used — leave it warm
+				}
+				recs = append(recs, recommendation{
+					class:  "idle",
+					target: "model " + m.Name,
+					detail: fmt.Sprintf(
+						"loaded, holding %.1f GB VRAM, unused >15min\n"+
+							"    action: fabi unload %s",
+						float64(m.SizeVRAM)/1e9, m.Name),
+					confidence: "high — resident but idle, reclaimable",
+				})
+			}
 		}
 	}
 
