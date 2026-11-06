@@ -236,6 +236,26 @@ never proof. The loop worked because deletion stayed manual.
 
 ---
 
+# Part 12 — Verified fixes and the signing prophecy (measured)
+
+**First verified fix [M]:** `wsl --unregister OpenClawGateway` →
+re-scan → `dead-wsl` finding gone from doctor output. The loop
+recommendation → action → verified delta is closed end-to-end.
+
+**Unsigned-binary incident [M]:** `fabi.exe` (locally built,
+unsigned) became unreadable/unlaunchable mid-session — Windows
+quarantine-class behavior on an executable that does port probing
++ process enumeration. A fresh rebuild (fabi2.exe) ran fine.
+The RELEASE.md signing requirement is now a measured fact,
+not a theory: **unsigned fabi gets blocked on real machines.**
+
+**New estate fact [M]:** ollama appeared at :11434 (`Ollama is
+running`) — previously idle for 25 scans. The llm-router startup
+entry (llm-router-startup.vbs, Hermes_Gateway*.vbs found in the
+Startup folder) is the likely activator.
+
+---
+
 ## End
 
 Versions 0.3–0.6 were a spec discovering itself.
