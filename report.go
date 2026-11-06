@@ -463,6 +463,50 @@ func runReport() {
 	fmt.Println("  (deltas include probe-coverage changes, not just file changes)")
 	fmt.Println()
 
+	// Measured inference throughput per model — the statement records
+	// execution reality, not just asset inventory.
+	type stat struct {
+		n           int
+		sum, mn, mx float64
+	}
+	stats := map[string]*stat{}
+	var order []string
+	for _, e := range events {
+		if e.kind != "inference.measured" {
+			continue
+		}
+		var p map[string]any
+		if err := json.Unmarshal([]byte(e.payload), &p); err != nil {
+			continue
+		}
+		if v, ok := p["tok_s"].(float64); ok && v > 0 {
+			m := strOf(p, "model")
+			s := stats[m]
+			if s == nil {
+				s = &stat{mn: 1e18}
+				stats[m] = s
+				order = append(order, m)
+			}
+			s.n++
+			s.sum += v
+			if v < s.mn {
+				s.mn = v
+			}
+			if v > s.mx {
+				s.mx = v
+			}
+		}
+	}
+	if len(order) > 0 {
+		fmt.Println("INFERENCE — measured tok/s (real, not predicted)")
+		for _, m := range order {
+			s := stats[m]
+			fmt.Printf("  %-18s %3d samples  avg %5.0f  min %5.0f  max %5.0f\n",
+				m, s.n, s.sum/float64(s.n), s.mn, s.mx)
+		}
+		fmt.Println()
+	}
+
 	fmt.Println("FABI'S WORK")
 	fmt.Printf("  recommendations open: %d\n", len(recLatest))
 	parts := []string{}
