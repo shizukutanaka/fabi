@@ -67,6 +67,15 @@ what was freed; recorded as `model.unloaded` with `via: "serve"`.
 {"unloaded":["qwen2.5:0.5b"],"vram_freed_bytes":483645193,"count":1}
 ```
 
+### POST /scan
+
+Trigger a fresh observation — runs the full 6-probe pipeline and
+returns the new estate summary. Findings land in the ledger.
+
+```json
+{"installed_idle":5,"models":8,"running":5,"scans":30,"services":4}
+```
+
 ### GET /doctor
 
 Latest open recommendations per target (investigate / idle / remove).

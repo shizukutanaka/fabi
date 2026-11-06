@@ -28,7 +28,7 @@ func runServe() {
 		return
 	}
 	fmt.Printf("fabi serve — http://127.0.0.1:%s\n", servePort)
-	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor · POST /run|/goal|/unload")
+	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor · POST /run|/goal|/unload|/scan")
 	fmt.Println("(loopback only — other agents can call fabi now)")
 	for {
 		conn, err := ln.Accept()
@@ -94,6 +94,8 @@ func serveConn(conn net.Conn) {
 		serveDoctor(conn)
 	case method == "POST" && path == "/unload":
 		serveUnload(conn)
+	case method == "POST" && path == "/scan":
+		serveScan(conn)
 	default:
 		writeJSON(conn, 404, map[string]string{"error": "unknown endpoint"})
 	}
@@ -310,6 +312,14 @@ func serveUnload(conn net.Conn) {
 	writeJSON(conn, 200, map[string]any{
 		"unloaded": names, "vram_freed_bytes": freed, "count": len(names),
 	})
+}
+
+// serveScan: POST /scan — trigger a fresh observation over the API.
+// Agents can ask fabi to look again; the full probe pipeline runs
+// and every finding lands in the ledger before we answer.
+func serveScan(conn net.Conn) {
+	runScan(time.Now(), true) // quiet — full pipeline, one-line to serve's stdout
+	writeJSON(conn, 200, statusJSON())
 }
 
 func statusJSON() map[string]any {
