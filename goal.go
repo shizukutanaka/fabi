@@ -250,8 +250,8 @@ func modelForTask(tp taskProfile) string {
 			fastest = m.Name
 		}
 		// Does this model meet the latency target?
-		est := float64(tp.outTok) / mToks
-		if est <= tp.latS && m.Size > bestSize {
+		est := float64(tp.outTokens) / mToks
+		if est <= tp.latencyS && m.Size > bestSize {
 			best, bestSize = m.Name, m.Size
 		}
 	}

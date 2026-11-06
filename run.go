@@ -42,10 +42,14 @@ func runRun(args []string) {
 		return
 	}
 	var forceModel string
+	var numCtx int
 	var parts []string
 	for i := 0; i < len(args); i++ {
 		if args[i] == "--model" && i+1 < len(args) {
 			forceModel = args[i+1]
+			i++
+		} else if args[i] == "--ctx" && i+1 < len(args) {
+			fmt.Sscanf(args[i+1], "%d", &numCtx)
 			i++
 		} else {
 			parts = append(parts, args[i])
@@ -96,7 +100,7 @@ func runRun(args []string) {
 	fmt.Println("running...")
 	fmt.Println()
 
-	r, toks, wall, err := execPrompt(best, prompt)
+	r, toks, wall, err := execPromptCtx(best, prompt, numCtx)
 	l := openLedger()
 	defer l.close()
 	if err != nil {
@@ -133,11 +137,19 @@ var inferenceLock sync.Mutex
 // parsed response, measured tok/s and wall time. Shared by run and
 // goal --run task chains.
 func execPrompt(model, prompt string) (ollamaGenResp, float64, time.Duration, error) {
+	return execPromptCtx(model, prompt, 0)
+}
+
+// execPromptCtx allows a custom num_ctx — bigger context means more
+// VRAM and slower prefill; small tasks shouldn't pay for 128k windows.
+func execPromptCtx(model, prompt string, numCtx int) (ollamaGenResp, float64, time.Duration, error) {
 	inferenceLock.Lock()
 	defer inferenceLock.Unlock()
-	payload, _ := json.Marshal(map[string]any{
-		"model": model, "prompt": prompt, "stream": false,
-	})
+	req := map[string]any{"model": model, "prompt": prompt, "stream": false}
+	if numCtx > 0 {
+		req["options"] = map[string]any{"num_ctx": numCtx}
+	}
+	payload, _ := json.Marshal(req)
 	t0 := time.Now()
 	st, rbody, err := rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 120*time.Second)
 	wall := time.Since(t0)
