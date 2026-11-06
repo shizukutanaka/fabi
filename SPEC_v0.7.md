@@ -306,6 +306,43 @@ the connection mission has an API surface. Documented in `API.md`.
 
 ---
 
+# Part 15 — What Fabi actually is (Socratic resolution)
+
+Six questions, answered with shipped code and measured data:
+
+```text
+Q1  Does fabi control anything?
+    Now yes — unload (2.0 GB freed, verified), GPU queue,
+    num_ctx. Observation → inference → control.
+
+Q2  What does fabi know that tools don't?
+    The correlation graph — models↔processes↔ports↔VRAM↔
+    startup↔services. No engine sees outside itself.
+
+Q3  What's lost if fabi disappears?
+    The single truth (ledger), provenance detection, honest
+    subtraction, and now resource control.
+
+Q4  Did decisions change outcomes?
+    Proven — scheduler's pick measured fastest (181 vs 120),
+    constraint solver predicted 4.9s < 5.0s correctly.
+
+Q5  What would falsify it?
+    The falsification engine itself — it already caught 3
+    real bugs (false dup, net/http bloat, unsigned binary).
+
+Q6  Is the purpose something tools don't serve?
+    Yes — the honest control plane. Every other tool manages
+    ONE engine honestly OR sees the whole estate blindly.
+    Fabi alone does both: sees everything (including what
+    hides), keeps one truth, and controls what it finds.
+```
+
+That is the product. Not "a scanner with a ledger" — the honest
+control plane the estate didn't have.
+
+---
+
 ## End
 
 Versions 0.3–0.6 were a spec discovering itself.
