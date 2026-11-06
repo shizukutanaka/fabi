@@ -14,6 +14,7 @@ fabi doctor     evidence-based recommendations (remove / idle / investigate)
 fabi report     statement — estate trend + measured inference stats
 fabi selftest   falsification engine — every spec claim gets a test
 fabi ledger     query the event log (stats | events | export)
+fabi diff       estate delta between scans (+appeared / -gone; N for N back)
 fabi route      physics + measured model verdict for a task
 fabi goal       purpose → task chain → per-task model scheduling (--run)
 fabi install    register fabi watch in Startup (fully reversible)
