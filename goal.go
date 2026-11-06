@@ -191,7 +191,7 @@ func runGoalTask(l *ledger, goal string, tasks []string) {
 	for _, tn := range tasks {
 		p, ok := prompts[tn]
 		if !ok {
-			skipped = append(skipped, tn+" (needs image/video engine)")
+			skipped = append(skipped, tn)
 			continue
 		}
 		if prev != "" {
@@ -219,6 +219,14 @@ func runGoalTask(l *ledger, goal string, tasks []string) {
 		fmt.Println("skipped (no engine for these yet):")
 		for _, s := range skipped {
 			fmt.Println("  - " + s)
+		}
+		// Actionable hint: ComfyUI is the estate's image engine. If it's
+		// installed but down, starting it enables these tasks — route
+		// the user to the fix instead of a dead end.
+		if st, _, err := rawHTTP("127.0.0.1:8188", "GET", "/", "", 2*time.Second); err == nil && st > 0 {
+			fmt.Println("    → ComfyUI is UP on :8188 — image routing can be added")
+		} else {
+			fmt.Println("    → ComfyUI is installed (idle) — start it to enable image tasks")
 		}
 	}
 	if executed == 0 {
