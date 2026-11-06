@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -28,7 +30,7 @@ func runServe() {
 		return
 	}
 	fmt.Printf("fabi serve — http://127.0.0.1:%s\n", servePort)
-	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor · POST /run|/goal|/unload|/scan")
+	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern · POST /run|/goal|/unload|/scan|/pattern")
 	fmt.Println("(loopback only — other agents can call fabi now)")
 	for {
 		conn, err := ln.Accept()
@@ -96,6 +98,10 @@ func serveConn(conn net.Conn) {
 		serveUnload(conn)
 	case method == "POST" && path == "/scan":
 		serveScan(conn)
+	case method == "GET" && path == "/pattern":
+		servePattern(conn, body, query, false)
+	case method == "POST" && path == "/pattern":
+		servePattern(conn, body, query, true)
 	default:
 		writeJSON(conn, 404, map[string]string{"error": "unknown endpoint"})
 	}
@@ -321,6 +327,79 @@ func serveUnload(conn net.Conn) {
 func serveScan(conn net.Conn) {
 	runScan(time.Now(), true) // quiet — full pipeline, one-line to serve's stdout
 	writeJSON(conn, 200, statusJSON())
+}
+
+// servePattern: GET/POST /pattern — agents extend detection through
+// data too. POST {"field":"exe","value":"x.exe"} adds to the user
+// file; GET lists user patterns. Same ~/.fabi/patterns.json store.
+func servePattern(conn net.Conn, body, query string, write bool) {
+	dir, err := ledgerDir()
+	if err != nil {
+		writeJSON(conn, 500, map[string]string{"error": err.Error()})
+		return
+	}
+	path := filepath.Join(dir, "patterns.json")
+	var user patternSet
+	if b, err := os.ReadFile(path); err == nil {
+		json.Unmarshal(b, &user)
+	}
+	if !write {
+		writeJSON(conn, 200, map[string]any{"user_patterns": user})
+		return
+	}
+	var req struct {
+		Field string `json:"field"`
+		Value string `json:"value"`
+	}
+	if err := json.Unmarshal([]byte(body), &req); err != nil {
+		writeJSON(conn, 400, map[string]string{"error": `need {"field":"...","value":"..."}`})
+		return
+	}
+	if err := addPatternField(&user, req.Field, req.Value); err != nil {
+		writeJSON(conn, 400, map[string]string{"error": err.Error()})
+		return
+	}
+	b, _ := json.MarshalIndent(user, "", "  ")
+	if err := os.WriteFile(path, b, 0644); err != nil {
+		writeJSON(conn, 500, map[string]string{"error": err.Error()})
+		return
+	}
+	activePatterns = nil
+	writeJSON(conn, 200, map[string]any{"added": req.Value, "field": req.Field})
+}
+
+// addPatternField appends to a user patternSet by field name —
+// shared logic for the CLI and API pattern commands.
+func addPatternField(user *patternSet, field, value string) error {
+	switch field {
+	case "exe":
+		user.ExePatterns = append(user.ExePatterns, value)
+	case "cmd":
+		user.CmdPatterns = append(user.CmdPatterns, value)
+	case "scripthost":
+		user.ScriptHosts = append(user.ScriptHosts, value)
+	case "dir":
+		user.ScanDirs = append(user.ScanDirs, value)
+	case "modelroot":
+		user.ModelRoots = append(user.ModelRoots, value)
+	case "pkgtool":
+		user.PkgAITools = append(user.PkgAITools, value)
+	case "pkgruntime":
+		user.PkgRuntimes = append(user.PkgRuntimes, value)
+	case "port":
+		name, port := value, 0
+		if i := strings.LastIndexByte(value, ':'); i >= 0 {
+			name = value[:i]
+			fmt.Sscanf(value[i+1:], "%d", &port)
+		}
+		if port <= 0 {
+			return fmt.Errorf("port needs name:port, e.g. myservice:9000")
+		}
+		user.Ports = append(user.Ports, portTarget{Port: port, Name: name})
+	default:
+		return fmt.Errorf("unknown field %q — exe|cmd|scripthost|dir|modelroot|pkgtool|pkgruntime|port", field)
+	}
+	return nil
 }
 
 func statusJSON() map[string]any {

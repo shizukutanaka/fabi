@@ -76,6 +76,24 @@ returns the new estate summary. Findings land in the ledger.
 {"installed_idle":5,"models":8,"running":5,"scans":30,"services":4}
 ```
 
+### GET|POST /pattern
+
+Extend detection through data — the Marketplace seed. POST adds a
+user pattern; GET lists current user patterns.
+
+```sh
+curl -X POST /pattern -d '{"field":"exe","value":"myserver.exe"}'
+curl -X POST /pattern -d '{"field":"port","value":"mysvc:9000"}'
+```
+
+```json
+{"added":"myserver.exe","field":"exe"}
+```
+
+fields: `exe | cmd | scripthost | dir | modelroot | pkgtool | pkgruntime | port`
+(port value format: `name:port`). Writes `~/.fabi/patterns.json`,
+which merges on the next scan — same store as `fabi pattern`.
+
 ### GET /doctor
 
 Latest open recommendations per target (investigate / idle / remove).
