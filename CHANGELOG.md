@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.0.4-dev — unreleased
+## v0.0.4 — 2026-11-07
 
 Research-driven hardening (Qiita/Zenn/papers/GitHub analysis):
 
@@ -18,6 +18,13 @@ Research-driven hardening (Qiita/Zenn/papers/GitHub analysis):
   in `run`, `--sweep`, and `inference.measured` events
 - **`--ctx`** — num_ctx control per request (verified: 8k ctx
   loads 0.6 GB vs 4k's 0.5 GB)
+- **doctor Rule 7** — idle loaded models holding VRAM → actionable
+  `fabi unload` recommendation (observation→diagnosis→control loop)
+- **Ghost-VRAM attribution** — `/api/ps` correlates loaded models
+  into the unattributed-VRAM recommendation (461 MiB explained)
+- **selftest** — resource-control claim falsified via
+  `model.unloaded` events (10 PASS)
+- **`--compare`** — prove scheduler decisions with measured outcomes
 
 ## v0.0.3-dev — 2026-11-07
 
