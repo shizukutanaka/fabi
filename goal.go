@@ -195,7 +195,7 @@ func runGoalTask(l *ledger, goal string, tasks []string) {
 		if prev != "" {
 			p += "\n\nContext from previous step:\n" + trunc(prev, 600)
 		}
-		model := modelForClass(taskProfiles[tn].modelClass)
+		model := modelForTask(taskProfiles[tn])
 		fmt.Printf("── step %d: %s → %s ──\n", executed+1, tn, model)
 		r, toks, wall, err := execPrompt(model, p)
 		if err != nil {
@@ -220,10 +220,11 @@ func runGoalTask(l *ledger, goal string, tasks []string) {
 	}
 }
 
-// modelForClass schedules a model per task class (SPEC #10 seed):
-// 3b-class tasks go to the fastest/smallest local model (latency-first),
-// 8b/70b to the largest available (quality-first).
-func modelForClass(cls string) string {
+// modelForTask is the real scheduler (CARROT-lite): quality-first
+// under a latency constraint. Prefer the LARGEST model whose measured
+// throughput can meet the task's latency target; if nothing meets it,
+// take the fastest available. Measured tok/s beats physics.
+func modelForTask(tp taskProfile) string {
 	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
 	if err != nil || st != 200 {
 		return ""
@@ -232,19 +233,67 @@ func modelForClass(cls string) string {
 	if err := json.Unmarshal(body, &t); err != nil || len(t.Models) == 0 {
 		return ""
 	}
-	small, large := t.Models[0], t.Models[0]
-	for _, m := range t.Models[1:] {
-		if m.Size < small.Size {
-			small = m
+	l := openLedger()
+	defer l.close()
+	measured := measuredTokS(l)
+	bw := gpuBandwidth(l)
+
+	var best, fastest string
+	var bestSize, fastestToks int64
+	for _, m := range t.Models {
+		mToks := measured[m.Name]
+		if mToks <= 0 && m.Size > 0 {
+			mToks = bw * 1e9 / float64(m.Size) // physics fallback
 		}
-		if m.Size > large.Size {
-			large = m
+		if int64(mToks) > fastestToks {
+			fastestToks = int64(mToks)
+			fastest = m.Name
+		}
+		// Does this model meet the latency target?
+		est := float64(tp.outTok) / mToks
+		if est <= tp.latS && m.Size > bestSize {
+			best, bestSize = m.Name, m.Size
 		}
 	}
-	if cls == "8b" || cls == "70b" {
-		return large.Name
+	if best != "" {
+		return best
 	}
-	return small.Name
+	return fastest // nothing meets target — minimize damage
+}
+
+// gpuBandwidth returns measured GPU memory bandwidth from ledger
+// resource.found events — same source route uses.
+func gpuBandwidth(l *ledger) float64 {
+	var gpuName string
+	for _, e := range l.events("resource.found") {
+		if strings.Contains(e.payload, `"kind":"gpu"`) &&
+			!strings.Contains(e.payload, "unattributed") {
+			var p struct{ Name string }
+			if err := json.Unmarshal([]byte(e.payload), &p); err == nil {
+				gpuName = p.Name
+			}
+		}
+	}
+	return bandwidthForGPU(gpuName)
+}
+
+// measuredTokS collects median tok/s per model from inference.measured.
+func measuredTokS(l *ledger) map[string]float64 {
+	out := map[string]float64{}
+	var xs = map[string][]float64{}
+	for _, e := range l.events("inference.measured") {
+		var p map[string]any
+		if err := json.Unmarshal([]byte(e.payload), &p); err != nil {
+			continue
+		}
+		if v, ok := p["tok_s"].(float64); ok && v > 0 {
+			xs[strOf(p, "model")] = append(xs[strOf(p, "model")], v)
+		}
+	}
+	for m, vals := range xs {
+		out[m] = median(vals)
+	}
+	return out
 }
 
 // bestLocalModel picks the smallest model on ollama.

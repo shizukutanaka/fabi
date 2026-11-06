@@ -185,7 +185,7 @@ func serveGoal(conn net.Conn, body string) {
 			if prev != "" {
 				p += "\n\nContext from previous step:\n" + trunc(prev, 600)
 			}
-			model := modelForClass(taskProfiles[tn].modelClass)
+			model := modelForTask(taskProfiles[tn])
 			r, toks, wall, err := execPrompt(model, p)
 			if err != nil {
 				steps = append(steps, map[string]any{
