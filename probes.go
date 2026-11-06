@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/fs"
 	"net"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -215,18 +213,15 @@ func probePorts(ctx context.Context) ([]Finding, error) {
 
 // httpIdentify asks a service who it is: GET /, capture status + body head.
 func httpIdentify(addr string) string {
-	client := &http.Client{Timeout: 350 * time.Millisecond}
-	resp, err := client.Get("http://" + addr + "/")
-	if err != nil {
+	status, b, err := rawHTTP(addr, "GET", "/", "", 350*time.Millisecond)
+	if err != nil || status == 0 {
 		return ""
 	}
-	defer resp.Body.Close()
-	b, _ := io.ReadAll(io.LimitReader(resp.Body, 120))
 	snippet := strings.TrimSpace(string(b))
 	if len(snippet) > 80 {
 		snippet = snippet[:80] + "…"
 	}
-	return fmt.Sprintf("HTTP %d | %s", resp.StatusCode, snippet)
+	return fmt.Sprintf("HTTP %d | %s", status, snippet)
 }
 
 // listeningOwners maps localhost port → PID via netstat (one spawn, ~50 ms).
@@ -388,7 +383,11 @@ func probeGPU(ctx context.Context) ([]Finding, error) {
 	if _, err := exec.LookPath("nvidia-smi"); err != nil {
 		return nil, nil // no NVIDIA toolchain visible; other vendors later
 	}
-	cmd := exec.CommandContext(ctx, "nvidia-smi",
+	// nvidia-smi can stall in driver ioctls under heavy GPU load — cap at
+	// 1500 ms so a busy driver can never stall the whole scan.
+	gctx, gcancel := context.WithTimeout(ctx, 1500*time.Millisecond)
+	defer gcancel()
+	cmd := exec.CommandContext(gctx, "nvidia-smi",
 		"--query-gpu=name,memory.total,memory.used,utilization.gpu,temperature.gpu",
 		"--format=csv,noheader,nounits")
 	out, err := cmd.Output()
@@ -400,7 +399,7 @@ func probeGPU(ctx context.Context) ([]Finding, error) {
 	// Per-process GPU attribution: VRAM burn is a physics detection channel —
 	// an AI tool that matches no name pattern is still caught by usage.
 	var apps []Finding
-	if a, err := gpuComputeApps(ctx); err == nil {
+	if a, err := gpuComputeApps(gctx); err == nil {
 		apps = a
 	}
 	// WDDM attribution gap: header reports VRAM used but per-process list
