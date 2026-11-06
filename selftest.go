@@ -110,6 +110,27 @@ func runSelfTest() {
 		fmt.Sprintf("runtime unverified — %s binary builds clean, never ran on hw", other),
 		"UNVERIFIED")
 
+	// --- Claim: execution works (Phase 2, L15) ---
+	if l.db != nil {
+		var nExec int64
+		l.db.QueryRow(
+			`SELECT COUNT(*) FROM events
+			 WHERE kind='task.executed' AND json_extract(payload,'$.ok')=1`,
+		).Scan(&nExec)
+		var nMeas int64
+		l.db.QueryRow(
+			`SELECT COUNT(*) FROM events WHERE kind='inference.measured'`,
+		).Scan(&nMeas)
+		status := "UNVERIFIED"
+		if nExec > 0 && nMeas > 0 {
+			status = "PASS"
+		} else if nExec > 0 || nMeas > 0 {
+			status = "FAIL"
+		}
+		add("live model execution", "task.executed + inference.measured",
+			fmt.Sprintf("%d executed, %d measured", nExec, nMeas), status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
