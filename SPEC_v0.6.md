@@ -405,7 +405,43 @@ That is the correct direction.
 
 ---
 
+# 105. Route v0.0.1 — physics answers tasks (measured)
+
+`fabi route` shipped: the first Think primitive, no LLM involved.
+Real verdict on real hardware:
+
+```text
+task:      reasoning — 1000 out tok in 5 s → needs 200 tok/s
+model:     8B Q4, 4.7 GB resident
+hardware:  RTX A2000 12GB, ~288 GB/s
+
+288 GB/s ÷ 4.7 GB = 61 tok/s → 16.3 s vs 5 s target
+verdict: LOCAL TOO SLOW — speculative decoding or cloud required
+```
+
+The spec's own table (#48) predicted ~38 tok/s for 8B on RTX-class;
+measurement says 61 on A2000 (288 GB/s > 180 assumed). The physics
+framework held; only the input was conservative.
+
+Every evaluation emits `route.evaluated` — the ledger now records
+*decisions*, not just observations. That is the bridge to Phase 2.
+
+---
+
 ## End
+
+0.3 put numbers on words.
+0.4 subtracted the spec.
+0.5 subtracted the mystery.
+0.6 measured the atom.
+0.6.1 subtracted 160 MB of proven duplicate.
+0.6.2 closed the loop: scan → doctor → report → re-scan.
+0.6.3 caught a ghost: dead WSL distro found by inference.
+0.6.4 made the spec test itself, and turned patterns into plugins.
+0.6.5 gave the atom a heartbeat: timeseries exists.
+0.6.6 made the ledger queryable and caught the GPU lying by omission.
+0.6.7 services got names; GPU burn got suspects.
+0.6.8 tasks got physics answers — Phase 2 has a seed.
 
 0.3 put numbers on words.
 0.4 subtracted the spec.

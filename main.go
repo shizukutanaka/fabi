@@ -26,6 +26,18 @@ func main() {
 		runSelfTest()
 	case "ledger":
 		runLedgerCmd(os.Args[2:])
+	case "route":
+		arg := ""
+		if len(os.Args) > 2 {
+			arg = os.Args[2]
+		}
+		runRoute(arg)
+	case "goal":
+		arg := ""
+		if len(os.Args) > 2 {
+			arg = os.Args[2]
+		}
+		runGoal(arg)
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
@@ -45,5 +57,7 @@ func usage() {
 	fmt.Println("  selftest falsification engine — every claim gets a test")
 	fmt.Println("  watch    periodic scan, timeseries history (default 5m)")
 	fmt.Println("  ledger   query the event log (stats | events | export)")
+	fmt.Println("  route    physics-derived routing check for a task")
+	fmt.Println("  goal     purpose → tasks → feasibility, physics only")
 	fmt.Println("  version  print version")
 }
