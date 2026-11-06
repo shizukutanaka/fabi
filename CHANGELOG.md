@@ -1,6 +1,18 @@
 # Changelog
 
-## v0.0.1-dev — 2026-11-07 (unreleased)
+## v0.0.2-dev — 2026-11-07 (unreleased)
+
+Real fixes verified by the falsification loop:
+
+- **doctor: sha256-verify dup candidates** — name+size heuristic
+  produced a false-positive "160MB reclaimable" (vae vs vae_1_0
+  are separate revisions). `remove` now requires content equality. L14
+- **install: Startup-folder launcher** — schtasks needed admin;
+  Startup `.cmd` needs none. install/uninstall verified end-to-end
+- **.gitattributes eol=lf** — fixes gofmt on Windows runners/users
+- CI green on all 3 OSes
+
+## v0.0.1-dev — 2026-11-07
 
 First measured build. Phase 0–1 complete; Phase 2 seeded.
 
