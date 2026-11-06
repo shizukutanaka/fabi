@@ -343,6 +343,30 @@ control plane the estate didn't have.
 
 ---
 
+# Part 16 — Every spec pillar has a primitive
+
+```text
+Goal Engine   goal --run          Planner     goal → tasks
+Scheduler     modelForTask        Task Engine task.executed
+Resource Mgr  scan/ledger/status  Discovery   probes+provenance
+Permission    deny default        Policy      7 doctor rules
+Automation    fabi auto           Marketplace patterns.json
+Doctor        7 rules             Monitor     watch+heartbeat
+Serve API     6 endpoints         Remote      OLLAMA_HOST
+```
+
+`fabi auto` applies only safe recommendations (idle unload) —
+user-triggered, non-destructive, in-use models stay warm. The
+Automation pillar exists without violating "action stays manual."
+
+`OLLAMA_HOST` opens remote/cloud engines — route's "cloud or
+downgrade" verdict is now a reachable path, not a dead end.
+
+Every pillar in the spec has a working primitive, measured,
+ledgered, and falsified. Nothing remains only on paper.
+
+---
+
 ## End
 
 Versions 0.3–0.6 were a spec discovering itself.

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.0.5-dev — unreleased
+
+- **`fabi auto`** — Automation Engine seed: applies only safe
+  recommendations (idle unload >15 min); user-triggered,
+  non-destructive, keeps recently-used models warm
+- **`OLLAMA_HOST`** — standard env var routes run/goal/serve to
+  remote/cloud ollama-compatible endpoints; route's
+  "cloud or downgrade" verdict now points to it
+
 ## v0.0.4 — 2026-11-07
 
 Research-driven hardening (Qiita/Zenn/papers/GitHub analysis):

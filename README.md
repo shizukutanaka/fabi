@@ -22,7 +22,12 @@ fabi status     one-line health: estate + GPU + tok/s + loaded models
 fabi run        execute on a live model (--model, --ctx, --sweep, --compare)
 fabi serve      JSON API :11435 (GET /status|/models|/ledger|/doctor · POST /run|/goal)
 fabi unload     free VRAM — unload loaded models (real control action)
+fabi auto       apply safe recs only — idle unload, user-triggered (Automation seed)
 ```
+
+Remote engines: `OLLAMA_HOST=<host>:11434` routes run/goal/serve to a
+remote or cloud ollama-compatible endpoint — the "cloud or downgrade"
+path route recommends.
 
 ## Build
 
