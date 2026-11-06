@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 // Pattern lists are data, not code — the first capability pack (SPEC v0.6, L6).
@@ -101,8 +103,14 @@ func runPattern(args []string) {
 		return
 	}
 
+	if args[0] == "install" && len(args) == 2 {
+		installPatternPack(args[1], path, &user)
+		return
+	}
+
 	if args[0] != "add" || len(args) != 3 {
 		fmt.Println("usage: fabi pattern add <exe|cmd|scripthost|dir|modelroot|pkgtool|pkgruntime|port> <value>")
+		fmt.Println("        fabi pattern install <url-to-patterns.json>")
 		fmt.Println("example: fabi pattern add exe myserver.exe")
 		fmt.Println("         fabi pattern add port myservice:9000")
 		return
@@ -120,4 +128,48 @@ func runPattern(args []string) {
 	}
 	activePatterns = nil // reload on next use
 	fmt.Printf("added %s = %s → ~/.fabi/patterns.json (next scan picks it up)\n", field, value)
+}
+
+// installPatternPack fetches a community pattern pack (JSON with the
+// same patternSet shape) and merges it into the user file. The real
+// marketplace: detection knowledge shared as data, never code.
+// Fetch via curl — present on all supported OSes, no TLS deps added.
+func installPatternPack(url, path string, user *patternSet) {
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		fmt.Println("fabi pattern install: need http(s) URL")
+		return
+	}
+	out, err := exec.Command("curl", "-sfL", "--max-time", "15", url).Output()
+	if err != nil {
+		fmt.Printf("fabi pattern install: fetch failed — %v\n", err)
+		return
+	}
+	var pack patternSet
+	if err := json.Unmarshal(out, &pack); err != nil {
+		fmt.Println("fabi pattern install: not a pattern pack (bad JSON)")
+		return
+	}
+	user.ExePatterns = append(user.ExePatterns, pack.ExePatterns...)
+	user.CmdPatterns = append(user.CmdPatterns, pack.CmdPatterns...)
+	user.ScriptHosts = append(user.ScriptHosts, pack.ScriptHosts...)
+	user.Ports = append(user.Ports, pack.Ports...)
+	user.ScanDirs = append(user.ScanDirs, pack.ScanDirs...)
+	user.ModelRoots = append(user.ModelRoots, pack.ModelRoots...)
+	user.PkgAITools = append(user.PkgAITools, pack.PkgAITools...)
+	user.PkgRuntimes = append(user.PkgRuntimes, pack.PkgRuntimes...)
+
+	n := len(pack.ExePatterns) + len(pack.CmdPatterns) + len(pack.ScriptHosts) +
+		len(pack.Ports) + len(pack.ScanDirs) + len(pack.ModelRoots) +
+		len(pack.PkgAITools) + len(pack.PkgRuntimes)
+	if n == 0 {
+		fmt.Println("fabi pattern install: pack was empty — nothing merged")
+		return
+	}
+	b, _ := json.MarshalIndent(user, "", "  ")
+	if err := os.WriteFile(path, b, 0644); err != nil {
+		fmt.Println("fabi pattern install:", err)
+		return
+	}
+	activePatterns = nil
+	fmt.Printf("installed pack: %d entries merged → ~/.fabi/patterns.json\n", n)
 }
