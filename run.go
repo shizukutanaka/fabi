@@ -461,14 +461,36 @@ func runAuto() {
 // runSweep measures real tok/s on every live ollama model — replaces
 // predicted physics with measured ranking in the ledger.
 func runSweep() {
-	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
-	if err != nil || st != 200 {
-		fmt.Println("fabi run --sweep: ollama not reachable on " + ollamaBase)
-		return
+	type cand struct {
+		name string
+		size int64
 	}
-	var t ollamaTags
-	if err := json.Unmarshal(body, &t); err != nil || len(t.Models) == 0 {
-		fmt.Println("fabi run --sweep: no models on ollama")
+	var models []cand
+	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
+	if err == nil && st == 200 {
+		var t ollamaTags
+		if json.Unmarshal(body, &t) == nil {
+			for _, m := range t.Models {
+				models = append(models, cand{m.Name, m.Size})
+			}
+		}
+	}
+	// Second engine — sweep benchmarks across engine types too
+	// (asiai's lesson: the engine matters as much as the model).
+	if st2, b2, e2 := rawHTTP(lmstudioBase, "GET", "/v1/models", "", 3*time.Second); e2 == nil && st2 == 200 {
+		var lm struct {
+			Data []struct {
+				ID string `json:"id"`
+			} `json:"data"`
+		}
+		if json.Unmarshal(b2, &lm) == nil {
+			for _, m := range lm.Data {
+				models = append(models, cand{"lmstudio:" + m.ID, 0})
+			}
+		}
+	}
+	if len(models) == 0 {
+		fmt.Println("fabi run --sweep: no live models on any engine")
 		return
 	}
 
@@ -479,15 +501,15 @@ func runSweep() {
 	fmt.Println("FABI SWEEP — measured tok/s per model (warmup + median of 3)")
 	fmt.Println("─────────────────────────────────────────────")
 	const canned = "Count from one to ten."
-	for _, m := range t.Models {
+	for _, m := range models {
 		// Warmup — cold-load latency pollutes the first sample (asiai/MLPerf).
-		execPrompt(m.Name, "warmup")
+		execPrompt(m.name, "warmup")
 
 		var toksS, ttftS []float64
 		var wall time.Duration
 		var okCount int
 		for i := 0; i < 3; i++ {
-			r, toks, w, err := execPrompt(m.Name, canned)
+			r, toks, w, err := execPrompt(m.name, canned)
 			if err != nil {
 				break
 			}
@@ -497,17 +519,17 @@ func runSweep() {
 			okCount++
 		}
 		if okCount == 0 {
-			fmt.Printf("  %-18s %.1f GB   FAILED\n", m.Name, float64(m.Size)/1e9)
+			fmt.Printf("  %-18s %.1f GB   FAILED\n", m.name, float64(m.size)/1e9)
 			continue
 		}
 		toks := median(toksS)
 		ttft := median(ttftS)
 		fmt.Printf("  %-18s %.1f GB   %5.1f tok/s  ttft %4.0fms  (%.1fs, %d samples)\n",
-			m.Name, float64(m.Size)/1e9, toks, ttft, wall.Seconds(), okCount)
+			m.name, float64(m.size)/1e9, toks, ttft, wall.Seconds(), okCount)
 		l.emit("inference.measured", map[string]any{
-			"endpoint": ollamaBase, "model": m.Name, "op": "sweep-median",
+			"endpoint": ollamaBase, "model": m.name, "op": "sweep-median",
 			"tok_s": toks, "ttft_ms": ttft, "samples": okCount,
-			"wall_s": wall.Seconds(), "bytes": m.Size, "ok": true,
+			"wall_s": wall.Seconds(), "bytes": m.size, "ok": true,
 		})
 	}
 	// Cooldown — return VRAM to baseline (bastion pattern: don't leave
