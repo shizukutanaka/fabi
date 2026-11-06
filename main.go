@@ -57,6 +57,8 @@ func main() {
 		runAuto()
 	case "pattern":
 		runPattern(os.Args[2:])
+	case "diff":
+		runDiff()
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
@@ -87,5 +89,6 @@ func usage() {
 	fmt.Println("  unload   free VRAM — unload loaded models (first real control action)")
 	fmt.Println("  auto     apply safe recs only — idle unload, user-triggered (Automation seed)")
 	fmt.Println("  pattern  extend detection via data — add/list user patterns (Marketplace seed)")
+	fmt.Println("  diff     what changed between the last two scans (+appeared / -gone)")
 	fmt.Println("  version  print version")
 }
