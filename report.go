@@ -551,6 +551,26 @@ func runReport() {
 			unloadN, formatBytes(vramFreed),
 			map[bool]string{true: fmt.Sprintf(" (%d via auto)", unloadVia)}[unloadVia > 0])
 	}
+
+	// Executions: goal chains and prompts actually run — the execution
+	// pillar's footprint in the statement.
+	goals := map[string]bool{}
+	var steps int
+	for _, e := range events {
+		if e.kind != "task.executed" {
+			continue
+		}
+		var p map[string]any
+		if json.Unmarshal([]byte(e.payload), &p) == nil {
+			if strOf(p, "goal") != "" {
+				steps++
+				goals[strOf(p, "goal")] = true
+			}
+		}
+	}
+	if len(goals) > 0 {
+		fmt.Printf("  executions: %d goal(s), %d step(s) run\n", len(goals), steps)
+	}
 	fmt.Println()
 
 	fmt.Println("NOT YET MEASURED — honest section")
