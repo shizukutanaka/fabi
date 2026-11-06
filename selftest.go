@@ -270,6 +270,21 @@ func runSelfTest() {
 		}
 	}
 
+	// --- Claim: universal API works (serve) —
+	// The HTTP layer needs a daemon, but the data layer doesn't —
+	// the JSON functions that back the endpoints are directly callable.
+	// Falsify by checking they return the expected shape.
+	{
+		sj := statusJSON()
+		mj := modelsJSON()
+		_, hasScans := sj["scans"]
+		_, hasModels := mj["models"]
+		measured := fmt.Sprintf("status %d keys, models %d keys",
+			len(sj), len(mj))
+		add("universal API (serve)", "endpoints return valid shapes",
+			measured, passIf(hasScans && hasModels))
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
