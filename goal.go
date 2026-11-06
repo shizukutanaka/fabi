@@ -317,7 +317,9 @@ func measuredTokS(l *ledger) map[string]float64 {
 func bestLocalModel() string {
 	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
 	if err != nil || st != 200 {
-		return ""
+		// ollama down — try the other engine. lmstudio: prefix tells
+		// execPrompt which engine owns this model (multi-engine routing).
+		return lmstudioModel()
 	}
 	var t ollamaTags
 	if err := json.Unmarshal(body, &t); err != nil || len(t.Models) == 0 {
@@ -331,4 +333,22 @@ func bestLocalModel() string {
 		}
 	}
 	return best
+}
+
+// lmstudioModel finds a loaded model on the OpenAI-compatible engine.
+// "lmstudio:" prefix routes the caller away from ollama entirely.
+func lmstudioModel() string {
+	st, body, err := rawHTTP(lmstudioBase, "GET", "/v1/models", "", 3*time.Second)
+	if err != nil || st != 200 {
+		return ""
+	}
+	var m struct {
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(body, &m); err != nil || len(m.Data) == 0 {
+		return ""
+	}
+	return "lmstudio:" + m.Data[0].ID
 }

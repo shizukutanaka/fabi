@@ -80,6 +80,22 @@ func runRun(args []string) {
 			}
 		}
 	}
+	// Second engine: LM Studio's OpenAI-compat endpoint. lmstudio:
+	// prefix routes these through execOpenAI, not ollama.
+	if st2, b2, err2 := rawHTTP(lmstudioBase, "GET", "/v1/models", "", 3*time.Second); err2 == nil && st2 == 200 {
+		var lm struct {
+			Data []struct {
+				ID string `json:"id"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal(b2, &lm); err == nil {
+			for _, m := range lm.Data {
+				name := "lmstudio:" + m.ID
+				models = append(models, name)
+				sizes[name] = 1 // unknown size — sort small to try first
+			}
+		}
+	}
 	if len(models) == 0 {
 		fmt.Println("fabi run — no live generative model found.")
 		fmt.Println("(checked ollama " + ollamaBase + " — start `ollama serve` or pull a model)")
@@ -155,6 +171,9 @@ func execPrompt(model, prompt string) (ollamaGenResp, float64, time.Duration, er
 func execPromptCtx(model, prompt string, numCtx int) (ollamaGenResp, float64, time.Duration, error) {
 	inferenceLock.Lock()
 	defer inferenceLock.Unlock()
+	if strings.HasPrefix(model, "lmstudio:") {
+		return execOpenAI(strings.TrimPrefix(model, "lmstudio:"), prompt)
+	}
 	req := map[string]any{"model": model, "prompt": prompt, "stream": false}
 	if numCtx > 0 {
 		req["options"] = map[string]any{"num_ctx": numCtx}
@@ -162,11 +181,14 @@ func execPromptCtx(model, prompt string, numCtx int) (ollamaGenResp, float64, ti
 	payload, _ := json.Marshal(req)
 	t0 := time.Now()
 	st, rbody, err := rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 120*time.Second)
+	if err != nil {
+		// ollama unreachable — try the other engine. LM Studio exposes
+		// an OpenAI-compatible API on :1234; a real second engine makes
+		// fabi a multi-engine control plane, not an ollama wrapper.
+		return execOpenAI(model, prompt)
+	}
 	wall := time.Since(t0)
 	var r ollamaGenResp
-	if err != nil {
-		return r, 0, wall, err
-	}
 	if st != 200 {
 		return r, 0, wall, fmt.Errorf("HTTP %d", st)
 	}
@@ -181,6 +203,71 @@ func execPromptCtx(model, prompt string, numCtx int) (ollamaGenResp, float64, ti
 		ttft = float64(r.PromptEvalDuration) / 1e6 // ns → ms
 	}
 	r.ttftMs = ttft
+	return r, toks, wall, nil
+}
+
+// lmstudioBase — LM Studio's OpenAI-compatible endpoint. Standard
+// port; a second engine type fabi can route to when ollama is down.
+const lmstudioBase = "127.0.0.1:1234"
+
+// execOpenAI runs a prompt through an OpenAI-compatible API (LM
+// Studio, llama.cpp server, vLLM). tok/s is wall-clock based —
+// OpenAI gives token counts but no native durations.
+func execOpenAI(model, prompt string) (ollamaGenResp, float64, time.Duration, error) {
+	var r ollamaGenResp
+	// Discover a generative model the engine actually has loaded.
+	st, body, err := rawHTTP(lmstudioBase, "GET", "/v1/models", "", 5*time.Second)
+	if err != nil || st != 200 {
+		return r, 0, 0, fmt.Errorf("ollama unreachable; lm-studio fallback failed: %v", err)
+	}
+	var models struct {
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(body, &models); err != nil || len(models.Data) == 0 {
+		return r, 0, 0, fmt.Errorf("lm-studio reachable but no models loaded")
+	}
+	if model == "" {
+		model = models.Data[0].ID
+	}
+	req, _ := json.Marshal(map[string]any{
+		"model": model,
+		"messages": []map[string]string{
+			{"role": "user", "content": prompt},
+		},
+	})
+	t0 := time.Now()
+	st, rbody, err := rawHTTP(lmstudioBase, "POST", "/v1/chat/completions", string(req), 120*time.Second)
+	wall := time.Since(t0)
+	if err != nil {
+		return r, 0, wall, fmt.Errorf("lm-studio error: %v", err)
+	}
+	if st != 200 {
+		return r, 0, wall, fmt.Errorf("lm-studio HTTP %d — no chat model loaded?", st)
+	}
+	var resp struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+		Usage struct {
+			CompletionTokens int `json:"completion_tokens"`
+			PromptTokens     int `json:"prompt_tokens"`
+		} `json:"usage"`
+	}
+	if err := json.Unmarshal(rbody, &resp); err != nil || len(resp.Choices) == 0 {
+		return r, 0, wall, fmt.Errorf("lm-studio bad response")
+	}
+	r.Response = resp.Choices[0].Message.Content
+	r.EvalCount = resp.Usage.CompletionTokens
+	r.PromptEvalCount = resp.Usage.PromptTokens
+	r.Done = true
+	toks := 0.0
+	if wall.Seconds() > 0 && r.EvalCount > 0 {
+		toks = float64(r.EvalCount) / wall.Seconds()
+	}
 	return r, toks, wall, nil
 }
 
