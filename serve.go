@@ -127,11 +127,12 @@ func serveRun(conn net.Conn, body string) {
 	l.emit("task.executed", map[string]any{
 		"ok": true, "model": model, "via": "serve",
 		"prompt": trunc(req.Prompt, 200), "eval_count": r.EvalCount,
-		"tok_s": toks, "wall_s": wall.Seconds(),
+		"tok_s": toks, "ttft_ms": r.ttftMs, "wall_s": wall.Seconds(),
 	})
 	writeJSON(conn, 200, map[string]any{
 		"model": model, "response": strings.TrimSpace(r.Response),
-		"tok_s": toks, "wall_s": wall.Seconds(), "eval_count": r.EvalCount,
+		"tok_s": toks, "ttft_ms": r.ttftMs, "wall_s": wall.Seconds(),
+		"eval_count": r.EvalCount, "prefill_tok": r.PromptEvalCount,
 	})
 }
 
