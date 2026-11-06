@@ -318,6 +318,46 @@ func runSelfTest() {
 		}
 	}
 
+	// --- Claim: explainability resolves (why) —
+	// "evidence_ids resolve to real events" — the why explainer's claim.
+	// Falsified if any recommendation's evidence_ids point to events
+	// that don't exist in the ledger.
+	if l.db != nil {
+		var withEv, resolved int64
+		for _, e := range l.events("doctor.recommendation") {
+			var p map[string]any
+			if json.Unmarshal([]byte(e.payload), &p) != nil {
+				continue
+			}
+			a, ok := p["evidence_ids"].([]any)
+			if !ok || len(a) == 0 {
+				continue
+			}
+			withEv++
+			all := true
+			for _, v := range a {
+				f, _ := v.(float64)
+				var n int64
+				l.db.QueryRow("SELECT COUNT(*) FROM events WHERE id=?",
+					int64(f)).Scan(&n)
+				if n == 0 {
+					all = false
+				}
+			}
+			if all {
+				resolved++
+			}
+		}
+		measured := "no evidence-bearing recommendations"
+		status := "UNVERIFIED"
+		if withEv > 0 {
+			measured = fmt.Sprintf("%d/%d recs fully resolve", resolved, withEv)
+			status = passIf(resolved == withEv)
+		}
+		add("explainability resolves (why)", "evidence_ids point to real events",
+			measured, status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
