@@ -44,7 +44,9 @@ func main() {
 	case "uninstall":
 		runUninstall(os.Args[2:])
 	case "bench":
-		runBench()
+		// Deleted — Phase-1 proof, superseded by `fabi run --sweep`
+		// (generative benchmarks across engines). Musk: delete beats add.
+		fmt.Println("fabi bench removed — use `fabi run --sweep`")
 	case "status":
 		runStatus()
 	case "run":
@@ -84,7 +86,7 @@ func usage() {
 	fmt.Println("  goal     purpose → tasks → feasibility, physics only")
 	fmt.Println("  install  register watch at logon (--yes required)")
 	fmt.Println("  uninstall remove watch task (ledger kept)")
-	fmt.Println("  bench    measure real inference latency on a live API")
+	fmt.Println("  bench    (removed — use run --sweep)")
 	fmt.Println("  status   one-line machine health from the ledger")
 	fmt.Println("  run      execute a prompt on a live local model, measure real tok/s")
 	fmt.Println("  serve    JSON API on :11435 (GET /status|/models|/ledger|/doctor · POST /run|/goal)")

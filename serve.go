@@ -556,15 +556,28 @@ func statusJSON() map[string]any {
 }
 
 func modelsJSON() map[string]any {
-	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
-	if err != nil || st != 200 {
-		return map[string]any{"models": []string{}}
-	}
-	var t ollamaTags
-	json.Unmarshal(body, &t)
 	names := []string{}
-	for _, m := range t.Models {
-		names = append(names, m.Name)
+	if st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second); err == nil && st == 200 {
+		var t ollamaTags
+		if json.Unmarshal(body, &t) == nil {
+			for _, m := range t.Models {
+				names = append(names, m.Name)
+			}
+		}
+	}
+	// Second engine — agents see the whole estate's live models,
+	// not just ollama's (multi-engine parity with `fabi run`).
+	if st, b, err := rawHTTP(lmstudioBase, "GET", "/v1/models", "", 3*time.Second); err == nil && st == 200 {
+		var lm struct {
+			Data []struct {
+				ID string `json:"id"`
+			} `json:"data"`
+		}
+		if json.Unmarshal(b, &lm) == nil {
+			for _, m := range lm.Data {
+				names = append(names, "lmstudio:"+m.ID)
+			}
+		}
 	}
 	return map[string]any{"models": names}
 }
