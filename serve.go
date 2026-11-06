@@ -28,7 +28,7 @@ func runServe() {
 		return
 	}
 	fmt.Printf("fabi serve — http://127.0.0.1:%s\n", servePort)
-	fmt.Println("endpoints: GET /status · GET /models · POST /run {prompt, model?}")
+	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor · POST /run|/goal|/unload")
 	fmt.Println("(loopback only — other agents can call fabi now)")
 	for {
 		conn, err := ln.Accept()

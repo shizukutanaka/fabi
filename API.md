@@ -58,6 +58,15 @@ Decompose a purpose into tasks; optionally execute the chain.
 
 `run:false` (default) returns decomposition only — no execution.
 
+### POST /unload
+
+Free VRAM — unloads every loaded model (`keep_alive:0`). Returns
+what was freed; recorded as `model.unloaded` with `via: "serve"`.
+
+```json
+{"unloaded":["qwen2.5:0.5b"],"vram_freed_bytes":483645193,"count":1}
+```
+
 ### GET /doctor
 
 Latest open recommendations per target (investigate / idle / remove).
