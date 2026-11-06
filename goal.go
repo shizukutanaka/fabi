@@ -187,9 +187,11 @@ func runGoalTask(l *ledger, goal string, tasks []string) {
 	}
 	var prev string
 	var executed int
+	var skipped []string
 	for _, tn := range tasks {
 		p, ok := prompts[tn]
 		if !ok {
+			skipped = append(skipped, tn+" (needs image/video engine)")
 			continue
 		}
 		if prev != "" {
@@ -211,6 +213,13 @@ func runGoalTask(l *ledger, goal string, tasks []string) {
 		})
 		executed++
 		prev = r.Response
+	}
+	if len(skipped) > 0 {
+		fmt.Println()
+		fmt.Println("skipped (no engine for these yet):")
+		for _, s := range skipped {
+			fmt.Println("  - " + s)
+		}
 	}
 	if executed == 0 {
 		fmt.Println()
