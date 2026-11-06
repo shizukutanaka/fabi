@@ -49,6 +49,8 @@ func main() {
 		runUninstall(os.Args[2:])
 	case "bench":
 		runBench()
+	case "status":
+		runStatus()
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
@@ -73,5 +75,6 @@ func usage() {
 	fmt.Println("  install  register watch at logon (--yes required)")
 	fmt.Println("  uninstall remove watch task (ledger kept)")
 	fmt.Println("  bench    measure real inference latency on a live API")
+	fmt.Println("  status   one-line machine health from the ledger")
 	fmt.Println("  version  print version")
 }
