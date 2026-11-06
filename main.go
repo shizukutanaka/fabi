@@ -38,11 +38,7 @@ func main() {
 		}
 		runRoute(arg)
 	case "goal":
-		arg := ""
-		if len(os.Args) > 2 {
-			arg = os.Args[2]
-		}
-		runGoal(arg)
+		runGoal(os.Args[2:])
 	case "install":
 		runInstall(os.Args[2:])
 	case "uninstall":

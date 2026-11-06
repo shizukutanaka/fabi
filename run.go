@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -96,7 +97,7 @@ func runRun(args []string) {
 	}
 
 	var r ollamaGenResp
-	if err := json.Unmarshal(rbody, &r); err != nil {
+	if err := json.NewDecoder(bytes.NewReader(rbody)).Decode(&r); err != nil {
 		fmt.Println("bad response:", err)
 		return
 	}

@@ -65,10 +65,20 @@ func evalTask(tp taskProfile, gpuName string, vramMiB float64) evalResult {
 	return evalResult{"", tp, toks, latency, fitVRAM, verdict}
 }
 
-func runGoal(goal string) {
+func runGoal(args []string) {
+	var doRun bool
+	var parts []string
+	for _, a := range args {
+		if a == "--run" {
+			doRun = true
+		} else {
+			parts = append(parts, a)
+		}
+	}
+	goal := strings.Join(parts, " ")
 	if goal == "" {
-		fmt.Println("usage: fabi goal \"<purpose>\"")
-		fmt.Println("example: fabi goal \"build a homepage\"")
+		fmt.Println("usage: fabi goal \"<purpose>\" [--run]")
+		fmt.Println("example: fabi goal \"build a homepage\" --run")
 		return
 	}
 
@@ -156,4 +166,31 @@ func runGoal(goal string) {
 		"goal": goal, "tasks": tasks,
 		"local_ok": ok, "gpu": gpuName, "vram_mib": vramMiB,
 	})
+
+	if doRun {
+		runGoalTask(goal, tasks)
+	}
+}
+
+// runGoalTask picks the first text-generatable task and executes it on
+// the fastest measured local model — spec's core UX: purpose only.
+func runGoalTask(goal string, tasks []string) {
+	prompts := map[string]string{
+		"planning":    "You are a planner. Produce a short 5-step plan for: " + goal,
+		"code_review": "Briefly list quality risks for: " + goal,
+		"summarize":   "Summarize in one sentence what this means: " + goal,
+		"translate":   "Translate to English: " + goal,
+		"reasoning":   "Explain briefly: " + goal,
+		"search":      "List 3 key questions to research about: " + goal,
+		"ocr":         "Briefly describe how to extract text for: " + goal,
+	}
+	for _, tn := range tasks {
+		if p, ok := prompts[tn]; ok {
+			fmt.Println("── executing " + tn + " on best local model ──")
+			runRun([]string{p})
+			return
+		}
+	}
+	fmt.Println()
+	fmt.Println("no text-generatable task in this goal (image/video need other engines)")
 }

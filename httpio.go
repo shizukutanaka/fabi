@@ -52,7 +52,35 @@ func rawHTTP(addr, method, path, body string, timeout time.Duration) (int, []byt
 		}
 	}
 	if i := bytes.Index(data, []byte("\r\n\r\n")); i >= 0 {
-		return status, data[i+4:], nil
+		head := bytes.ToLower(data[:i])
+		body := data[i+4:]
+		if bytes.Contains(head, []byte("transfer-encoding:")) &&
+			bytes.Contains(head, []byte("chunked")) {
+			body = dechunk(body)
+		}
+		return status, body, nil
 	}
 	return status, data, nil
+}
+
+// dechunk decodes HTTP/1.1 chunked transfer-encoding.
+func dechunk(b []byte) []byte {
+	var out []byte
+	for len(b) > 0 {
+		i := bytes.IndexByte(b, '\n')
+		if i <= 0 {
+			break
+		}
+		var n int64
+		if _, err := fmt.Sscanf(strings.TrimSpace(string(b[:i])), "%x", &n); err != nil || n <= 0 {
+			break
+		}
+		b = b[i+1:]
+		if int(n) > len(b) {
+			n = int64(len(b))
+		}
+		out = append(out, b[:n]...)
+		b = b[n:]
+	}
+	return out
 }
