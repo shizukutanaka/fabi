@@ -28,6 +28,10 @@ type ollamaGenResp struct {
 }
 
 func runRun(args []string) {
+	if len(args) > 0 && args[0] == "--sweep" {
+		runSweep()
+		return
+	}
 	prompt := strings.Join(args, " ")
 
 	// Discover live ollama models.
@@ -122,4 +126,55 @@ func trunc(s string, n int) string {
 		return s
 	}
 	return s[:n] + "…"
+}
+
+// runSweep measures real tok/s on every live ollama model — replaces
+// predicted physics with measured ranking in the ledger.
+func runSweep() {
+	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
+	if err != nil || st != 200 {
+		fmt.Println("fabi run --sweep: ollama not reachable on :11434")
+		return
+	}
+	var t ollamaTags
+	if err := json.Unmarshal(body, &t); err != nil || len(t.Models) == 0 {
+		fmt.Println("fabi run --sweep: no models on ollama")
+		return
+	}
+
+	l := openLedger()
+	defer l.close()
+
+	fmt.Println()
+	fmt.Println("FABI SWEEP — measured tok/s per model")
+	fmt.Println("─────────────────────────────────────────────")
+	const canned = "Count from one to ten."
+	for _, m := range t.Models {
+		payload, _ := json.Marshal(map[string]any{
+			"model": m.Name, "prompt": canned, "stream": false,
+			"options": map[string]any{"num_predict": 40},
+		})
+		t0 := time.Now()
+		st2, rbody, err := rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 90*time.Second)
+		wall := time.Since(t0)
+		if err != nil || st2 != 200 {
+			fmt.Printf("  %-18s %.1f GB   FAILED (HTTP %d)\n", m.Name, float64(m.Size)/1e9, st2)
+			continue
+		}
+		var r ollamaGenResp
+		json.Unmarshal(rbody, &r)
+		toks := float64(0)
+		if r.EvalDuration > 0 {
+			toks = float64(r.EvalCount) / (float64(r.EvalDuration) / 1e9)
+		}
+		fmt.Printf("  %-18s %.1f GB   %3d tok  %5.1f tok/s  (%.1fs)\n",
+			m.Name, float64(m.Size)/1e9, r.EvalCount, toks, wall.Seconds())
+		l.emit("inference.measured", map[string]any{
+			"endpoint": ollamaBase, "model": m.Name, "op": "generate",
+			"tok_s": toks, "eval_count": r.EvalCount, "wall_s": wall.Seconds(),
+			"bytes": m.Size, "ok": true,
+		})
+	}
+	fmt.Println()
+	fmt.Println("measured values in ledger — route can now rank by reality, not assumption")
 }
