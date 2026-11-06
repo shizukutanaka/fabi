@@ -33,7 +33,17 @@ func runRun(args []string) {
 		runSweep()
 		return
 	}
-	prompt := strings.Join(args, " ")
+	var forceModel string
+	var parts []string
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--model" && i+1 < len(args) {
+			forceModel = args[i+1]
+			i++
+		} else {
+			parts = append(parts, args[i])
+		}
+	}
+	prompt := strings.Join(parts, " ")
 
 	// Discover live ollama models.
 	var models []string
@@ -59,12 +69,15 @@ func runRun(args []string) {
 		return
 	}
 
-	// Pick the smallest (fastest) model.
+	// Pick the smallest (fastest) model, or the --model override.
 	best := models[0]
 	for _, m := range models {
 		if sizes[m] < sizes[best] {
 			best = m
 		}
+	}
+	if forceModel != "" {
+		best = forceModel
 	}
 
 	fmt.Println()

@@ -195,8 +195,9 @@ func runGoalTask(goal string, tasks []string) {
 		if prev != "" {
 			p += "\n\nContext from previous step:\n" + trunc(prev, 600)
 		}
-		fmt.Printf("── step %d: %s ──\n", executed+1, tn)
-		r, toks, wall, err := execPrompt(bestLocalModel(), p)
+		model := modelForClass(taskProfiles[tn].modelClass)
+		fmt.Printf("── step %d: %s → %s ──\n", executed+1, tn, model)
+		r, toks, wall, err := execPrompt(model, p)
 		if err != nil {
 			fmt.Printf("   failed: %v\n", err)
 			break
@@ -212,6 +213,33 @@ func runGoalTask(goal string, tasks []string) {
 	} else {
 		fmt.Printf("\n%d task(s) executed as a chain — outputs threaded\n", executed)
 	}
+}
+
+// modelForClass schedules a model per task class (SPEC #10 seed):
+// 3b-class tasks go to the fastest/smallest local model (latency-first),
+// 8b/70b to the largest available (quality-first).
+func modelForClass(cls string) string {
+	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
+	if err != nil || st != 200 {
+		return ""
+	}
+	var t ollamaTags
+	if err := json.Unmarshal(body, &t); err != nil || len(t.Models) == 0 {
+		return ""
+	}
+	small, large := t.Models[0], t.Models[0]
+	for _, m := range t.Models[1:] {
+		if m.Size < small.Size {
+			small = m
+		}
+		if m.Size > large.Size {
+			large = m
+		}
+	}
+	if cls == "8b" || cls == "70b" {
+		return large.Name
+	}
+	return small.Name
 }
 
 // bestLocalModel picks the smallest model on ollama.
