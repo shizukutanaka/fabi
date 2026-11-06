@@ -15,6 +15,11 @@ func main() {
 	}
 	switch os.Args[1] {
 	case "scan":
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			}
+		}
 		runScan(time.Now(), false)
 	case "watch":
 		runWatch(os.Args[2:])

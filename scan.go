@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"os"
 	"runtime"
 	"sort"
@@ -10,6 +12,9 @@ import (
 
 	"github.com/shirou/gopsutil/v4/process"
 )
+
+// jsonOut is set by `fabi scan --json` — machine-readable output (API-first).
+var jsonOut bool
 
 // Finding is one discovered thing: a tool, service, package, model, or GPU.
 type Finding struct {
@@ -137,9 +142,20 @@ func runScan(start time.Time, quiet bool) {
 		"findings":    len(all),
 		"duration_ms": elapsed.Milliseconds(),
 	})
-	if quiet {
+	switch {
+	case jsonOut:
+		b, _ := json.MarshalIndent(map[string]any{
+			"scan_ms":   elapsed.Milliseconds(),
+			"probes":    results,
+			"findings":  all,
+			"ram_used":  vm.Used,
+			"ram_total": vm.Total,
+			"fabi_rss":  rss,
+		}, "", "  ")
+		fmt.Println(string(b))
+	case quiet:
 		printScanLine(all, vm, elapsed)
-	} else {
+	default:
 		printReport(buildReport(results, all, elapsed, vm, rss), results, elapsed)
 	}
 }
