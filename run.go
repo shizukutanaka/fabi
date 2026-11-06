@@ -312,37 +312,57 @@ func runSweep() {
 	defer l.close()
 
 	fmt.Println()
-	fmt.Println("FABI SWEEP — measured tok/s per model")
+	fmt.Println("FABI SWEEP — measured tok/s per model (warmup + median of 3)")
 	fmt.Println("─────────────────────────────────────────────")
 	const canned = "Count from one to ten."
 	for _, m := range t.Models {
-		payload, _ := json.Marshal(map[string]any{
-			"model": m.Name, "prompt": canned, "stream": false,
-			"options": map[string]any{"num_predict": 40},
-		})
-		t0 := time.Now()
-		st2, rbody, err := rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 90*time.Second)
-		wall := time.Since(t0)
-		if err != nil || st2 != 200 {
-			fmt.Printf("  %-18s %.1f GB   FAILED (HTTP %d)\n", m.Name, float64(m.Size)/1e9, st2)
+		// Warmup — cold-load latency pollutes the first sample (asiai/MLPerf).
+		execPrompt(m.Name, "warmup")
+
+		var toksS, ttftS []float64
+		var wall time.Duration
+		var okCount int
+		for i := 0; i < 3; i++ {
+			r, toks, w, err := execPrompt(m.Name, canned)
+			if err != nil {
+				break
+			}
+			toksS = append(toksS, toks)
+			ttftS = append(ttftS, r.ttftMs)
+			wall = w
+			okCount++
+		}
+		if okCount == 0 {
+			fmt.Printf("  %-18s %.1f GB   FAILED\n", m.Name, float64(m.Size)/1e9)
 			continue
 		}
-		var r ollamaGenResp
-		json.Unmarshal(rbody, &r)
-		toks := float64(0)
-		if r.EvalDuration > 0 {
-			toks = float64(r.EvalCount) / (float64(r.EvalDuration) / 1e9)
-		}
-		ttft := float64(r.PromptEvalDuration) / 1e6
-		fmt.Printf("  %-18s %.1f GB   %3d tok  %5.1f tok/s  ttft %4.0fms  (%.1fs)\n",
-			m.Name, float64(m.Size)/1e9, r.EvalCount, toks, ttft, wall.Seconds())
+		toks := median(toksS)
+		ttft := median(ttftS)
+		fmt.Printf("  %-18s %.1f GB   %5.1f tok/s  ttft %4.0fms  (%.1fs, %d samples)\n",
+			m.Name, float64(m.Size)/1e9, toks, ttft, wall.Seconds(), okCount)
 		l.emit("inference.measured", map[string]any{
-			"endpoint": ollamaBase, "model": m.Name, "op": "generate",
-			"tok_s": toks, "ttft_ms": ttft, "eval_count": r.EvalCount,
-			"prefill_tok": r.PromptEvalCount, "wall_s": wall.Seconds(),
-			"bytes": m.Size, "ok": true,
+			"endpoint": ollamaBase, "model": m.Name, "op": "sweep-median",
+			"tok_s": toks, "ttft_ms": ttft, "samples": okCount,
+			"wall_s": wall.Seconds(), "bytes": m.Size, "ok": true,
 		})
 	}
+	// Cooldown — return VRAM to baseline (bastion pattern: don't leave
+	// the estate changed after measurement).
+	runUnload(nil)
 	fmt.Println()
-	fmt.Println("measured values in ledger — route can now rank by reality, not assumption")
+	fmt.Println("measured medians in ledger — cooldown unloaded all models")
+}
+
+// median of a small sample set — honest central value, not a lucky run.
+func median(xs []float64) float64 {
+	if len(xs) == 0 {
+		return 0
+	}
+	cp := append([]float64(nil), xs...)
+	for i := 1; i < len(cp); i++ {
+		for j := i; j > 0 && cp[j] < cp[j-1]; j-- {
+			cp[j], cp[j-1] = cp[j-1], cp[j]
+		}
+	}
+	return cp[len(cp)/2]
 }
