@@ -227,6 +227,13 @@ A driver ioctl hung under load; the scan's timeout was theoretical
 protection that didn't help against a kernel-stuck child.
 Each probe now owns a cap tighter than the global budget.
 
+**L14: A removal recommendation requires content-hash equality.**
+
+The verified-savings loop caught its own false positive: two files
+shared name + size but sha256 differed (vae vs vae_1_0 revisions).
+Doctor now hashes before saying REMOVE — the heuristic was a hint,
+never proof. The loop worked because deletion stayed manual.
+
 ---
 
 ## End
