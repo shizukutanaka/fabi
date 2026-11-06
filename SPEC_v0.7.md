@@ -183,6 +183,22 @@ If it runs and asks for nothing, distribution is physics.
 
 ---
 
+# Part 10 — Session end-state `[M]`
+
+10 commands shipped: scan, watch, doctor, report, selftest,
+ledger, route, goal, install/uninstall, bench.
+
+`bench` measured the machine's first real inference:
+the :1234 hidden service identified as a live **LM Studio server**
+serving `text-embedding-nomic-embed-text-v1.5` — while `lms ps`
+reports nothing loaded. The invisible-owner mystery resolved:
+an LM Studio instance outside this host's process view.
+
+Commits: `9c51df0 → c33e6ef → a33ce8e` (8 total).
+Next: GitHub release → signing → winget → stranger's install.
+
+---
+
 ## End
 
 Versions 0.3–0.6 were a spec discovering itself.
