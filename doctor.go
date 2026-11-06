@@ -271,22 +271,39 @@ func runDoctor() {
 	}
 
 	// --- Emit recommendations back to the ledger ---
-	var reclaimTotal int64
+	// Dedupe: don't re-emit a recommendation identical to the latest open one.
+	latestRec := map[string]map[string]any{}
+	for _, e := range l.events("doctor.recommendation") {
+		var p map[string]any
+		if err := json.Unmarshal([]byte(e.payload), &p); err == nil {
+			if t, ok := p["target"].(string); ok {
+				latestRec[t] = p
+			}
+		}
+	}
+	var emitted, unchanged, reclaimTotal int64
 	for _, r := range recs {
+		if prev, ok := latestRec[r.target]; ok &&
+			strOf(prev, "class") == r.class &&
+			strOf(prev, "detail") == r.detail {
+			unchanged++
+			continue
+		}
 		l.emit("doctor.recommendation", map[string]any{
-			"class":       r.class,
-			"target":      r.target,
-			"detail":      r.detail,
-			"confidence":  r.confidence,
+			"class":         r.class,
+			"target":        r.target,
+			"detail":        r.detail,
+			"confidence":    r.confidence,
 			"reclaim_bytes": r.reclaim,
-			"evidence_ids": r.evidence,
+			"evidence_ids":  r.evidence,
 		})
+		emitted++
 		if r.class == "remove" {
 			reclaimTotal += r.reclaim
 		}
 	}
 
-	printDoctor(recs, len(events), len(windows), reclaimTotal, latest)
+	printDoctor(recs, len(events), len(windows), reclaimTotal, latest, emitted, unchanged)
 }
 
 func strOf(m map[string]any, k string) string {
@@ -317,7 +334,7 @@ func lastN(ids []int64, n int) []int64 {
 	return ids[len(ids)-n:]
 }
 
-func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, latest scanWindow) {
+func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, latest scanWindow, emitted, unchanged int64) {
 	fmt.Println()
 	fmt.Println("FABI DOCTOR — evidence-based recommendations")
 	fmt.Println("─────────────────────────────────────────────")
@@ -375,6 +392,6 @@ func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, late
 	}
 
 	fmt.Println("─────────────────────────────────────────────")
-	fmt.Println("recommendations written to ledger as doctor.recommendation events")
+	fmt.Printf("recommendations: %d new, %d unchanged\n", emitted, unchanged)
 	fmt.Println("deletion is always manual — evidence first, action never automatic")
 }
