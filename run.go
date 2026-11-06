@@ -33,6 +33,10 @@ func runRun(args []string) {
 		runSweep()
 		return
 	}
+	if len(args) > 0 && args[0] == "--compare" {
+		runCompare(strings.Join(args[1:], " "))
+		return
+	}
 	var forceModel string
 	var parts []string
 	for i := 0; i < len(args); i++ {
@@ -146,6 +150,70 @@ func trunc(s string, n int) string {
 		return s
 	}
 	return s[:n] + "…"
+}
+
+// runCompare answers Socratic Q4 — did the scheduler's choice change a
+// real outcome? Runs the same prompt on every live model, shows the
+// measured winner vs the scheduler's pick. Decision proven, not asserted.
+func runCompare(prompt string) {
+	if prompt == "" {
+		prompt = "Count from one to ten."
+	}
+	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
+	if err != nil || st != 200 {
+		fmt.Println("fabi run --compare: ollama not reachable")
+		return
+	}
+	var t ollamaTags
+	if err := json.Unmarshal(body, &t); err != nil || len(t.Models) == 0 {
+		fmt.Println("fabi run --compare: no models")
+		return
+	}
+	l := openLedger()
+	defer l.close()
+
+	// The scheduler's pick for a fast task: smallest model.
+	pick := t.Models[0].Name
+	var pickSize = t.Models[0].Size
+	for _, m := range t.Models[1:] {
+		if m.Size < pickSize {
+			pick, pickSize = m.Name, m.Size
+		}
+	}
+
+	fmt.Println()
+	fmt.Println("FABI COMPARE — did the scheduler's choice matter?")
+	fmt.Println("─────────────────────────────────────────────")
+	fmt.Printf("prompt: %s\nscheduler picks (fastest/smallest): %s\n\n", prompt, pick)
+
+	var winner string
+	var winnerToks float64
+	for _, m := range t.Models {
+		_, toks, wall, err := execPrompt(m.Name, prompt)
+		if err != nil {
+			fmt.Printf("  %-18s %.1f GB   FAILED %v\n", m.Name, float64(m.Size)/1e9, err)
+			continue
+		}
+		mark := ""
+		if m.Name == pick {
+			mark = "  ← scheduler's choice"
+		}
+		fmt.Printf("  %-18s %.1f GB   %5.1f tok/s  (%.1fs)%s\n",
+			m.Name, float64(m.Size)/1e9, toks, wall.Seconds(), mark)
+		if toks > winnerToks {
+			winnerToks, winner = toks, m.Name
+		}
+		l.emit("inference.measured", map[string]any{
+			"endpoint": ollamaBase, "model": m.Name, "op": "compare",
+			"tok_s": toks, "ok": true,
+		})
+	}
+	fmt.Println()
+	if winner == pick {
+		fmt.Printf("verdict: scheduler was RIGHT — %s is measured fastest\n", pick)
+	} else {
+		fmt.Printf("verdict: scheduler was WRONG — %s (%.1f) beats %s\n", winner, winnerToks, pick)
+	}
 }
 
 // runSweep measures real tok/s on every live ollama model — replaces
