@@ -199,6 +199,34 @@ Next: GitHub release → signing → winget → stranger's install.
 
 ---
 
+# Part 11 — Regression lessons, encoded `[M]`
+
+Selftest caught two regressions in production; the fixes followed
+the laws they proved:
+
+```text
+binary 10.6 MB > budget    FAIL → net/http deleted (raw TCP, 58 lines)
+                                 10.6 → 7.6 MB, PASS. Delete beats defer.
+nvidia-smi stall 36 s      FAIL → per-probe 1500 ms cap.
+                                 Environment stalls; the scan doesn't.
+```
+
+**L12: When a dependency costs more than the thing it saves,
+the dependency is deleted.**
+
+net/http cost 1.5 MB per call site for a 30-byte GET. A raw socket
+does the same job in 58 lines for free. The correct fix was not
+optimization — it was deletion.
+
+**L13: Any external process that can stall gets a budget smaller
+than the scan's.**
+
+A driver ioctl hung under load; the scan's timeout was theoretical
+protection that didn't help against a kernel-stuck child.
+Each probe now owns a cap tighter than the global budget.
+
+---
+
 ## End
 
 Versions 0.3–0.6 were a spec discovering itself.
