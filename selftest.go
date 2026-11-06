@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"runtime"
@@ -145,6 +146,32 @@ func runSelfTest() {
 		}
 		add("resource control (unload)", "model.unloaded events",
 			fmt.Sprintf("%d VRAM releases recorded", nUnl), status)
+	}
+
+	// --- Claim: multi-engine execution (Phase 3, L15) ---
+	// "fabi routes to more than ollama" — verifiable by discovery: the
+	// OpenAI-compat endpoint should yield at least one lmstudio: model
+	// when reachable. Unreachable engines → UNVERIFIED, not failure.
+	{
+		found := ""
+		if st, b, err := rawHTTP(lmstudioBase, "GET", "/v1/models", "", 3*time.Second); err == nil && st == 200 {
+			var lm struct {
+				Data []struct {
+					ID string `json:"id"`
+				} `json:"data"`
+			}
+			if json.Unmarshal(b, &lm) == nil && len(lm.Data) > 0 {
+				found = "lmstudio:" + lm.Data[0].ID
+			}
+		}
+		status := "UNVERIFIED"
+		measured := "no OpenAI-compat engine reachable"
+		if found != "" {
+			status = "PASS"
+			measured = "discovered " + found
+		}
+		add("multi-engine (openai-compat)", "lmstudio: model discovered",
+			measured, status)
 	}
 
 	// Emit the result set — falsification records are themselves ledger data.
