@@ -22,10 +22,13 @@ type ollamaTags struct {
 }
 
 type ollamaGenResp struct {
-	Response     string `json:"response"`
-	EvalCount    int    `json:"eval_count"`
-	EvalDuration int64  `json:"eval_duration"` // ns
-	Done         bool   `json:"done"`
+	Response           string  `json:"response"`
+	EvalCount          int     `json:"eval_count"`
+	EvalDuration       int64   `json:"eval_duration"` // ns, decode
+	PromptEvalCount    int     `json:"prompt_eval_count"`
+	PromptEvalDuration int64   `json:"prompt_eval_duration"` // ns, prefill
+	Done               bool    `json:"done"`
+	ttftMs             float64 // computed in execPrompt (not from JSON)
 }
 
 func runRun(args []string) {
@@ -106,15 +109,16 @@ func runRun(args []string) {
 	fmt.Println("response:")
 	fmt.Println("  " + trunc(strings.TrimSpace(r.Response), 400))
 	fmt.Println()
-	fmt.Printf("measured: %d tokens in %.1fs = %.1f tok/s", r.EvalCount,
-		wall.Seconds(), toks)
-	fmt.Println("  [M — real, not predicted]")
+	fmt.Printf("measured: %d tokens in %.1fs = %.1f tok/s · ttft %.0f ms (prefill %d tok)",
+		r.EvalCount, wall.Seconds(), toks, r.ttftMs, r.PromptEvalCount)
+	fmt.Println("  [M]")
 	fmt.Println()
 
 	l.emit("task.executed", map[string]any{
 		"ok": true, "model": best, "endpoint": ollamaBase,
 		"prompt": trunc(prompt, 200), "eval_count": r.EvalCount,
-		"tok_s": toks, "wall_s": wall.Seconds(),
+		"tok_s": toks, "ttft_ms": r.ttftMs,
+		"prefill_tok": r.PromptEvalCount, "wall_s": wall.Seconds(),
 	})
 }
 
@@ -138,10 +142,14 @@ func execPrompt(model, prompt string) (ollamaGenResp, float64, time.Duration, er
 	if err := json.NewDecoder(bytes.NewReader(rbody)).Decode(&r); err != nil {
 		return r, 0, wall, err
 	}
-	var toks float64
+	var toks, ttft float64
 	if r.EvalDuration > 0 && r.EvalCount > 0 {
 		toks = float64(r.EvalCount) / (float64(r.EvalDuration) / 1e9)
 	}
+	if r.PromptEvalDuration > 0 {
+		ttft = float64(r.PromptEvalDuration) / 1e6 // ns → ms
+	}
+	r.ttftMs = ttft
 	return r, toks, wall, nil
 }
 
@@ -255,11 +263,13 @@ func runSweep() {
 		if r.EvalDuration > 0 {
 			toks = float64(r.EvalCount) / (float64(r.EvalDuration) / 1e9)
 		}
-		fmt.Printf("  %-18s %.1f GB   %3d tok  %5.1f tok/s  (%.1fs)\n",
-			m.Name, float64(m.Size)/1e9, r.EvalCount, toks, wall.Seconds())
+		ttft := float64(r.PromptEvalDuration) / 1e6
+		fmt.Printf("  %-18s %.1f GB   %3d tok  %5.1f tok/s  ttft %4.0fms  (%.1fs)\n",
+			m.Name, float64(m.Size)/1e9, r.EvalCount, toks, ttft, wall.Seconds())
 		l.emit("inference.measured", map[string]any{
 			"endpoint": ollamaBase, "model": m.Name, "op": "generate",
-			"tok_s": toks, "eval_count": r.EvalCount, "wall_s": wall.Seconds(),
+			"tok_s": toks, "ttft_ms": ttft, "eval_count": r.EvalCount,
+			"prefill_tok": r.PromptEvalCount, "wall_s": wall.Seconds(),
 			"bytes": m.Size, "ok": true,
 		})
 	}
