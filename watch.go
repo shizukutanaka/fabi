@@ -75,15 +75,38 @@ func runWatch(args []string) {
 	tick := time.NewTicker(interval)
 
 	runScan(time.Now(), true)
+	measureLiveInference()
 	for {
 		select {
 		case <-tick.C:
 			runScan(time.Now(), true)
+			measureLiveInference()
 		case <-sig:
 			fmt.Println("\nwatch stopped — ledger complete.")
 			return
 		}
 	}
+}
+
+// measureLiveInference adds real tok/s to the timeseries — a canned
+// generation on the fastest local model. If nothing's live, it skips
+// silently; heartbeat data only exists when inference is possible.
+func measureLiveInference() {
+	model := bestLocalModel()
+	if model == "" {
+		return
+	}
+	l := openLedger()
+	defer l.close()
+	r, toks, wall, err := execPrompt(model, "Count: 1 2 3")
+	if err != nil {
+		return
+	}
+	l.emit("inference.measured", map[string]any{
+		"endpoint": ollamaBase, "model": model, "op": "watch-generate",
+		"tok_s": toks, "eval_count": r.EvalCount, "wall_s": wall.Seconds(), "ok": true,
+	})
+	fmt.Printf("[inference] %s %.1f tok/s (%.1fs)\n", model, toks, wall.Seconds())
 }
 
 var _ = strconv.Itoa
