@@ -1,40 +1,45 @@
-# Release Process — Fabi v0.0.1
+# Release Process — Fabi v0.0.2
 
-Phase 0 remaining work is distribution, not code (SPEC v0.6 #95).
+Current state: **shipped to review queue** — all steps done except
+Microsoft's async validation on the winget PR.
 
-## 1. Build artifacts
+## Done `[M]`
 
-```sh
-bash build.sh   # → release/<ver>/  4 binaries + SHA256SUMS.txt
-```
+- `bash build.sh` → 4 binaries + SHA256SUMS (7.8–8.0 MB each)
+- GitHub release `v0.0.2` — all 4 artifacts + checksums live
+- winget manifests: validated clean (`winget validate`, zero warnings)
+- PR `microsoft/winget-pkgs#472788` — "New package: Fabi.Fabi version 0.0.2"
+  · CLA agreed (individual)
+  · updated to 0.0.2 so reviewers see the sha256-fix, not the buggy 0.0.1
+  · open, no blocking labels, awaiting WinGetSvc backend validation
+- Artifact verified end-to-end: download → SHA256 == manifest → runs
 
-Targets: windows/amd64, linux/amd64, darwin/amd64, darwin/arm64.
+## Install mechanism (changed)
 
-## 2. GitHub release (owner action)
+`fabi install` uses the **Startup folder** (`fabi-watch.cmd`), not
+`schtasks` — measured reason: Task Scheduler required admin on the
+reference machine; a Startup `.cmd` needs none and is trivially
+reversible via `fabi uninstall --yes`. Verified end-to-end.
 
-- Push repo to GitHub (`<owner>/fabi` — set real owner in manifests).
-- `gh release create v0.0.1 release/*/fabi-* release/*/SHA256SUMS.txt --title "Fabi v0.0.1"`
+## Code signing — now a measured requirement
 
-## 3. Code signing (owner action)
+`fabi.exe` (unsigned, built locally) was **blocked mid-session** on the
+reference machine — unreadable/unlaunchable, quarantine-class behavior.
+A port-probing + process-enumerating binary is exactly what SmartScreen
+flags. Signing is not optional for public distribution:
 
-- Windows: EV/OV Authenticode cert → `signtool sign fabi-windows-amd64.exe`
-  (unsigned exe triggers SmartScreen — kills the 60 s / 0-config funnel)
-- macOS: `codesign` + `notarytool` — required for Gatekeeper
+- Windows: EV/OV Authenticode → `signtool sign`
+- macOS: `codesign` + `notarytool` (Gatekeeper)
 
-## 4. winget
+## Remaining user actions
 
-- Fill `InstallerUrl` + `InstallerSha256` in `packaging/winget/Fabi.Fabi.installer.yaml`
-  from the released binary's SHA256SUMS.txt.
-- `winget validate --manifest packaging/winget/`
-- `winget install --manifest packaging/winget/` (local test)
-- PR to microsoft/winget-pkgs: `manifests/f/Fabi/Fabi/0.0.1/`
+1. Watch PR `#472788` for `Validation-Completed` / request labels —
+   responds asynchronously (hours–days).
+2. Procure a signing cert before the first real public release.
+3. `winget install Fabi` once merged.
 
-## 5. brew / apt (later)
+## Honesty gates (still)
 
-- brew: `brew create` formula pointing at darwin binaries — needs repo first.
-- apt: `.deb` packaging is a Phase-2 task (systemd unit for watch mode).
-
-## Honesty gates (don't skip)
-
-- Every number in release notes comes from `fabi selftest` output or ledger — not hope.
-- `other OSes: UNVERIFIED` stays on the page until a real macOS/Linux scan ships proof.
+- Numbers in release notes come from `fabi selftest` / ledger only.
+- `UNVERIFIED` marks stay until a real macOS/Linux scan ships proof.
+- Version claims match the binary's `fabi version` output.
