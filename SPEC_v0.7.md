@@ -285,6 +285,27 @@ running real workloads, measured.
 
 ---
 
+# Part 14 — Universal API v0 (shipped, measured)
+
+`fabi serve` on `127.0.0.1:11435` — raw sockets, no net/http
+(budget kept at 7.6 MB). 6 endpoints, all ledgered (via: serve):
+
+```text
+GET  /status    estate summary          GET  /models   live models
+GET  /ledger    events (kind,n)         GET  /doctor   recommendations
+POST /run       prompt → model output   POST /goal     decompose + chain
+```
+
+Measured: POST /run → qwen2.5:0.5b → 200 tok/s [M].
+POST /goal → 2-step chain executed over the wire [M].
+
+Other software can now call fabi. Strata, hermes, any agent —
+the connection mission has an API surface. Documented in `API.md`.
+
+**status** shows the heartbeat: `... | 128 tok/s qwen2.5:0.5b`.
+
+---
+
 ## End
 
 Versions 0.3–0.6 were a spec discovering itself.
