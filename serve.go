@@ -357,9 +357,15 @@ func servePattern(conn net.Conn, body, query string, write bool) {
 	var req struct {
 		Field string `json:"field"`
 		Value string `json:"value"`
+		URL   string `json:"url"`
 	}
 	if err := json.Unmarshal([]byte(body), &req); err != nil {
-		writeJSON(conn, 400, map[string]string{"error": `need {"field":"...","value":"..."}`})
+		writeJSON(conn, 400, map[string]string{"error": `need {"field":"...","value":"..."} or {"url":"..."}`})
+		return
+	}
+	if req.URL != "" {
+		installPatternPack(req.URL, path, &user)
+		writeJSON(conn, 200, map[string]any{"installed": req.URL})
 		return
 	}
 	if err := addPatternField(&user, req.Field, req.Value); err != nil {
