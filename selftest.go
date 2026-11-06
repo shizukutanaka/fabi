@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
@@ -242,6 +243,31 @@ func runSelfTest() {
 		}
 		add("goal engine (decompose→execute)", "task.executed w/ goal",
 			measured, status)
+	}
+
+	// --- Claim: marketplace works (pattern add/install) —
+	// "users extend detection via data" — verifiable: when a user
+	// patterns file exists, its entries must merge into the active set.
+	// UNVERIFIED until a user file exists (no side effects in selftest).
+	{
+		dir, err := ledgerDir()
+		if err == nil {
+			path := filepath.Join(dir, "patterns.json")
+			if _, err := os.Stat(path); err == nil {
+				ps := loadPatterns()
+				total := len(ps.ExePatterns) + len(ps.CmdPatterns) +
+					len(ps.ScriptHosts) + len(ps.Ports) + len(ps.ScanDirs) +
+					len(ps.ModelRoots) + len(ps.PkgAITools) + len(ps.PkgRuntimes)
+				add("marketplace (user patterns)",
+					"user file merges into active set",
+					fmt.Sprintf("%d entries active", total),
+					passIf(total > 114))
+			} else {
+				add("marketplace (user patterns)",
+					"user file merges into active set",
+					"no user patterns.json yet", "UNVERIFIED")
+			}
+		}
 	}
 
 	// Emit the result set — falsification records are themselves ledger data.
