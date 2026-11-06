@@ -26,12 +26,12 @@ func TestNormalizeToolName(t *testing.T) {
 
 func TestNormalizeRuntimeKey(t *testing.T) {
 	cases := map[string]string{
-		"Python 3.11.9 (64-bit)":              "python@3.11",
-		"Python 3.11.9 Core Interpreter":      "python@3.11",
-		"Python 3.14.7 (32-bit)":              "python@3.14",
-		"Git 2.56.0.4":                        "git@2.56",
-		"Visual Studio Code 1.96":             "visual@1.96",
-		"Python Launcher":                     "python",
+		"Python 3.11.9 (64-bit)":         "python@3.11",
+		"Python 3.11.9 Core Interpreter": "python@3.11",
+		"Python 3.14.7 (32-bit)":         "python@3.14",
+		"Git 2.56.0.4":                   "git@2.56",
+		"Visual Studio Code 1.96":        "visual@1.96",
+		"Python Launcher":                "python",
 	}
 	for in, want := range cases {
 		if got := normalizeRuntimeKey(in); got != want {

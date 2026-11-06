@@ -79,10 +79,10 @@ func runScan(start time.Time, quiet bool) {
 			results = append(results, res)
 			mu.Unlock()
 			ledger.emit("probe.completed", map[string]any{
-				"probe":        p.name,
-				"duration_ms":  res.Duration.Milliseconds(),
-				"findings":     len(findings),
-				"error":        errString(err),
+				"probe":       p.name,
+				"duration_ms": res.Duration.Milliseconds(),
+				"findings":    len(findings),
+				"error":       errString(err),
 			})
 		}(p)
 	}

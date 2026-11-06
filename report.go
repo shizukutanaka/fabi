@@ -305,10 +305,10 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 // ---- fabi report — the monthly statement (#87, #76) ----
 
 type scanAgg struct {
-	ts                       int64
-	modelBytes               int64
-	models, services         int
-	running, installed       int
+	ts                 int64
+	modelBytes         int64
+	models, services   int
+	running, installed int
 }
 
 // runReport renders the statement. Numbers come only from the ledger;
@@ -370,7 +370,11 @@ func runReport() {
 	}
 
 	// Doctor recommendations: dedupe by target, keep latest, sum reclaim.
-	type recLite struct{ class string; reclaim int64; ts int64 }
+	type recLite struct {
+		class   string
+		reclaim int64
+		ts      int64
+	}
 	recLatest := map[string]recLite{}
 	for _, e := range events {
 		if e.kind != "doctor.recommendation" {

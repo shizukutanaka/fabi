@@ -43,7 +43,9 @@ func tryBench(l *ledger, base string) string {
 	body, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	var models struct {
-		Data []struct{ ID string `json:"id"` } `json:"data"`
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
 	}
 	if err := json.Unmarshal(body, &models); err != nil || len(models.Data) == 0 {
 		return ""

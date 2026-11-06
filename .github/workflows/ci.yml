@@ -1,0 +1,24 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: go vet ./...
+      - run: gofmt -l . | tee /tmp/fmt.txt && test ! -s /tmp/fmt.txt
+        shell: bash
+      - run: go test ./...
+      - run: go build -ldflags="-s -w" -o fabi${{ matrix.os == 'windows-latest' && '.exe' || '' }} .
+      - name: binary size gate (≤10MB, SPEC #59)
+        run: |
+          size=$(stat -c%s fabi* 2>/dev/null || stat -f%z fabi*)
+          echo "binary: $size bytes"
+          [ "$size" -lt 10485760 ]
+        shell: bash

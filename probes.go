@@ -413,8 +413,8 @@ func probeGPU(ctx context.Context) ([]Finding, error) {
 		if f.Kind == "gpu" && f.Metrics != nil {
 			if gap := f.Metrics["vram_used_mib"] - appSum; gap > 1024 {
 				findings = append(findings, Finding{
-					Kind: "gpu",
-					Name: f.Name + " — unattributed use",
+					Kind:   "gpu",
+					Name:   f.Name + " — unattributed use",
 					Detail: fmt.Sprintf("%.0f MiB VRAM in use by unattributed processes (WDDM/VM attribution gap)", gap),
 				})
 			}
@@ -485,9 +485,9 @@ func gpuComputeApps(ctx context.Context) ([]Finding, error) {
 		name := filepath.Base(pname)
 		findings = append(findings, Finding{
 			Kind: "tool", Name: name + " [gpu-client]",
-			Detail: fmt.Sprintf("pid %d, %.0f MiB VRAM in use", pid, vram),
-			Running:   true,
-			Metrics:   map[string]float64{"vram_used_mib": vram},
+			Detail:  fmt.Sprintf("pid %d, %.0f MiB VRAM in use", pid, vram),
+			Running: true,
+			Metrics: map[string]float64{"vram_used_mib": vram},
 		})
 	}
 	return findings, nil

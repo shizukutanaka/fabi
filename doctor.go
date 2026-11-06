@@ -28,12 +28,12 @@ type scanWindow struct {
 }
 
 type recommendation struct {
-	class     string // remove | idle | investigate | info
-	target    string
-	detail    string
+	class      string // remove | idle | investigate | info
+	target     string
+	detail     string
 	confidence string
-	reclaim   int64
-	evidence  []int64
+	reclaim    int64
+	evidence   []int64
 }
 
 // loadScanWindows partitions resource.found events into scan windows.
@@ -219,7 +219,7 @@ func runDoctor() {
 			detail: strings.Join(hiddenDetail, "\n    ") +
 				"\n    likely WSL2 / VM / container — inspect: wsl -l -v, docker ps",
 			confidence: "info — provenance gap, not an error",
-			evidence:  hidden,
+			evidence:   hidden,
 		})
 	}
 
@@ -227,7 +227,7 @@ func runDoctor() {
 	for _, f := range latest.findings {
 		if strings.Contains(f.detail, "vhdx MISSING") {
 			recs = append(recs, recommendation{
-				class: "investigate",
+				class:  "investigate",
 				target: strings.ToLower(f.name),
 				detail: fmt.Sprintf("%s\n    cleanup: wsl --unregister %s",
 					f.detail, strings.TrimPrefix(f.name, "WSL distro: ")),
