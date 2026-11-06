@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // fabi goal — Goal → Task → Capability → Model → Hardware (SPEC #6, #30).
@@ -184,13 +185,51 @@ func runGoalTask(goal string, tasks []string) {
 		"search":      "List 3 key questions to research about: " + goal,
 		"ocr":         "Briefly describe how to extract text for: " + goal,
 	}
+	var prev string
+	var executed int
 	for _, tn := range tasks {
-		if p, ok := prompts[tn]; ok {
-			fmt.Println("── executing " + tn + " on best local model ──")
-			runRun([]string{p})
-			return
+		p, ok := prompts[tn]
+		if !ok {
+			continue
+		}
+		if prev != "" {
+			p += "\n\nContext from previous step:\n" + trunc(prev, 600)
+		}
+		fmt.Printf("── step %d: %s ──\n", executed+1, tn)
+		r, toks, wall, err := execPrompt(bestLocalModel(), p)
+		if err != nil {
+			fmt.Printf("   failed: %v\n", err)
+			break
+		}
+		fmt.Printf("   %.1f tok/s, %.1fs | %s\n", toks, wall.Seconds(),
+			trunc(strings.TrimSpace(r.Response), 200))
+		executed++
+		prev = r.Response
+	}
+	if executed == 0 {
+		fmt.Println()
+		fmt.Println("no text-generatable task in this goal (image/video need other engines)")
+	} else {
+		fmt.Printf("\n%d task(s) executed as a chain — outputs threaded\n", executed)
+	}
+}
+
+// bestLocalModel picks the smallest model on ollama.
+func bestLocalModel() string {
+	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
+	if err != nil || st != 200 {
+		return ""
+	}
+	var t ollamaTags
+	if err := json.Unmarshal(body, &t); err != nil || len(t.Models) == 0 {
+		return ""
+	}
+	best := t.Models[0].Name
+	var bestSize int64 = t.Models[0].Size
+	for _, m := range t.Models[1:] {
+		if m.Size < bestSize {
+			best, bestSize = m.Name, m.Size
 		}
 	}
-	fmt.Println()
-	fmt.Println("no text-generatable task in this goal (image/video need other engines)")
+	return best
 }

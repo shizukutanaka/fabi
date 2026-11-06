@@ -75,36 +75,15 @@ func runRun(args []string) {
 	fmt.Println("running...")
 	fmt.Println()
 
-	payload, _ := json.Marshal(map[string]any{
-		"model":  best,
-		"prompt": prompt,
-		"stream": false,
-	})
-	t0 := time.Now()
-	st, rbody, err := rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 60*time.Second)
-	wall := time.Since(t0)
-
+	r, toks, wall, err := execPrompt(best, prompt)
 	l := openLedger()
 	defer l.close()
-
-	if err != nil || st != 200 {
-		fmt.Printf("failed: HTTP %d err=%v\n", st, err)
+	if err != nil {
+		fmt.Printf("failed: %v\n", err)
 		l.emit("task.executed", map[string]any{
-			"ok": false, "model": best, "status": st,
-			"error": fmt.Sprint(err),
+			"ok": false, "model": best, "error": err.Error(),
 		})
 		return
-	}
-
-	var r ollamaGenResp
-	if err := json.NewDecoder(bytes.NewReader(rbody)).Decode(&r); err != nil {
-		fmt.Println("bad response:", err)
-		return
-	}
-
-	var toks float64
-	if r.EvalDuration > 0 && r.EvalCount > 0 {
-		toks = float64(r.EvalCount) / (float64(r.EvalDuration) / 1e9)
 	}
 
 	fmt.Println("response:")
@@ -118,8 +97,35 @@ func runRun(args []string) {
 	l.emit("task.executed", map[string]any{
 		"ok": true, "model": best, "endpoint": ollamaBase,
 		"prompt": trunc(prompt, 200), "eval_count": r.EvalCount,
-		"tok_s": toks, "wall_s": wall.Seconds(), "status": st,
+		"tok_s": toks, "wall_s": wall.Seconds(),
 	})
+}
+
+// execPrompt runs one generation on the given model, returning the
+// parsed response, measured tok/s and wall time. Shared by run and
+// goal --run task chains.
+func execPrompt(model, prompt string) (ollamaGenResp, float64, time.Duration, error) {
+	payload, _ := json.Marshal(map[string]any{
+		"model": model, "prompt": prompt, "stream": false,
+	})
+	t0 := time.Now()
+	st, rbody, err := rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 120*time.Second)
+	wall := time.Since(t0)
+	var r ollamaGenResp
+	if err != nil {
+		return r, 0, wall, err
+	}
+	if st != 200 {
+		return r, 0, wall, fmt.Errorf("HTTP %d", st)
+	}
+	if err := json.NewDecoder(bytes.NewReader(rbody)).Decode(&r); err != nil {
+		return r, 0, wall, err
+	}
+	var toks float64
+	if r.EvalDuration > 0 && r.EvalCount > 0 {
+		toks = float64(r.EvalCount) / (float64(r.EvalDuration) / 1e9)
+	}
+	return r, toks, wall, nil
 }
 
 func trunc(s string, n int) string {
