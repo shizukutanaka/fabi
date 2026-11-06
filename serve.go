@@ -30,7 +30,7 @@ func runServe() {
 		return
 	}
 	fmt.Printf("fabi serve — http://127.0.0.1:%s\n", servePort)
-	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern · POST /run|/goal|/unload|/scan|/pattern")
+	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff · POST /run|/goal|/unload|/scan|/pattern")
 	fmt.Println("(loopback only — other agents can call fabi now)")
 	for {
 		conn, err := ln.Accept()
@@ -94,6 +94,8 @@ func serveConn(conn net.Conn) {
 		serveLedger(conn, query)
 	case method == "GET" && path == "/doctor":
 		serveDoctor(conn)
+	case method == "GET" && path == "/diff":
+		serveDiff(conn)
 	case method == "POST" && path == "/unload":
 		serveUnload(conn)
 	case method == "POST" && path == "/scan":
@@ -405,6 +407,52 @@ func addPatternField(user *patternSet, field, value string) error {
 		return fmt.Errorf("unknown field %q — exe|cmd|scripthost|dir|modelroot|pkgtool|pkgruntime|port", field)
 	}
 	return nil
+}
+
+// serveDiff: GET /diff — estate delta over API, same logic as
+// `fabi diff` but machine-readable for agents.
+func serveDiff(conn net.Conn) {
+	l := openLedger()
+	defer l.close()
+	windows := loadScanWindows(l.allEvents())
+	if len(windows) < 2 {
+		writeJSON(conn, 200, map[string]any{"error": "need 2+ scans"})
+		return
+	}
+	prev, latest := windows[len(windows)-2], windows[len(windows)-1]
+	key := func(f findingRec) string {
+		if f.kind == "tool" {
+			return "tool:" + normalizeToolName(f.name)
+		}
+		return f.kind + ":" + strings.ToLower(f.name)
+	}
+	having := map[string]findingRec{}
+	for _, f := range prev.findings {
+		having[key(f)] = f
+	}
+	var added, removed []map[string]any
+	for _, f := range latest.findings {
+		if _, ok := having[key(f)]; !ok {
+			added = append(added, map[string]any{
+				"kind": f.kind, "name": f.name, "detail": f.detail,
+			})
+		}
+	}
+	nowKeys := map[string]bool{}
+	for _, f := range latest.findings {
+		nowKeys[key(f)] = true
+	}
+	for k, f := range having {
+		if !nowKeys[k] {
+			removed = append(removed, map[string]any{
+				"kind": f.kind, "name": f.name, "detail": f.detail,
+			})
+		}
+	}
+	writeJSON(conn, 200, map[string]any{
+		"from": prev.startTs, "to": latest.startTs,
+		"added": added, "removed": removed,
+	})
 }
 
 func statusJSON() map[string]any {

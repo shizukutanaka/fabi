@@ -102,6 +102,15 @@ Latest open recommendations per target (investigate / idle / remove).
 {"count":8,"recommendations":[{"class":"investigate","target":"hidden compute","detail":"..."}]}
 ```
 
+### GET /diff
+
+Estate delta between the last two scans — what appeared or
+disappeared. Machine-readable version of `fabi diff`.
+
+```json
+{"from":...,"to":...,"added":[{"kind":"service","name":"ollama-alt"}],"removed":null}
+```
+
 ### GET /ledger?kind=&n=
 
 Query the append-only event ledger. Params: `kind` (filter by event
