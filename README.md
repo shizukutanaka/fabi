@@ -9,11 +9,19 @@ Not an LLM. Not a launcher. The layer that makes every AI tool visible.
 
 ```text
 fabi scan       detect AI tools, models, hardware → ledger → estate report
-fabi watch      periodic scan, timeseries (default 5 min)
+fabi watch      periodic scan, timeseries (default 5 min) + inference heartbeat
 fabi doctor     evidence-based recommendations (remove / idle / investigate)
-fabi report     statement — estate trend + reclaimable, measured
+fabi report     statement — estate trend + measured inference stats
 fabi selftest   falsification engine — every spec claim gets a test
 fabi ledger     query the event log (stats | events | export)
+fabi route      physics + measured model verdict for a task
+fabi goal       purpose → task chain → per-task model scheduling (--run)
+fabi install    register fabi watch in Startup (fully reversible)
+fabi bench      hardware capability measurement
+fabi status     one-line health: estate + GPU + tok/s + loaded models
+fabi run        execute on a live model (--model, --ctx, --sweep, --compare)
+fabi serve      JSON API :11435 (GET /status|/models|/ledger|/doctor · POST /run|/goal)
+fabi unload     free VRAM — unload loaded models (real control action)
 ```
 
 ## Build

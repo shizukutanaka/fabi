@@ -58,6 +58,14 @@ Decompose a purpose into tasks; optionally execute the chain.
 
 `run:false` (default) returns decomposition only — no execution.
 
+### GET /doctor
+
+Latest open recommendations per target (investigate / idle / remove).
+
+```json
+{"count":8,"recommendations":[{"class":"investigate","target":"hidden compute","detail":"..."}]}
+```
+
 ### GET /ledger?kind=&n=
 
 Query the append-only event ledger. Params: `kind` (filter by event

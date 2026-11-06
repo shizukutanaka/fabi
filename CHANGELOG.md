@@ -1,6 +1,25 @@
 # Changelog
 
-## v0.0.3-dev — unreleased
+## v0.0.4-dev — unreleased
+
+Research-driven hardening (Qiita/Zenn/papers/GitHub analysis):
+
+- **`fabi unload`** — first real control action: `keep_alive:0` frees
+  VRAM; verified via `/api/ps` (2.0 GB freed on reference hw)
+- **Loaded-model observation** — `/api/ps` → `status` shows
+  `loaded N (X GB)`; installed ≠ loaded
+- **GPU queue** — all inference serialized via `execPrompt` mutex
+  (sluice/bastion pattern — no concurrent GPU access, no OOM)
+- **MLPerf-lite sweep** — warmup + median-of-3 + auto-unload;
+  honest central values, VRAM returns to baseline
+- **CARROT-lite scheduler** — `modelForTask`: largest model meeting
+  the latency constraint wins (measured tok/s, physics fallback)
+- **TTFT** — `prompt_eval_duration` → prefill/decode separated
+  in `run`, `--sweep`, and `inference.measured` events
+- **`--ctx`** — num_ctx control per request (verified: 8k ctx
+  loads 0.6 GB vs 4k's 0.5 GB)
+
+## v0.0.3-dev — 2026-11-07
 
 Phase 2 became live code — execution primitives, measured:
 
