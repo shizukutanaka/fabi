@@ -1,0 +1,7 @@
+fabi.exe
+fabi
+fabi-linux
+fabi-darwin
+*.test
+NUL
+release/

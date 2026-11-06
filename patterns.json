@@ -1,0 +1,71 @@
+{
+  "exePatterns": [
+    "ollama", "lm studio", "lmstudio", "lm-studio", "comfyui",
+    "koboldcpp", "gpt4all", "anythingllm", "open-webui", "openwebui",
+    "vllm", "sglang", "textgen", "pinokio", "dify", "flowise",
+    "jan.exe", "docker", "com.docker"
+  ],
+  "cmdPatterns": [
+    "ollama", "comfyui", "invokeai", "sd-scripts", "automatic1111",
+    "stable-diffusion-webui", "llama-server", "llama.cpp", "koboldcpp",
+    "text-generation-webui", "vllm", "sglang", "open_webui", "open-webui",
+    "anything-llm", "flowise", "dify", "lm studio", "pinokio",
+    "strata", "hermes", "mcp"
+  ],
+  "scriptHosts": ["python", "pythonw", "node", "bun", "deno"],
+  "ports": [
+    {"port": 11434, "name": "ollama"},
+    {"port": 1234,  "name": "lm-studio"},
+    {"port": 8080,  "name": "open-webui"},
+    {"port": 3000,  "name": "flowise"},
+    {"port": 3001,  "name": "anythingllm"},
+    {"port": 7860,  "name": "sd-webui"},
+    {"port": 8188,  "name": "comfyui"},
+    {"port": 11435, "name": "ollama-alt"},
+    {"port": 5001,  "name": "dify"},
+    {"port": 39281, "name": "pinokio"}
+  ],
+  "scanDirs": [
+    "~/.ollama",
+    "~/.lmstudio",
+    "~/.cache/lm-studio",
+    "%APPDATA%/LM Studio",
+    "%APPDATA%/AnythingLLM",
+    "%APPDATA%/anythingllm",
+    "%LOCALAPPDATA%/nomic.ai/GPT4All",
+    "%APPDATA%/nomic.ai/GPT4All",
+    "%LOCALAPPDATA%/Programs/Ollama",
+    "%LOCALAPPDATA%/Jan",
+    "~/.comfyui",
+    "~/Documents/ComfyUI",
+    "%APPDATA%/ComfyUI",
+    "~/.dify",
+    "~/.flowise",
+    "~/.pinokio",
+    "%LOCALAPPDATA%/pinokio",
+    "~/Library/Application Support/LM Studio",
+    "~/.cache/huggingface",
+    "~/.config/ollama",
+    "~/.local/share/pinokio"
+  ],
+  "modelRoots": [
+    "~/.lmstudio/models",
+    "~/.cache/lm-studio/models",
+    "%APPDATA%/LM Studio/models",
+    "~/Library/Application Support/LM Studio/models",
+    "%LOCALAPPDATA%/nomic.ai/GPT4All",
+    "%APPDATA%/nomic.ai/GPT4All",
+    "~/.local/share/GPT4All",
+    "~/.cache/huggingface/hub"
+  ],
+  "pkgAITools": [
+    "ollama", "lm studio", "lmstudio", "comfyui", "gpt4all",
+    "anythingllm", "open webui", "jan ai", "pinokio", "dify",
+    "flowise", "koboldcpp"
+  ],
+  "pkgRuntimes": [
+    "python", "node", "node.js", "rust", "cargo", "golang", "go ",
+    "git", "docker", "cuda", "pytorch", "visual studio code", "code",
+    "cmake", "ninja", "mingw", "msys"
+  ]
+}
