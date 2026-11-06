@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Pattern lists are data, not code — the first capability pack (SPEC v0.6, L6).
@@ -53,4 +54,97 @@ func loadPatterns() *patternSet {
 	}
 	activePatterns = ps
 	return ps
+}
+
+// runPattern — Marketplace seed: users extend detection through data,
+// not code. `fabi pattern add <field> <value>` writes to
+// ~/.fabi/patterns.json, which loadPatterns merges on next scan.
+//
+//	fields: exe | cmd | scripthost | dir | modelroot | pkgtool |
+//	        pkgruntime | port (name:port e.g. "mysvc:9000")
+func runPattern(args []string) {
+	dir, err := ledgerDir()
+	if err != nil {
+		fmt.Println("fabi pattern:", err)
+		return
+	}
+	path := filepath.Join(dir, "patterns.json")
+
+	var user patternSet
+	if b, err := os.ReadFile(path); err == nil {
+		json.Unmarshal(b, &user)
+	}
+
+	if len(args) == 0 || args[0] == "list" {
+		fmt.Println("FABI PATTERNS — user additions in ~/.fabi/patterns.json")
+		fmt.Println("─────────────────────────────────────────────")
+		empty := true
+		show := func(name string, xs []string) {
+			for _, x := range xs {
+				fmt.Printf("  %-10s %s\n", name, x)
+				empty = false
+			}
+		}
+		show("exe", user.ExePatterns)
+		show("cmd", user.CmdPatterns)
+		show("scripthost", user.ScriptHosts)
+		show("dir", user.ScanDirs)
+		show("modelroot", user.ModelRoots)
+		show("pkgtool", user.PkgAITools)
+		show("pkgruntime", user.PkgRuntimes)
+		for _, p := range user.Ports {
+			fmt.Printf("  %-10s %s:%d\n", "port", p.Name, p.Port)
+			empty = false
+		}
+		if empty {
+			fmt.Println("  (none — add with: fabi pattern add <field> <value>)")
+		}
+		return
+	}
+
+	if args[0] != "add" || len(args) != 3 {
+		fmt.Println("usage: fabi pattern add <exe|cmd|scripthost|dir|modelroot|pkgtool|pkgruntime|port> <value>")
+		fmt.Println("example: fabi pattern add exe myserver.exe")
+		fmt.Println("         fabi pattern add port myservice:9000")
+		return
+	}
+	field, value := args[1], args[2]
+	switch field {
+	case "exe":
+		user.ExePatterns = append(user.ExePatterns, value)
+	case "cmd":
+		user.CmdPatterns = append(user.CmdPatterns, value)
+	case "scripthost":
+		user.ScriptHosts = append(user.ScriptHosts, value)
+	case "dir":
+		user.ScanDirs = append(user.ScanDirs, value)
+	case "modelroot":
+		user.ModelRoots = append(user.ModelRoots, value)
+	case "pkgtool":
+		user.PkgAITools = append(user.PkgAITools, value)
+	case "pkgruntime":
+		user.PkgRuntimes = append(user.PkgRuntimes, value)
+	case "port":
+		name, port := value, 0
+		if i := strings.LastIndexByte(value, ':'); i >= 0 {
+			name = value[:i]
+			fmt.Sscanf(value[i+1:], "%d", &port)
+		}
+		if port <= 0 {
+			fmt.Println("port needs name:port, e.g. myservice:9000")
+			return
+		}
+		user.Ports = append(user.Ports, portTarget{Port: port, Name: name})
+	default:
+		fmt.Printf("unknown field %q — use exe|cmd|scripthost|dir|modelroot|pkgtool|pkgruntime|port\n", field)
+		return
+	}
+
+	b, _ := json.MarshalIndent(user, "", "  ")
+	if err := os.WriteFile(path, b, 0644); err != nil {
+		fmt.Println("fabi pattern:", err)
+		return
+	}
+	activePatterns = nil // reload on next use
+	fmt.Printf("added %s = %s → ~/.fabi/patterns.json (next scan picks it up)\n", field, value)
 }

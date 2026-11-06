@@ -55,6 +55,8 @@ func main() {
 		runUnload(os.Args[2:])
 	case "auto":
 		runAuto()
+	case "pattern":
+		runPattern(os.Args[2:])
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
@@ -84,5 +86,6 @@ func usage() {
 	fmt.Println("  serve    JSON API on :11435 (GET /status|/models|/ledger|/doctor · POST /run|/goal)")
 	fmt.Println("  unload   free VRAM — unload loaded models (first real control action)")
 	fmt.Println("  auto     apply safe recs only — idle unload, user-triggered (Automation seed)")
+	fmt.Println("  pattern  extend detection via data — add/list user patterns (Marketplace seed)")
 	fmt.Println("  version  print version")
 }
