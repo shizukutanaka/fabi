@@ -59,6 +59,8 @@ func main() {
 		runPattern(os.Args[2:])
 	case "diff":
 		runDiff(os.Args[2:])
+	case "why":
+		runWhy(os.Args[2:])
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
@@ -90,5 +92,6 @@ func usage() {
 	fmt.Println("  auto     apply safe recs only — idle unload, user-triggered (Automation seed)")
 	fmt.Println("  pattern  extend detection via data — add/list user patterns (Marketplace seed)")
 	fmt.Println("  diff     what changed between the last two scans (+appeared / -gone)")
+	fmt.Println("  why      explain a recommendation — show its evidence chain")
 	fmt.Println("  version  print version")
 }
