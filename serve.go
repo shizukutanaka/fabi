@@ -92,6 +92,8 @@ func serveConn(conn net.Conn) {
 		serveLedger(conn, query)
 	case method == "GET" && path == "/doctor":
 		serveDoctor(conn)
+	case method == "POST" && path == "/unload":
+		serveUnload(conn)
 	default:
 		writeJSON(conn, 404, map[string]string{"error": "unknown endpoint"})
 	}
@@ -271,6 +273,42 @@ func serveDoctor(conn net.Conn) {
 	}
 	writeJSON(conn, 200, map[string]any{
 		"count": len(out), "recommendations": out,
+	})
+}
+
+// serveUnload: POST /unload — free VRAM via keep_alive:0 for every
+// loaded model. Control over the API, ledgered like everything else.
+func serveUnload(conn net.Conn) {
+	st, body, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second)
+	if err != nil || st != 200 {
+		writeJSON(conn, 502, map[string]string{"error": "ollama not reachable"})
+		return
+	}
+	var ps struct {
+		Models []struct {
+			Name     string `json:"name"`
+			SizeVRAM int64  `json:"size_vram"`
+		} `json:"models"`
+	}
+	if err := json.Unmarshal(body, &ps); err != nil {
+		writeJSON(conn, 500, map[string]string{"error": "bad /api/ps"})
+		return
+	}
+	l := openLedger()
+	defer l.close()
+	var freed int64
+	var names []string
+	for _, m := range ps.Models {
+		payload, _ := json.Marshal(map[string]any{"model": m.Name, "keep_alive": 0})
+		rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 10*time.Second)
+		freed += m.SizeVRAM
+		names = append(names, m.Name)
+		l.emit("model.unloaded", map[string]any{
+			"model": m.Name, "vram_freed": m.SizeVRAM, "via": "serve",
+		})
+	}
+	writeJSON(conn, 200, map[string]any{
+		"unloaded": names, "vram_freed_bytes": freed, "count": len(names),
 	})
 }
 
