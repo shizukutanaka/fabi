@@ -169,13 +169,13 @@ func runGoal(args []string) {
 	})
 
 	if doRun {
-		runGoalTask(goal, tasks)
+		runGoalTask(l, goal, tasks)
 	}
 }
 
 // runGoalTask picks the first text-generatable task and executes it on
 // the fastest measured local model — spec's core UX: purpose only.
-func runGoalTask(goal string, tasks []string) {
+func runGoalTask(l *ledger, goal string, tasks []string) {
 	prompts := map[string]string{
 		"planning":    "You are a planner. Produce a short 5-step plan for: " + goal,
 		"code_review": "Briefly list quality risks for: " + goal,
@@ -204,6 +204,11 @@ func runGoalTask(goal string, tasks []string) {
 		}
 		fmt.Printf("   %.1f tok/s, %.1fs | %s\n", toks, wall.Seconds(),
 			trunc(strings.TrimSpace(r.Response), 200))
+		l.emit("task.executed", map[string]any{
+			"ok": true, "model": model, "task": tn, "goal": goal,
+			"step": executed + 1, "eval_count": r.EvalCount,
+			"tok_s": toks, "wall_s": wall.Seconds(),
+		})
 		executed++
 		prev = r.Response
 	}

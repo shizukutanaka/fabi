@@ -256,6 +256,35 @@ Startup folder) is the likely activator.
 
 ---
 
+# Part 13 — Phase 2 is live code (measured)
+
+The spec stopped being a plan. Real executions on this machine:
+
+```text
+fabi run "..."        qwen2.5:0.5b → 76.9 tok/s measured [M]
+fabi run --sweep      qwen 0.5b=193.8 · llama3.2:1b=75.9 tok/s [M]
+fabi route            physics 8B=61 vs measured — side by side
+fabi goal ... --run   goal → task chain → per-task model
+                      scheduling → threaded execution → measured
+```
+
+Measured chain on this PC (`goal "research local ai" --run`):
+
+```text
+step 1: search    (3b) → qwen2.5:0.5b   193.8 tok/s
+step 2: reasoning (8b) → llama3.2:1b    104.4 tok/s  ← context threaded
+```
+
+**L15: Every execution step emits task.executed — chains leave
+no invisible work.** (Chain steps originally skipped the ledger;
+now every step records goal/task/step/model/tok_s.)
+
+The Scheduler (SPEC #10) exists in miniature: 3b-class → fastest,
+8b-class → largest. Not yet a full scheduler — but a real one,
+running real workloads, measured.
+
+---
+
 ## End
 
 Versions 0.3–0.6 were a spec discovering itself.

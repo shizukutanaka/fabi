@@ -1,6 +1,25 @@
 # Changelog
 
-## v0.0.2-dev — 2026-11-07 (unreleased)
+## v0.0.3-dev — unreleased
+
+Phase 2 became live code — execution primitives, measured:
+
+- **`fabi run "<prompt>"`** — execute on a live local model,
+  measure real tok/s, record `task.executed`
+- **`fabi run --sweep`** — measured tok/s across all live models
+  (qwen 0.5b = 193.8, llama3.2 1b = 75.9 on reference hw)
+- **`fabi run --model <name>`** — pick a specific model
+- **`fabi goal "..." --run`** — goal → task decomposition →
+  per-task model scheduling (3b→fastest, 8b→largest) →
+  chained execution with threaded outputs
+- **`fabi route`** — measured local models ranked next to the
+  physics prediction
+- **Ledger completeness fix (L15)** — every chain step emits
+  `task.executed` with goal/task/step/model/tok_s
+- **httpio: chunked transfer-encoding decode** — ollama replies
+  chunked; rawHTTP now handles it (raw TCP, still no net/http)
+
+## v0.0.2-dev — 2026-11-07
 
 Real fixes verified by the falsification loop:
 
