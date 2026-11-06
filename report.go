@@ -527,6 +527,30 @@ func runReport() {
 	} else {
 		fmt.Println("  verified: 0 — act on a recommendation, re-scan, savings become proven")
 	}
+
+	// Control actions: model.unloaded events = VRAM actually freed —
+	// the statement counts what fabi controlled, not just observed.
+	var unloadN, unloadVia int
+	var vramFreed int64
+	for _, e := range events {
+		if e.kind != "model.unloaded" {
+			continue
+		}
+		var p map[string]any
+		if err := json.Unmarshal([]byte(e.payload), &p); err != nil {
+			continue
+		}
+		unloadN++
+		vramFreed += int64(numOf(p, "vram_freed"))
+		if strOf(p, "via") == "auto" {
+			unloadVia++
+		}
+	}
+	if unloadN > 0 {
+		fmt.Printf("  control: %d VRAM release(s) — %s freed%s\n",
+			unloadN, formatBytes(vramFreed),
+			map[bool]string{true: fmt.Sprintf(" (%d via auto)", unloadVia)}[unloadVia > 0])
+	}
 	fmt.Println()
 
 	fmt.Println("NOT YET MEASURED — honest section")
