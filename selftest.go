@@ -285,6 +285,39 @@ func runSelfTest() {
 			measured, passIf(hasScans && hasModels))
 	}
 
+	// --- Claim: physics predicts honestly (route) —
+	// The physics (bw ÷ residentGB) is a ceiling, not an estimate —
+	// real systems run at ~25% efficiency, so measured must be below
+	// predicted, never above. Falsified if measured exceeds the ceiling.
+	if l.db != nil {
+		var tok float64
+		row := l.db.QueryRow(
+			`SELECT json_extract(payload,'$.tok_s') FROM events
+			 WHERE kind='inference.measured'
+			 AND json_extract(payload,'$.op')='sweep-median'
+			 ORDER BY ts DESC LIMIT 1`)
+		if err := row.Scan(&tok); err == nil && tok > 0 {
+			var gpuName string
+			l.db.QueryRow(
+				`SELECT json_extract(payload,'$.name') FROM events
+				 WHERE kind='resource.found' AND payload LIKE '%"kind":"gpu"%'
+				 ORDER BY ts DESC LIMIT 1`).Scan(&gpuName)
+			bw := bandwidthForGPU(gpuName)
+			// smallest model ≈ 0.5GB resident → predicted = bw/0.5
+			pred := bw / 0.5
+			ratio := pred / tok
+			measured := fmt.Sprintf("pred %.0f vs measured %.0f (%.1fx)",
+				pred, tok, ratio)
+			add("physics predicts honestly (route)",
+				"prediction is upper bound",
+				measured, passIf(tok <= pred))
+		} else {
+			add("physics predicts honestly (route)",
+				"prediction is upper bound",
+				"no measured tok/s yet", "UNVERIFIED")
+		}
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
