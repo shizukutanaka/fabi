@@ -51,6 +51,8 @@ func main() {
 		runBench()
 	case "status":
 		runStatus()
+	case "run":
+		runRun(os.Args[2:])
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
@@ -76,5 +78,6 @@ func usage() {
 	fmt.Println("  uninstall remove watch task (ledger kept)")
 	fmt.Println("  bench    measure real inference latency on a live API")
 	fmt.Println("  status   one-line machine health from the ledger")
+	fmt.Println("  run      execute a prompt on a live local model, measure real tok/s")
 	fmt.Println("  version  print version")
 }
