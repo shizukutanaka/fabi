@@ -90,6 +90,8 @@ func serveConn(conn net.Conn) {
 		serveGoal(conn, body)
 	case method == "GET" && path == "/ledger":
 		serveLedger(conn, query)
+	case method == "GET" && path == "/doctor":
+		serveDoctor(conn)
 	default:
 		writeJSON(conn, 404, map[string]string{"error": "unknown endpoint"})
 	}
@@ -245,6 +247,30 @@ func serveLedger(conn net.Conn, query string) {
 	}
 	writeJSON(conn, 200, map[string]any{
 		"count": len(out), "events": out,
+	})
+}
+
+// serveDoctor: GET /doctor — latest open recommendations per target.
+func serveDoctor(conn net.Conn) {
+	l := openLedger()
+	defer l.close()
+	latest := map[string]map[string]any{}
+	for _, e := range l.events("doctor.recommendation") {
+		var p map[string]any
+		if err := json.Unmarshal([]byte(e.payload), &p); err != nil {
+			continue
+		}
+		if t, ok := p["target"].(string); ok {
+			p["event_id"] = e.id
+			latest[t] = p
+		}
+	}
+	var out []map[string]any
+	for _, r := range latest {
+		out = append(out, r)
+	}
+	writeJSON(conn, 200, map[string]any{
+		"count": len(out), "recommendations": out,
 	})
 }
 
