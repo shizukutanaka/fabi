@@ -38,6 +38,10 @@ func main() {
 			arg = os.Args[2]
 		}
 		runGoal(arg)
+	case "install":
+		runInstall(os.Args[2:])
+	case "uninstall":
+		runUninstall(os.Args[2:])
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
@@ -59,5 +63,7 @@ func usage() {
 	fmt.Println("  ledger   query the event log (stats | events | export)")
 	fmt.Println("  route    physics-derived routing check for a task")
 	fmt.Println("  goal     purpose → tasks → feasibility, physics only")
+	fmt.Println("  install  register watch at logon (--yes required)")
+	fmt.Println("  uninstall remove watch task (ledger kept)")
 	fmt.Println("  version  print version")
 }
