@@ -1,0 +1,7 @@
+# winget-pkgs manifest — version manifest
+# Submit to microsoft/winget-pkgs under manifests/f/Fabi/Fabi/<version>/
+PackageIdentifier: Fabi.Fabi
+PackageVersion: 0.0.1
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.9.0
