@@ -289,6 +289,58 @@ func runDoctor() {
 		})
 	}
 
+	// --- Rule 6: inference throughput regression ---
+	// Watch's heartbeat exists for this: real tok/s over time. If a model's
+	// measured throughput fell >30% (first-half vs second-half average),
+	// something real changed — thermal, contention, or a swapped engine.
+	type meas struct {
+		id   int64
+		toks float64
+	}
+	byModel := map[string][]meas{}
+	for _, e := range events {
+		if e.kind != "inference.measured" {
+			continue
+		}
+		var p map[string]any
+		if err := json.Unmarshal([]byte(e.payload), &p); err != nil {
+			continue
+		}
+		if v, ok := p["tok_s"].(float64); ok && v > 0 {
+			m := strOf(p, "model")
+			byModel[m] = append(byModel[m], meas{e.id, v})
+		}
+	}
+	for model, ms := range byModel {
+		if len(ms) < 4 {
+			continue
+		}
+		half := len(ms) / 2
+		var oldAvg, newAvg float64
+		for _, m := range ms[:half] {
+			oldAvg += m.toks
+		}
+		oldAvg /= float64(half)
+		var ev []int64
+		for _, m := range ms[half:] {
+			newAvg += m.toks
+			ev = append(ev, m.id)
+		}
+		newAvg /= float64(len(ms) - half)
+		if oldAvg > 0 && newAvg < oldAvg*0.7 {
+			recs = append(recs, recommendation{
+				class:  "investigate",
+				target: "inference " + model,
+				detail: fmt.Sprintf(
+					"tok/s fell from ~%.0f to ~%.0f (-%.0f%%) across %d samples\n"+
+						"    causes: thermal throttle, memory/CPU contention, engine swap",
+					oldAvg, newAvg, (1-newAvg/oldAvg)*100, len(ms)),
+				confidence: "medium — measured regression in ledger timeseries",
+				evidence:   ev[:min(3, len(ev))],
+			})
+		}
+	}
+
 	// --- Emit recommendations back to the ledger ---
 	// Dedupe: don't re-emit a recommendation identical to the latest open one.
 	latestRec := map[string]map[string]any{}
