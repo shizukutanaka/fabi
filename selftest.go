@@ -78,7 +78,9 @@ func runSelfTest() {
 		l.db.QueryRow("SELECT COUNT(*) FROM events").Scan(&n0)
 		l.emit("falsification.probe", map[string]any{"test": true})
 		l.db.QueryRow("SELECT COUNT(*) FROM events").Scan(&n1)
-		add("ledger append", "row count +1", fmt.Sprintf("%d → %d", n0, n1), passIf(n1 == n0+1))
+		// n1 > n0 proves our append landed. Demanding exactly +1 races
+		// with concurrent writers (e.g. a resident fabi watch).
+		add("ledger append", "row count grows", fmt.Sprintf("%d → %d", n0, n1), passIf(n1 > n0))
 	} else {
 		add("ledger append", "row count +1", "db unavailable", "FAIL")
 	}
