@@ -1,8 +1,12 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"sort"
 	"strings"
 )
@@ -132,17 +136,32 @@ func runDoctor() {
 		var ev []int64
 		var detail strings.Builder
 		fmt.Fprintf(&detail, "keep: %s (%s)\n", orPath(keep.path), formatBytes(keep.size))
+		allSame := true
 		for _, g := range group[1:] {
-			fmt.Fprintf(&detail, "remove: %s (%s)\n", orPath(g.path), formatBytes(g.size))
-			dupReclaim += g.size
+			if sameContent(keep.path, g.path) {
+				fmt.Fprintf(&detail, "remove: %s (%s)\n", orPath(g.path), formatBytes(g.size))
+				dupReclaim += g.size
+			} else {
+				allSame = false
+				fmt.Fprintf(&detail, "different content — NOT a duplicate: %s\n", orPath(g.path))
+			}
 			ev = append(ev, g.id)
 		}
 		ev = append(ev, keep.id)
-		recs = append(recs, recommendation{
-			class: "remove", target: name, detail: strings.TrimSpace(detail.String()),
-			confidence: "high — identical name+size in latest scan",
-			reclaim:    dupReclaim, evidence: ev,
-		})
+		if allSame {
+			recs = append(recs, recommendation{
+				class: "remove", target: name, detail: strings.TrimSpace(detail.String()),
+				confidence: "high — sha256 identical content",
+				reclaim:    dupReclaim, evidence: ev,
+			})
+		} else {
+			recs = append(recs, recommendation{
+				class: "investigate", target: name,
+				detail:     strings.TrimSpace(detail.String()),
+				confidence: "high — same name+size but sha256 differs (separate revisions)",
+				reclaim:    0, evidence: ev,
+			})
+		}
 	}
 
 	// --- Rule 2: installed tools never observed running ---
@@ -332,6 +351,29 @@ func lastN(ids []int64, n int) []int64 {
 		return ids
 	}
 	return ids[len(ids)-n:]
+}
+
+// sameContent verifies two paths hold byte-identical files via sha256.
+// Empty paths or unreadable files → not identical (never recommend removal).
+func sameContent(a, b string) bool {
+	if a == "" || b == "" {
+		return false
+	}
+	ha, hb := fileSHA256(a), fileSHA256(b)
+	return ha != "" && ha == hb
+}
+
+func fileSHA256(p string) string {
+	f, err := os.Open(p)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, latest scanWindow, emitted, unchanged int64) {

@@ -142,7 +142,9 @@ the ledger now stores decisions, not only observations.
 
 Real estate, real findings (all `[M]`):
 
-- 160 MB proven duplicate model (HF cache vae/vae_1_0)
+- 160 MB dup was a FALSE POSITIVE — same name+size, sha256
+  differed (vae vs vae_1_0 revisions). Caught before deletion;
+  L14 now requires content-hash equality for `remove` recs.
 - 3 idle tools: ollama, lm studio, comfyui — 8/8 scans, never running
 - 2 hidden services: port :1234 live JSON API, :8080 dead gateway
 - 1 dead WSL distro: OpenClawGateway — registered, vhdx gone

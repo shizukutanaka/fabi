@@ -26,9 +26,10 @@ binary 7.6 MB · scan 0.1–1.5 s · RSS ~14 MB · 0 config · offline · tests 
 
 ### Real findings on the reference machine
 
-160 MB duplicate model · 3 idle tools · 2 hidden services
-(LM Studio + dead gateway) · 1 dead WSL distro · 10.5 GB
-unattributed VRAM · 2 unknown agent tools caught by generic patterns
+3 idle tools · 2 hidden services (LM Studio + dead gateway)
+· 1 dead WSL distro · 10.5 GB unattributed VRAM · 2 unknown
+agent tools caught by generic patterns · 1 false-positive
+dup detected and corrected (sha256 verify — L14)
 
 ### Design laws now in code
 
