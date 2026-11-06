@@ -36,12 +36,16 @@ func printScanLine(all []Finding, vm vmStat, elapsed time.Duration) {
 			}
 		}
 	}
-	fmt.Printf("[%s] %4d ms | tools %d↑%d↓ | svc %d | models %d/%s | %s\n",
+	loadedStr := ""
+	if n, vram := loadedModels(); n > 0 {
+		loadedStr = fmt.Sprintf(" | loaded %d/%.1fGB", n, float64(vram)/1e9)
+	}
+	fmt.Printf("[%s] %4d ms | tools %d↑%d↓ | svc %d | models %d/%s | %s%s\n",
 		time.Now().Format("15:04:05"),
 		elapsed.Milliseconds(),
 		running, installed, services,
 		models, formatBytes(modelBytes),
-		gpuLine)
+		gpuLine, loadedStr)
 }
 
 // runWatch loops: scan → sleep → scan. Interval default 5 min (spec).
