@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -148,6 +149,46 @@ func runRoute(taskName string) {
 		"gpu": gpuName, "vram_mib": vramMiB, "bandwidth_gbps": bw,
 		"tok_s": toks, "latency_s": latency, "fit_vram": fitVRAM,
 	})
+
+	// Measured reality: if the ledger holds real tok/s, prefer them over
+	// the physics table. Prediction is a guess; measurement is a fact.
+	type mrow struct {
+		model string
+		toks  float64
+		ts    int64
+	}
+	latestM := map[string]mrow{}
+	for _, e := range l.events("inference.measured") {
+		var p map[string]any
+		if err := json.Unmarshal([]byte(e.payload), &p); err == nil &&
+			strOf(p, "op") == "generate" {
+			if v, ok := p["tok_s"].(float64); ok && v > 0 {
+				m := mrow{strOf(p, "model"), v, e.ts}
+				if cur, ok := latestM[m.model]; !ok || m.ts > cur.ts {
+					latestM[m.model] = m
+				}
+			}
+		}
+	}
+	if len(latestM) > 0 {
+		fmt.Println()
+		fmt.Println("measured local models (real tok/s, `run --sweep`):")
+		var rows []mrow
+		for _, m := range latestM {
+			rows = append(rows, m)
+		}
+		sort.Slice(rows, func(i, j int) bool { return rows[i].toks > rows[j].toks })
+		for _, m := range rows {
+			ml := float64(tp.outTokens) / m.toks
+			v := "FEASIBLE"
+			if ml > tp.latencyS {
+				v = "slow"
+			}
+			fmt.Printf("  %-18s %5.1f tok/s → %4.1fs vs %.1fs | %s\n",
+				m.model, m.toks, ml, tp.latencyS, v)
+		}
+		fmt.Println("  (measured — not predicted; `fabi run --sweep` to refresh)")
+	}
 }
 
 func taskNames() []string {
