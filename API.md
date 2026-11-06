@@ -111,6 +111,16 @@ disappeared. Machine-readable version of `fabi diff`.
 {"from":...,"to":...,"added":[{"kind":"service","name":"ollama-alt"}],"removed":null}
 ```
 
+### GET /why?target=X
+
+Evidence chain for a recommendation — why fabi says what it says.
+Returns the recommendation plus the ledger events that justify it.
+
+```json
+{"target":"gpu burn","class":"investigate","confidence":"info — ...",
+ "evidence":[{"id":2492,"kind":"resource.found","ts":...}]}
+```
+
 ### GET /ledger?kind=&n=
 
 Query the append-only event ledger. Params: `kind` (filter by event

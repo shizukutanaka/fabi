@@ -30,7 +30,7 @@ func runServe() {
 		return
 	}
 	fmt.Printf("fabi serve — http://127.0.0.1:%s\n", servePort)
-	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff · POST /run|/goal|/unload|/scan|/pattern")
+	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff|/why · POST /run|/goal|/unload|/scan|/pattern")
 	fmt.Println("(loopback only — other agents can call fabi now)")
 	for {
 		conn, err := ln.Accept()
@@ -96,6 +96,8 @@ func serveConn(conn net.Conn) {
 		serveDoctor(conn)
 	case method == "GET" && path == "/diff":
 		serveDiff(conn)
+	case method == "GET" && path == "/why":
+		serveWhy(conn, query)
 	case method == "POST" && path == "/unload":
 		serveUnload(conn)
 	case method == "POST" && path == "/scan":
@@ -462,6 +464,59 @@ func serveDiff(conn net.Conn) {
 		"from": prev.startTs, "to": latest.startTs,
 		"added": added, "removed": removed,
 	})
+}
+
+// serveWhy: GET /why?target=X — evidence chain over API. Agents
+// can ask why fabi says something, not just what it says.
+func serveWhy(conn net.Conn, query string) {
+	target := ""
+	for _, kv := range strings.Split(strings.TrimPrefix(query, "?"), "&") {
+		if p := strings.SplitN(kv, "=", 2); len(p) == 2 && p[0] == "target" {
+			target = p[1]
+		}
+	}
+	if target == "" {
+		writeJSON(conn, 400, map[string]string{"error": "need ?target="})
+		return
+	}
+	term := strings.ToLower(target)
+	l := openLedger()
+	defer l.close()
+	events := l.allEvents()
+	byID := map[int64]ledgerEvent{}
+	for _, e := range events {
+		byID[e.id] = e
+	}
+	for i := len(events) - 1; i >= 0; i-- {
+		e := events[i]
+		if e.kind != "doctor.recommendation" {
+			continue
+		}
+		var p map[string]any
+		if json.Unmarshal([]byte(e.payload), &p) != nil ||
+			!strings.Contains(strings.ToLower(strOf(p, "target")), term) {
+			continue
+		}
+		var ev []map[string]any
+		if a, ok := p["evidence_ids"].([]any); ok {
+			for _, v := range a {
+				if f, ok := v.(float64); ok {
+					if ev2, ok2 := byID[int64(f)]; ok2 {
+						ev = append(ev, map[string]any{
+							"id": int64(f), "ts": ev2.ts, "kind": ev2.kind,
+						})
+					}
+				}
+			}
+		}
+		writeJSON(conn, 200, map[string]any{
+			"target": strOf(p, "target"), "class": strOf(p, "class"),
+			"detail": strOf(p, "detail"), "confidence": strOf(p, "confidence"),
+			"evidence": ev,
+		})
+		return
+	}
+	writeJSON(conn, 404, map[string]string{"error": "no recommendation for " + target})
 }
 
 func statusJSON() map[string]any {
