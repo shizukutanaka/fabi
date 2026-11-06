@@ -316,6 +316,61 @@ func loadedModels() (int, int64) {
 	return len(ps.Models), vram
 }
 
+// runAuto is the Automation Engine seed: apply only the safe
+// recommendations (idle unload) — user-triggered, never autonomous,
+// only non-destructive actions. Observation → diagnosis → automate.
+func runAuto() {
+	st, body, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second)
+	if err != nil || st != 200 {
+		fmt.Println("fabi auto: no loaded-model info (ollama down) — nothing to do")
+		return
+	}
+	var ps struct {
+		Models []struct {
+			Name     string `json:"name"`
+			SizeVRAM int64  `json:"size_vram"`
+		} `json:"models"`
+	}
+	if err := json.Unmarshal(body, &ps); err != nil || len(ps.Models) == 0 {
+		fmt.Println("fabi auto: nothing loaded — estate is clean")
+		return
+	}
+	l := openLedger()
+	defer l.close()
+	lastUse := map[string]int64{}
+	for _, e := range l.allEvents() {
+		if e.kind != "task.executed" && e.kind != "inference.measured" {
+			continue
+		}
+		var p map[string]any
+		if json.Unmarshal([]byte(e.payload), &p) == nil {
+			if m := strOf(p, "model"); m != "" && e.ts > lastUse[m] {
+				lastUse[m] = e.ts
+			}
+		}
+	}
+	cutoff := time.Now().Add(-15 * time.Minute).UnixMilli()
+	var acted int
+	for _, m := range ps.Models {
+		if lastUse[m.Name] > cutoff {
+			fmt.Printf("  keep  %s (used recently)\n", m.Name)
+			continue
+		}
+		payload, _ := json.Marshal(map[string]any{"model": m.Name, "keep_alive": 0})
+		rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 10*time.Second)
+		fmt.Printf("  idle  %s → unloaded (%.1f GB freed)\n", m.Name, float64(m.SizeVRAM)/1e9)
+		l.emit("model.unloaded", map[string]any{
+			"model": m.Name, "vram_freed": m.SizeVRAM, "via": "auto",
+		})
+		acted++
+	}
+	if acted == 0 {
+		fmt.Println("fabi auto: all loaded models are in use — nothing safe to do")
+	} else {
+		fmt.Printf("fabi auto: %d idle model(s) unloaded — safe action only\n", acted)
+	}
+}
+
 // runSweep measures real tok/s on every live ollama model — replaces
 // predicted physics with measured ranking in the ledger.
 func runSweep() {

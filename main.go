@@ -53,6 +53,8 @@ func main() {
 		runServe()
 	case "unload":
 		runUnload(os.Args[2:])
+	case "auto":
+		runAuto()
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
@@ -81,5 +83,6 @@ func usage() {
 	fmt.Println("  run      execute a prompt on a live local model, measure real tok/s")
 	fmt.Println("  serve    JSON API on :11435 (GET /status|/models|/ledger|/doctor · POST /run|/goal)")
 	fmt.Println("  unload   free VRAM — unload loaded models (first real control action)")
+	fmt.Println("  auto     apply safe recs only — idle unload, user-triggered (Automation seed)")
 	fmt.Println("  version  print version")
 }
