@@ -206,7 +206,7 @@ func serveGoal(conn net.Conn, body string) {
 			})
 			steps = append(steps, map[string]any{
 				"task": tn, "model": model, "tok_s": toks,
-				"wall_s": wall.Seconds(),
+				"ttft_ms": r.ttftMs, "wall_s": wall.Seconds(),
 				"output": trunc(strings.TrimSpace(r.Response), 500),
 			})
 			prev = r.Response
