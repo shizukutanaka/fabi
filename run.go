@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -122,10 +123,18 @@ func runRun(args []string) {
 	})
 }
 
+// inferenceLock serializes every generation through one queue —
+// the sluice/bastion pattern: concurrent requests can overlap on
+// shared VRAM and OOM; one-at-a-time cannot. Single goroutine owns
+// the GPU; others wait.
+var inferenceLock sync.Mutex
+
 // execPrompt runs one generation on the given model, returning the
 // parsed response, measured tok/s and wall time. Shared by run and
 // goal --run task chains.
 func execPrompt(model, prompt string) (ollamaGenResp, float64, time.Duration, error) {
+	inferenceLock.Lock()
+	defer inferenceLock.Unlock()
 	payload, _ := json.Marshal(map[string]any{
 		"model": model, "prompt": prompt, "stream": false,
 	})
@@ -261,6 +270,28 @@ func runUnload(args []string) {
 	}
 	fmt.Printf("\nfabi unload: %.1f GB VRAM freed (%d model(s))\n",
 		float64(freed)/1e9, len(ps.Models))
+}
+
+// loadedModels returns how many models currently hold VRAM and the
+// total bytes — the loaded-vs-installed distinction fabi didn't have.
+func loadedModels() (int, int64) {
+	st, body, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second)
+	if err != nil || st != 200 {
+		return 0, 0
+	}
+	var ps struct {
+		Models []struct {
+			SizeVRAM int64 `json:"size_vram"`
+		} `json:"models"`
+	}
+	if err := json.Unmarshal(body, &ps); err != nil {
+		return 0, 0
+	}
+	var vram int64
+	for _, m := range ps.Models {
+		vram += m.SizeVRAM
+	}
+	return len(ps.Models), vram
 }
 
 // runSweep measures real tok/s on every live ollama model — replaces

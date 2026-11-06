@@ -92,5 +92,9 @@ func runStatus() {
 	if lastToks > 0 {
 		fmt.Printf(" | %.0f tok/s %s", lastToks, lastModel)
 	}
+	// Loaded-model state — installed ≠ loaded. Which models hold VRAM?
+	if n, vram := loadedModels(); n > 0 {
+		fmt.Printf(" | loaded %d (%.1f GB)", n, float64(vram)/1e9)
+	}
 	fmt.Println(stale)
 }
