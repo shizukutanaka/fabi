@@ -223,6 +223,27 @@ func runSelfTest() {
 			measured, status)
 	}
 
+	// --- Claim: goal engine works (Phase 2) —
+	// "goal decomposes → schedules → executes → records" — the deepest
+	// pipeline. Verifiable: task.executed events must carry a goal field
+	// proving they came from a chain, not a single prompt.
+	if l.db != nil {
+		var nGoal int64
+		l.db.QueryRow(
+			`SELECT COUNT(*) FROM events
+			 WHERE kind='task.executed'
+			 AND json_extract(payload,'$.goal') != ''`,
+		).Scan(&nGoal)
+		status := "UNVERIFIED"
+		measured := "no goal chains executed"
+		if nGoal > 0 {
+			status = "PASS"
+			measured = fmt.Sprintf("%d goal-driven task(s) executed", nGoal)
+		}
+		add("goal engine (decompose→execute)", "task.executed w/ goal",
+			measured, status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
