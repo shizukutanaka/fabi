@@ -60,6 +60,23 @@ func runStatus() {
 		}
 	}
 
+	// Latest measured inference (the heartbeat of execution).
+	var lastToks float64
+	var lastModel string
+	for i := len(events) - 1; i >= 0; i-- {
+		e := events[i]
+		if e.kind == "inference.measured" {
+			var p map[string]any
+			if err := json.Unmarshal([]byte(e.payload), &p); err == nil {
+				if v := numOf(p, "tok_s"); v > 0 {
+					lastToks = v
+					lastModel = strOf(p, "model")
+				}
+			}
+			break
+		}
+	}
+
 	age := time.Since(time.UnixMilli(latest.startTs))
 	stale := ""
 	if age > 24*time.Hour {
@@ -71,6 +88,9 @@ func runStatus() {
 		gpuUtil, gpuTemp, vramUsed/1024, vramTotal/1024)
 	if deadWSL > 0 {
 		fmt.Printf(" | dead-wsl %d", deadWSL)
+	}
+	if lastToks > 0 {
+		fmt.Printf(" | %.0f tok/s %s", lastToks, lastModel)
 	}
 	fmt.Println(stale)
 }
