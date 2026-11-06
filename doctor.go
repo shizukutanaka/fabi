@@ -411,6 +411,45 @@ func runDoctor() {
 		}
 	}
 
+	// --- Rule 8: installed but never-invoked models ---
+	// The estate's biggest waste is model files that were never used.
+	// "Never invoked through a fabi-tracked path" — honest framing;
+	// the model may predate fabi. Recommendation is manual review (L9).
+	var usedModels = map[string]bool{}
+	for _, e := range events {
+		if e.kind != "task.executed" && e.kind != "inference.measured" {
+			continue
+		}
+		var p map[string]any
+		if json.Unmarshal([]byte(e.payload), &p) == nil {
+			if m := strOf(p, "model"); m != "" {
+				usedModels[m] = true
+			}
+		}
+	}
+	// Installed models come from ollama /api/tags — those that never
+	// appear in task/inference events are reclaim candidates.
+	st, tagsBody, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
+	if err == nil && st == 200 {
+		var t ollamaTags
+		if err := json.Unmarshal(tagsBody, &t); err == nil {
+			for _, m := range t.Models {
+				if usedModels[m.Name] || len(usedModels) == 0 {
+					continue // used, or fabi has no usage data yet
+				}
+				recs = append(recs, recommendation{
+					class:  "idle",
+					target: "model " + m.Name,
+					detail: fmt.Sprintf(
+						"installed (%.1f GB) but never invoked via fabi — "+
+							"reclaim disk by removing manually if unneeded",
+						float64(m.Size)/1e9),
+					confidence: "medium — untracked, may predate fabi",
+				})
+			}
+		}
+	}
+
 	// --- Emit recommendations back to the ledger ---
 	// Dedupe: don't re-emit a recommendation identical to the latest open one.
 	latestRec := map[string]map[string]any{}
