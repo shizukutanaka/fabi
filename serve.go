@@ -488,11 +488,16 @@ func statusJSON() map[string]any {
 			models++
 		}
 	}
-	return map[string]any{
+	resp := map[string]any{
 		"running": running, "installed_idle": installed,
 		"services": services, "models": models,
 		"scans": len(windows), "version": version,
 	}
+	if n, vram := loadedModels(); n > 0 {
+		resp["loaded_models"] = n
+		resp["loaded_vram_bytes"] = vram
+	}
+	return resp
 }
 
 func modelsJSON() map[string]any {
