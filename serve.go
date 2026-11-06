@@ -178,6 +178,7 @@ func serveGoal(conn net.Conn, body string) {
 		l := openLedger()
 		defer l.close()
 		var steps []map[string]any
+		var skipped []string
 		var prev string
 		stepNum := 0
 		for _, tn := range tasks {
@@ -191,6 +192,7 @@ func serveGoal(conn net.Conn, body string) {
 				"ocr":         "Describe how to extract text for: " + req.Goal,
 			}[tn]
 			if !ok {
+				skipped = append(skipped, tn)
 				continue
 			}
 			if prev != "" {
@@ -219,6 +221,9 @@ func serveGoal(conn net.Conn, body string) {
 		}
 		resp["steps"] = steps
 		resp["executed"] = stepNum
+		if len(skipped) > 0 {
+			resp["skipped"] = skipped
+		}
 	}
 	writeJSON(conn, 200, resp)
 }
