@@ -195,6 +195,34 @@ func runSelfTest() {
 			fmt.Sprintf("%d notes for unattributed things", nGap), status)
 	}
 
+	// --- Claim: automation is safe (auto) —
+	// "auto applies only safe, reversible actions" — verifiable: every
+	// auto-triggered control event must be an unload (reversible), never
+	// a delete/remove (destructive). Falsified by any destructive event.
+	if l.db != nil {
+		var nAuto, nBad int64
+		l.db.QueryRow(
+			`SELECT COUNT(*) FROM events
+			 WHERE kind='model.unloaded' AND payload LIKE '%"via":"auto"%'`,
+		).Scan(&nAuto)
+		l.db.QueryRow(
+			`SELECT COUNT(*) FROM events
+			 WHERE payload LIKE '%"via":"auto"%'
+			 AND kind NOT IN ('model.unloaded','auto.applied','auto.skipped')`,
+		).Scan(&nBad)
+		status := "UNVERIFIED"
+		measured := "no auto actions yet"
+		if nAuto > 0 && nBad == 0 {
+			status = "PASS"
+			measured = fmt.Sprintf("%d safe auto unload(s), 0 destructive", nAuto)
+		} else if nBad > 0 {
+			status = "FAIL"
+			measured = fmt.Sprintf("%d destructive auto action(s) — unsafe", nBad)
+		}
+		add("automation is safe (auto)", "only reversible actions",
+			measured, status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
