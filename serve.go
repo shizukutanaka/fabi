@@ -54,6 +54,11 @@ func serveConn(conn net.Conn) {
 		return
 	}
 	method, path := parts[0], parts[1]
+	var query string
+	if i := strings.IndexByte(path, '?'); i >= 0 {
+		query = path[i+1:]
+		path = path[:i]
+	}
 
 	// Headers — we only need Content-Length for POST bodies.
 	cl := 0
@@ -83,6 +88,8 @@ func serveConn(conn net.Conn) {
 		serveRun(conn, body)
 	case method == "POST" && path == "/goal":
 		serveGoal(conn, body)
+	case method == "GET" && path == "/ledger":
+		serveLedger(conn, query)
 	default:
 		writeJSON(conn, 404, map[string]string{"error": "unknown endpoint"})
 	}
@@ -201,6 +208,44 @@ func serveGoal(conn net.Conn, body string) {
 		resp["executed"] = stepNum
 	}
 	writeJSON(conn, 200, resp)
+}
+
+// serveLedger: GET /ledger?kind=X&n=N — query events over the API.
+// The single truth is now machine-readable by any local agent.
+func serveLedger(conn net.Conn, query string) {
+	kind, n := "", 20
+	for _, kv := range strings.Split(query, "&") {
+		p := strings.SplitN(kv, "=", 2)
+		if len(p) == 2 {
+			switch p[0] {
+			case "kind":
+				kind = p[1]
+			case "n":
+				fmt.Sscanf(p[1], "%d", &n)
+			}
+		}
+	}
+	if n > 200 {
+		n = 200
+	}
+	l := openLedger()
+	defer l.close()
+	var out []map[string]any
+	events := l.allEvents()
+	for i := len(events) - 1; i >= 0 && len(out) < n; i-- {
+		e := events[i]
+		if kind != "" && e.kind != kind {
+			continue
+		}
+		var payload map[string]any
+		json.Unmarshal([]byte(e.payload), &payload)
+		out = append(out, map[string]any{
+			"id": e.id, "ts": e.ts, "kind": e.kind, "payload": payload,
+		})
+	}
+	writeJSON(conn, 200, map[string]any{
+		"count": len(out), "events": out,
+	})
 }
 
 func statusJSON() map[string]any {

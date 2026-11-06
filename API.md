@@ -1,0 +1,80 @@
+# Fabi Serve API — v0
+
+`fabi serve` exposes a loopback-only JSON API on `127.0.0.1:11435`.
+No auth (loopback = same trust as probes). Any local agent or tool
+can call fabi — this is the Universal API seed (SPEC #21).
+
+Start it:
+
+```sh
+fabi serve    # blocks; Ctrl+C to stop
+```
+
+## Endpoints
+
+### GET /status
+
+Current estate summary (from latest scan in the ledger).
+
+```json
+{"running":5,"installed_idle":5,"services":3,"models":8,"scans":28,"version":"0.0.2-dev"}
+```
+
+### GET /models
+
+Live local generative models (ollama passthrough).
+
+```json
+{"models":["llama3.2:1b","qwen2.5:0.5b"]}
+```
+
+### POST /run
+
+Run a prompt on a local model. Body:
+
+```json
+{"prompt":"say hi","model":"qwen2.5:0.5b"}
+```
+
+`model` optional — defaults to the smallest/fastest live model.
+
+```json
+{"model":"qwen2.5:0.5b","response":"Hello!","tok_s":200.4,"wall_s":0.13,"eval_count":9}
+```
+
+### POST /goal
+
+Decompose a purpose into tasks; optionally execute the chain.
+
+```json
+{"goal":"research local ai","run":true}
+```
+
+```json
+{"goal":"research local ai","tasks":["search","reasoning"],
+ "steps":[{"task":"search","model":"qwen2.5:0.5b","tok_s":190.1,"output":"..."}],
+ "executed":2}
+```
+
+`run:false` (default) returns decomposition only — no execution.
+
+### GET /ledger?kind=&n=
+
+Query the append-only event ledger. Params: `kind` (filter by event
+kind), `n` (max events, default 20, cap 200). Returns newest first.
+
+```sh
+curl "http://127.0.0.1:11435/ledger?kind=task.executed&n=5"
+```
+
+```json
+{"count":5,"events":[{"id":1,"ts":...,"kind":"task.executed","payload":{...}}]}
+```
+
+## Notes
+
+- Everything the API does is also recorded back to `~/.fabi/ledger.db`
+  (`task.executed` with `via: "serve"`) — the ledger stays the one truth.
+- Errors: `400` bad request, `404` unknown endpoint, `502` upstream
+  (model/engine) failure.
+- Loopback only by design — no external exposure.
