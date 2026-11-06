@@ -81,6 +81,8 @@ func serveConn(conn net.Conn) {
 		writeJSON(conn, 200, modelsJSON())
 	case method == "POST" && path == "/run":
 		serveRun(conn, body)
+	case method == "POST" && path == "/goal":
+		serveGoal(conn, body)
 	default:
 		writeJSON(conn, 404, map[string]string{"error": "unknown endpoint"})
 	}
@@ -118,6 +120,87 @@ func serveRun(conn net.Conn, body string) {
 		"model": model, "response": strings.TrimSpace(r.Response),
 		"tok_s": toks, "wall_s": wall.Seconds(), "eval_count": r.EvalCount,
 	})
+}
+
+// serveGoal: POST /goal {"goal":"...","run":true} — decompose a purpose
+// into tasks, return verdicts; optionally execute the chain and return
+// per-step results. Universal API's planning endpoint.
+func serveGoal(conn net.Conn, body string) {
+	var req struct {
+		Goal string `json:"goal"`
+		Run  bool   `json:"run"`
+	}
+	if err := json.Unmarshal([]byte(body), &req); err != nil || req.Goal == "" {
+		writeJSON(conn, 400, map[string]string{"error": `need {"goal":"..."}`})
+		return
+	}
+
+	var tasks []string
+	gl := strings.ToLower(req.Goal)
+	for _, m := range goalTaskMap {
+		for _, kw := range m.kws {
+			if strings.Contains(gl, kw) {
+				tasks = m.tasks
+				break
+			}
+		}
+		if tasks != nil {
+			break
+		}
+	}
+	if tasks == nil {
+		tasks = []string{"planning", "reasoning"}
+	}
+
+	resp := map[string]any{"goal": req.Goal, "tasks": tasks}
+
+	if req.Run {
+		l := openLedger()
+		defer l.close()
+		var steps []map[string]any
+		var prev string
+		stepNum := 0
+		for _, tn := range tasks {
+			p, ok := map[string]string{
+				"planning":    "Produce a short 5-step plan for: " + req.Goal,
+				"code_review": "List quality risks for: " + req.Goal,
+				"summarize":   "Summarize in one sentence: " + req.Goal,
+				"translate":   "Translate to English: " + req.Goal,
+				"reasoning":   "Explain briefly: " + req.Goal,
+				"search":      "List 3 key questions about: " + req.Goal,
+				"ocr":         "Describe how to extract text for: " + req.Goal,
+			}[tn]
+			if !ok {
+				continue
+			}
+			if prev != "" {
+				p += "\n\nContext from previous step:\n" + trunc(prev, 600)
+			}
+			model := modelForClass(taskProfiles[tn].modelClass)
+			r, toks, wall, err := execPrompt(model, p)
+			if err != nil {
+				steps = append(steps, map[string]any{
+					"task": tn, "error": err.Error(),
+				})
+				break
+			}
+			stepNum++
+			l.emit("task.executed", map[string]any{
+				"ok": true, "model": model, "task": tn, "goal": req.Goal,
+				"step": stepNum, "via": "serve",
+				"tok_s": toks, "wall_s": wall.Seconds(),
+			})
+			steps = append(steps, map[string]any{
+				"task": tn, "model": model, "tok_s": toks,
+				"wall_s": wall.Seconds(),
+				"output": trunc(strings.TrimSpace(r.Response), 500),
+			})
+			prev = r.Response
+		}
+		resp["steps"] = steps
+		resp["executed"] = stepNum
+	}
+	writeJSON(conn, 200, resp)
 }
 
 func statusJSON() map[string]any {
