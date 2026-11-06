@@ -375,3 +375,26 @@ Version 0.7 is a spec describing a product that exists.
 The difference is the ledger.
 
 Next number that matters: **one stranger's install.**
+
+## Part 17 — Socratic conclusion (what fabi actually is)
+
+23 questions later, the dialectic converged on one truth:
+
+**fabi is not "the worldwide AI execution foundation".**
+**fabi is "the honest eye on this PC's AI stack".**
+
+The dialectic:
+- "Worldwide" was the hook; "build honestly" was the real goal.
+- fabi is made, not yet used — but its discoveries were real:
+  fake duplicates, dead WSL, ghost GPU, unknown tools.
+- Its methods were real: falsification, evidence chains,
+  multi-engine routing, deletion, L1–L15.
+
+The honest framing:
+> fabi sees your own machine's AI estate honestly on the ledger —
+> what exists, what's idle, what holds VRAM, what changed, and why
+> it says what it says. The world may come or not; the honest eye
+> already works.
+
+The goal was inflated. The product was not. Record the truth, not
+the story (L15).
