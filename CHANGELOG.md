@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.0.5-dev — unreleased
+## v0.0.5 — 2026-11-07
 
 - **`fabi auto`** — Automation Engine seed: applies only safe
   recommendations (idle unload >15 min); user-triggered,
@@ -8,6 +8,11 @@
 - **`OLLAMA_HOST`** — standard env var routes run/goal/serve to
   remote/cloud ollama-compatible endpoints; route's
   "cloud or downgrade" verdict now points to it
+- **serve API complete** — 8 endpoints: added POST /unload (VRAM
+  release) and POST /scan (trigger observation over API)
+- **report control line** — counts VRAM releases in the statement
+- **selftest race fix** — ledger-append check accepts concurrent
+  writers (resident watch could make +1 flaky)
 
 ## v0.0.4 — 2026-11-07
 
