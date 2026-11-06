@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"sync"
@@ -356,6 +357,34 @@ func runSelfTest() {
 		}
 		add("explainability resolves (why)", "evidence_ids point to real events",
 			measured, status)
+	}
+
+	// --- Claim: the serve daemon actually serves —
+	// The API claim tested the data layer; this tests the HTTP layer —
+	// spawn `fabi serve`, query /status, kill it. The real daemon check.
+	{
+		exe, _ := os.Executable()
+		cmd := exec.Command(exe, "serve")
+		if err := cmd.Start(); err == nil {
+			defer cmd.Process.Kill()
+			time.Sleep(1500 * time.Millisecond)
+			st, body, err := rawHTTP("127.0.0.1:11435", "GET", "/status", "", 5*time.Second)
+			measured := "serve did not respond"
+			status := "FAIL"
+			if err == nil && st == 200 {
+				var sj map[string]any
+				if json.Unmarshal(body, &sj) == nil {
+					measured = fmt.Sprintf("serve responded, %d keys", len(sj))
+					status = "PASS"
+				}
+			}
+			cmd.Process.Kill()
+			add("serve daemon actually serves", "spawn + query /status",
+				measured, status)
+		} else {
+			add("serve daemon actually serves", "spawn + query /status",
+				"could not start daemon", "FAIL")
+		}
 	}
 
 	// Emit the result set — falsification records are themselves ledger data.
