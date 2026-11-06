@@ -132,6 +132,7 @@ func runRoute(taskName string) {
 	switch {
 	case !fitVRAM:
 		fmt.Println("verdict:     DOESN'T FIT — smaller model or cloud required")
+		fmt.Println("             → OLLAMA_HOST=<host>:11434 routes to a remote engine")
 	case latency <= tp.latencyS:
 		fmt.Printf("verdict:     LOCAL OK — %.0f tok/s ≥ %.0f needed, %.1fs ≤ %.1fs\n",
 			toks, latTok, latency, tp.latencyS)
@@ -140,7 +141,8 @@ func runRoute(taskName string) {
 			"             speculative decoding / draft model may close the gap\n",
 			latency, tp.latencyS, latency/tp.latencyS)
 	default:
-		fmt.Printf("verdict:     LOCAL TOO SLOW — %.1fs vs %.1fs; cloud or downgrade\n",
+		fmt.Printf("verdict:     LOCAL TOO SLOW — %.1fs vs %.1fs; cloud or downgrade\n"+
+			"             → OLLAMA_HOST=<host>:11434 routes to a remote engine\n",
 			latency, tp.latencyS)
 	}
 

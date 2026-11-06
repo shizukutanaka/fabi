@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -13,7 +14,16 @@ import (
 // local model, measure real tok/s, record the decision + result.
 // route predicts physics; run measures it.
 
-const ollamaBase = "127.0.0.1:11434"
+// ollamaBase defaults to loopback; OLLAMA_HOST (standard ollama env)
+// lets fabi route to remote/cloud engines — the "cloud or downgrade"
+// path route recommends becomes reachable.
+var ollamaBase = func() string {
+	if h := os.Getenv("OLLAMA_HOST"); h != "" {
+		h = strings.TrimPrefix(strings.TrimPrefix(h, "http://"), "https://")
+		return h
+	}
+	return "127.0.0.1:11434"
+}()
 
 type ollamaTags struct {
 	Models []struct {
@@ -72,7 +82,7 @@ func runRun(args []string) {
 	}
 	if len(models) == 0 {
 		fmt.Println("fabi run — no live generative model found.")
-		fmt.Println("(checked ollama :11434 — start `ollama serve` or pull a model)")
+		fmt.Println("(checked ollama " + ollamaBase + " — start `ollama serve` or pull a model)")
 		return
 	}
 	if prompt == "" {
@@ -251,7 +261,7 @@ func runCompare(prompt string) {
 func runUnload(args []string) {
 	st, body, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second)
 	if err != nil || st != 200 {
-		fmt.Println("fabi unload: ollama not reachable on :11434")
+		fmt.Println("fabi unload: ollama not reachable on " + ollamaBase)
 		return
 	}
 	var ps struct {
@@ -311,7 +321,7 @@ func loadedModels() (int, int64) {
 func runSweep() {
 	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
 	if err != nil || st != 200 {
-		fmt.Println("fabi run --sweep: ollama not reachable on :11434")
+		fmt.Println("fabi run --sweep: ollama not reachable on " + ollamaBase)
 		return
 	}
 	var t ollamaTags
