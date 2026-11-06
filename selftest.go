@@ -174,6 +174,27 @@ func runSelfTest() {
 			measured, status)
 	}
 
+	// --- Claim: the honest eye (Part 17) —
+	// "fabi says what it can't see" — verifiable: does fabi emit
+	// provenance-gap notes for things it cannot attribute? The honest
+	// eye's claim is falsified by the absence of such notes.
+	if l.db != nil {
+		var nGap int64
+		l.db.QueryRow(
+			`SELECT COUNT(*) FROM events
+			 WHERE kind='doctor.recommendation'
+			 AND (payload LIKE '%not visible%' OR payload LIKE '%unattributed%'
+			  OR payload LIKE '%provenance%')`,
+		).Scan(&nGap)
+		status := "UNVERIFIED"
+		if nGap > 0 {
+			status = "PASS"
+		}
+		add("honest eye (says what it can't see)",
+			"provenance-gap notes emitted",
+			fmt.Sprintf("%d notes for unattributed things", nGap), status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
