@@ -131,6 +131,20 @@ func runSelfTest() {
 			fmt.Sprintf("%d executed, %d measured", nExec, nMeas), status)
 	}
 
+	// --- Claim: resource control works (Socratic Q1) ---
+	if l.db != nil {
+		var nUnl int64
+		l.db.QueryRow(
+			`SELECT COUNT(*) FROM events WHERE kind='model.unloaded'`,
+		).Scan(&nUnl)
+		status := "UNVERIFIED"
+		if nUnl > 0 {
+			status = "PASS"
+		}
+		add("resource control (unload)", "model.unloaded events",
+			fmt.Sprintf("%d VRAM releases recorded", nUnl), status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
