@@ -1,9 +1,8 @@
-# installer manifest — single portable exe, zero config, zero deps.
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.9.0.schema.json
 PackageIdentifier: Fabi.Fabi
 PackageVersion: 0.0.1
 InstallerType: portable
 InstallerLocale: en-US
-Scope: user
 UpgradeBehavior: install
 Commands:
   - fabi

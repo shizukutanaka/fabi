@@ -36,7 +36,9 @@ func tryBench(l *ledger, base string) string {
 		return ""
 	}
 	var models struct {
-		Data []struct{ ID string `json:"id"` } `json:"data"`
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
 	}
 	if err := json.Unmarshal(body, &models); err != nil || len(models.Data) == 0 {
 		return ""
