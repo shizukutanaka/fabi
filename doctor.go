@@ -277,6 +277,31 @@ func runDoctor() {
 			}
 		}
 		detail := fmt.Sprintf("%.0f MiB unattributed VRAM", gapMiB)
+		// Correlate with loaded models — some of the "ghost" burn is
+		// just resident weights. /api/ps knows what ollama holds.
+		var loadedVRAM int64
+		var loadedNames []string
+		if st, b, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second); err == nil && st == 200 {
+			var ps struct {
+				Models []struct {
+					Name     string `json:"name"`
+					SizeVRAM int64  `json:"size_vram"`
+				} `json:"models"`
+			}
+			if json.Unmarshal(b, &ps) == nil {
+				for _, m := range ps.Models {
+					loadedVRAM += m.SizeVRAM
+					loadedNames = append(loadedNames, m.Name)
+				}
+			}
+		}
+		if loadedVRAM > 0 {
+			explained := float64(loadedVRAM) / 1048576
+			pct := explained / gapMiB * 100
+			detail += fmt.Sprintf(
+				"\n    explained: %.0f MiB (%.0f%%) is loaded models — %s",
+				explained, pct, strings.Join(loadedNames, ", "))
+		}
 		if len(suspects) > 0 {
 			detail += "\n    suspects (running ai-workloads):\n      " +
 				strings.Join(suspects, "\n      ")
