@@ -27,6 +27,7 @@ fabi serve      JSON API :11435 (GET /status|/models|/ledger|/doctor|/diff|/why|
 fabi unload     free VRAM — unload loaded models (real control action)
 fabi auto       apply safe recs only — idle unload, user-triggered (Automation seed)
 fabi pattern    extend detection via data — add/list user patterns (Marketplace seed)
+fabi update     honest update check — compares to github releases (no auto-install)
 ```
 
 Remote engines: `OLLAMA_HOST=<host>:11434` routes run/goal/serve to a
