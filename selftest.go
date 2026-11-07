@@ -423,6 +423,17 @@ func runSelfTest() {
 			if failed > 0 {
 				status = "FAIL"
 			}
+			// POST /run with no model must fail honestly — a JSON error,
+			// not a crash or a hang. The error path is part of the API.
+			st4, b4, err4 := rawHTTP("127.0.0.1:11435", "POST", "/run",
+				`{"prompt":"test"}`, 10*time.Second)
+			var v4 any
+			if err4 != nil || json.Unmarshal(b4, &v4) != nil {
+				status = "FAIL"
+				measured += " + /run crashed"
+			} else if st4 >= 500 || st4 == 400 || st4 == 200 {
+				measured += fmt.Sprintf(" + /run honest %d", st4)
+			}
 			cmd.Process.Kill()
 			add("serve daemon actually serves", "spawn + query /status",
 				measured, status)
