@@ -10,9 +10,22 @@ const version = "0.0.6-dev"
 
 func main() {
 	if len(os.Args) < 2 {
-		// Minimal cognitive load: bare `fabi` answers the likely goal —
-		// "what's the state of my machine?" — in one line, not a wall
-		// of usage. Full commands stay one word away.
+		// Context-aware default: a first-timer needs "what is this +
+		// one action", a returner needs the one-line status. The ledger
+		// knows which — zero scans means they've never run fabi.
+		l := openLedger()
+		var scans int64
+		if l.db != nil {
+			l.db.QueryRow("SELECT COUNT(*) FROM events WHERE kind='scan.started'").Scan(&scans)
+		}
+		l.close()
+		if scans == 0 {
+			fmt.Println("fabi — the honest eye on your PC's AI estate")
+			fmt.Println()
+			fmt.Println("  Run `fabi scan` to see what's here.")
+			fmt.Println("  Run `fabi help` for all commands.")
+			return
+		}
 		runStatus()
 		fmt.Println()
 		fmt.Println("commands: scan · doctor · run · serve · help")
