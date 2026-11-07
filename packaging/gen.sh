@@ -4,10 +4,9 @@
 # with the published binaries. Run after building release assets:
 #   ./packaging/gen.sh 0.0.6 release/*/SHA256SUMS.txt
 set -euo pipefail
-cd "$(dirname "$0")"
-
 VER="${1:?usage: gen.sh <version> <SHA256SUMS.txt>}"
-SUMS="${2:?usage: gen.sh <version> <SHA256SUMS.txt>}"
+SUMS="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"  # abs path before cd
+cd "$(dirname "$0")"
 REPO="shizukutanaka/fabi"
 BASE="https://github.com/$REPO/releases/download/v$VER"
 
