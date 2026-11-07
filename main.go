@@ -10,8 +10,13 @@ const version = "0.0.6-dev"
 
 func main() {
 	if len(os.Args) < 2 {
-		usage()
-		os.Exit(2)
+		// Minimal cognitive load: bare `fabi` answers the likely goal —
+		// "what's the state of my machine?" — in one line, not a wall
+		// of usage. Full commands stay one word away.
+		runStatus()
+		fmt.Println()
+		fmt.Println("commands: scan · doctor · run · serve · help")
+		return
 	}
 	switch os.Args[1] {
 	case "scan":
@@ -72,7 +77,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Println("fabi — Universal AI Control Plane")
+	fmt.Println("fabi — the honest eye on your PC's AI estate")
 	fmt.Println("usage: fabi <command>")
 	fmt.Println()
 	fmt.Println("commands:")
