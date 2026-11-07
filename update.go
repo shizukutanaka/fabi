@@ -8,52 +8,51 @@ import (
 	"time"
 )
 
-// fabi update — the honest update check. No auto-download, no
-// auto-install (deny-by-default holds): it queries the GitHub release
-// API once, compares the tag to the running binary's version, and
-// reports the delta. The only network call fabi makes — and only
-// when the user explicitly asks.
-func runUpdate() {
+// updateCheck queries GitHub releases once and reports the version
+// delta — the only network call fabi makes, user-invoked only.
+func updateCheck() (cur, latest, url string, behind bool, err error) {
 	st, body, err := httpsGet("api.github.com",
 		"/repos/shizukutanaka/fabi/releases/latest", 8*time.Second)
 	if err != nil || st != 200 {
-		fmt.Println("fabi update — could not reach github releases:",
-			err)
-		return
+		return "", "", "", false, fmt.Errorf("github releases: %v", err)
 	}
 	var rel struct {
 		TagName string `json:"tag_name"`
 		HTMLURL string `json:"html_url"`
 	}
 	if err := json.Unmarshal(body, &rel); err != nil || rel.TagName == "" {
-		fmt.Println("fabi update — unexpected release response")
+		return "", "", "", false, fmt.Errorf("unexpected release response")
+	}
+	cur = strings.TrimSuffix(strings.TrimPrefix(version, "v"), "-dev")
+	latest = strings.TrimPrefix(rel.TagName, "v")
+	return cur, latest, rel.HTMLURL, semverLess(cur, latest), nil
+}
+
+// fabi update — the honest update check. No auto-download, no
+// auto-install (deny-by-default holds): reports the delta.
+func runUpdate() {
+	cur, latest, url, behind, err := updateCheck()
+	if err != nil {
+		fmt.Println("fabi update —", err)
 		return
 	}
-
-	cur := strings.TrimPrefix(version, "v")
-	cur = strings.TrimSuffix(cur, "-dev")
-	latest := strings.TrimPrefix(rel.TagName, "v")
-
 	fmt.Println()
 	fmt.Println("FABI UPDATE — honest version check")
 	fmt.Println("─────────────────────────────────────────────")
 	fmt.Printf("  running:  v%s\n", cur)
-	fmt.Printf("  latest:   %s\n", rel.TagName)
-
-	if semverLess(cur, latest) {
-		fmt.Println()
-		fmt.Printf("  → newer release available: %s\n", rel.HTMLURL)
+	fmt.Printf("  latest:   v%s\n", latest)
+	switch {
+	case behind:
+		fmt.Printf("\n  → newer release available: %s\n", url)
 		fmt.Println("  download & replace — fabi never auto-installs")
-	} else if cur == latest {
+	case cur == latest:
 		fmt.Println("  → up to date")
-	} else {
+	default:
 		fmt.Println("  → ahead of latest release (dev build)")
 	}
-
 	if l := openLedger(); l.db != nil {
 		l.emit("update.checked", map[string]any{
-			"current": cur, "latest": latest,
-			"behind": semverLess(cur, latest),
+			"current": cur, "latest": latest, "behind": behind,
 		})
 		l.close()
 	}

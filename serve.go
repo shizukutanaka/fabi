@@ -116,9 +116,23 @@ func serveConn(conn net.Conn) {
 		servePattern(conn, body, query, true)
 	case method == "POST" && path == "/import":
 		serveImport(conn, body)
+	case method == "GET" && path == "/update":
+		serveUpdate(conn)
 	default:
 		writeJSON(conn, 404, map[string]string{"error": "unknown endpoint"})
 	}
+}
+
+// serveUpdate — GET /update: honest version check over the API.
+func serveUpdate(conn net.Conn) {
+	cur, latest, url, behind, err := updateCheck()
+	if err != nil {
+		writeJSON(conn, 502, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(conn, 200, map[string]any{
+		"current": cur, "latest": latest, "behind": behind, "url": url,
+	})
 }
 
 func serveRun(conn net.Conn, body string) {
