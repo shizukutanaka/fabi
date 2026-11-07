@@ -465,6 +465,36 @@ func runSelfTest() {
 			"inference.measured op=watch-generate", measured, status)
 	}
 
+	// --- Claim: ledger is append-only ordered —
+	// Concurrent probes emit with their own timestamps, so ts can skew
+	// a few hundred ms while id order stays correct. Falsified only by
+	// real corruption: an event >5s out of order.
+	if l.db != nil {
+		var prev, bad int64
+		rows, err := l.db.Query("SELECT ts FROM events ORDER BY id ASC")
+		if err == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var ts int64
+				rows.Scan(&ts)
+				if ts < prev-5000 {
+					bad++
+				}
+				if ts > prev {
+					prev = ts
+				}
+			}
+		}
+		measured := "no events"
+		status := "UNVERIFIED"
+		if prev > 0 {
+			measured = fmt.Sprintf("%d event(s) >5s out of order", bad)
+			status = passIf(bad == 0)
+		}
+		add("ledger append-only ordered", "no event >5s out of order",
+			measured, status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
