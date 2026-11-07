@@ -445,6 +445,26 @@ func runSelfTest() {
 		}
 	}
 
+	// --- Claim: watch heartbeat measures inference —
+	// "watch periodically measures real inference" — verifiable:
+	// inference.measured events with op=watch-generate must exist.
+	if l.db != nil {
+		var n int64
+		l.db.QueryRow(
+			`SELECT COUNT(*) FROM events
+			 WHERE kind='inference.measured'
+			 AND json_extract(payload,'$.op')='watch-generate'`,
+		).Scan(&n)
+		status := "UNVERIFIED"
+		measured := "no watch heartbeats yet"
+		if n > 0 {
+			status = "PASS"
+			measured = fmt.Sprintf("%d watch heartbeats recorded", n)
+		}
+		add("watch heartbeat measures inference",
+			"inference.measured op=watch-generate", measured, status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
