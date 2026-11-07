@@ -78,9 +78,10 @@ func runRoute(taskName string) {
 	// Get measured hardware: VRAM from the ledger's latest GPU finding.
 	l := openLedger()
 	defer l.close()
+	ranges := l.importedRanges()
 	var vramMiB float64
 	var gpuName string
-	for _, e := range l.events("resource.found") {
+	for _, e := range localEvents(l.events("resource.found"), ranges) {
 		if strings.Contains(e.payload, `"kind":"gpu"`) &&
 			!strings.Contains(e.payload, "unattributed") {
 			var p struct {
@@ -125,7 +126,7 @@ func runRoute(taskName string) {
 	// learn the measured/predicted ratio and correct the ceiling into an
 	// honest estimate.
 	var ratios []float64
-	for _, e := range l.events("inference.measured") {
+	for _, e := range localEvents(l.events("inference.measured"), ranges) {
 		var p map[string]any
 		if err := json.Unmarshal([]byte(e.payload), &p); err == nil &&
 			strOf(p, "op") == "generate" {
@@ -187,7 +188,7 @@ func runRoute(taskName string) {
 		ts    int64
 	}
 	latestM := map[string]mrow{}
-	for _, e := range l.events("inference.measured") {
+	for _, e := range localEvents(l.events("inference.measured"), ranges) {
 		var p map[string]any
 		if err := json.Unmarshal([]byte(e.payload), &p); err == nil &&
 			strOf(p, "op") == "generate" {
