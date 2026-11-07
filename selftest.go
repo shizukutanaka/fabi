@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -614,6 +615,34 @@ func runSelfTest() {
 			status = "PASS" // nothing written, nothing authorized
 		}
 		add("deny-by-default (L9)", "no file without authorized install",
+			measured, status)
+	}
+
+	// --- Claim: estate import works —
+	// "foreign ledgers merge with dedupe + provenance" — self-contained:
+	// import a temp JSONL with a marker, verify insertion, dedupe on
+	// re-import, and a ledger.imported range event (W1/W13/W15).
+	if l.db != nil {
+		marker := fmt.Sprintf("selftest_import_%d", time.Now().UnixMilli())
+		body := fmt.Sprintf(
+			`{"kind":"test.selftest","payload":{"marker":"%s"},"ts":%d}`+"\n",
+			marker, time.Now().UnixMilli())
+		sc1 := bufio.NewScanner(strings.NewReader(body))
+		n1, _, _ := importJSONL(l, sc1, "selftest")
+		// Re-import same body — dedupe must reject every event.
+		sc2 := bufio.NewScanner(strings.NewReader(body))
+		n2, dup2, _ := importJSONL(l, sc2, "selftest")
+		// The import itself must leave a provenance event.
+		var prov int64
+		l.db.QueryRow(
+			`SELECT COUNT(*) FROM events WHERE kind='ledger.imported'
+			 AND json_extract(payload,'$.source')='selftest'`,
+		).Scan(&prov)
+		measured := fmt.Sprintf(
+			"inserted %d, re-import %d (dup %d), provenance %d",
+			n1, n2, dup2, prov)
+		status := passIf(n1 == 1 && n2 == 0 && dup2 == 1 && prov >= 2)
+		add("estate import", "dedupe + provenance range",
 			measured, status)
 	}
 
