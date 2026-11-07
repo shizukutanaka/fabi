@@ -434,6 +434,38 @@ func runSelfTest() {
 			} else if st4 >= 500 || st4 == 400 || st4 == 200 {
 				measured += fmt.Sprintf(" + /run honest %d", st4)
 			}
+			// Remaining POSTs — each must respond with valid JSON,
+			// whether success or honest failure (ollama is down).
+			// /pattern writes to the real user file — back it up and
+			// restore so the test leaves no residue.
+			dir, _ := ledgerDir()
+			patPath := filepath.Join(dir, "patterns.json")
+			origPat, hadPat := os.ReadFile(patPath)
+			posts := []struct{ path, body string }{
+				{"/goal", `{"goal":"summarize"}`},
+				{"/unload", ""},
+				{"/pattern", `{"field":"exe","value":"st.exe"}`},
+				{"/scan", ""},
+			}
+			okPost := 0
+			for _, p := range posts {
+				st5, b5, err5 := rawHTTP("127.0.0.1:11435", "POST",
+					p.path, p.body, 15*time.Second)
+				var v5 any
+				if err5 == nil && json.Unmarshal(b5, &v5) == nil &&
+					st5 < 600 {
+					okPost++
+				}
+			}
+			if hadPat == nil {
+				os.WriteFile(patPath, origPat, 0644)
+			} else {
+				os.Remove(patPath)
+			}
+			measured += fmt.Sprintf(" + %d/%d POSTs", okPost, len(posts))
+			if okPost < len(posts) {
+				status = "FAIL"
+			}
 			cmd.Process.Kill()
 			add("serve daemon actually serves", "spawn + query /status",
 				measured, status)
