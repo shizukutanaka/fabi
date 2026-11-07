@@ -861,6 +861,31 @@ func runSelfTest() {
 			measured, status)
 	}
 
+	// --- Claim: scan --json produces valid JSON —
+	// The --json flag is a public contract: scripts parse it. Falsified
+	// if the output isn't parseable or lacks the expected keys.
+	{
+		exe, _ := os.Executable()
+		cmd := exec.Command(exe, "scan", "--json")
+		out, err := cmd.Output()
+		var parsed map[string]any
+		jerr := json.Unmarshal(out, &parsed)
+		measured := "no output"
+		status := "FAIL"
+		if err == nil && jerr == nil {
+			keys := 0
+			for _, k := range []string{"fabi_rss", "findings"} {
+				if _, ok := parsed[k]; ok {
+					keys++
+				}
+			}
+			measured = fmt.Sprintf("valid JSON, %d/2 expected keys", keys)
+			status = passIf(keys == 2)
+		}
+		add("scan --json valid", "machine-readable contract",
+			measured, status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
