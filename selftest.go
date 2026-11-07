@@ -392,6 +392,18 @@ func runSelfTest() {
 					status = "PASS"
 				}
 			}
+			// While the daemon is up, exercise the merge path over HTTP —
+			// POST /import must accept a JSONL event and report it.
+			jl := fmt.Sprintf(
+				`{"kind":"test.serve","payload":{"t":%d},"ts":%d}`+"\n",
+				time.Now().UnixMilli(), time.Now().UnixMilli())
+			st2, b2, err2 := rawHTTP("127.0.0.1:11435", "POST", "/import", jl, 5*time.Second)
+			if err2 == nil && st2 == 200 && strings.Contains(string(b2), `"imported":1`) {
+				measured += " + POST /import"
+			} else {
+				status = "FAIL"
+				measured += " + /import failed"
+			}
 			cmd.Process.Kill()
 			add("serve daemon actually serves", "spawn + query /status",
 				measured, status)
