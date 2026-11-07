@@ -398,3 +398,42 @@ The honest framing:
 
 The goal was inflated. The product was not. Record the truth, not
 the story (L15).
+
+## Part 18 — The first step toward "the world" (measured, not promised)
+
+The dialectic said "the world may come or not." Then the
+strength/weakness decomposition found the honest first primitive:
+
+**`fabi ledger export` + `fabi ledger import` (+ `POST /import`)**
+— one machine's estate merges into another's ledger.
+
+The chain of consequences, each decomposed and fixed:
+
+1. import merges events (W1) → dedupe on ts|kind|payload,
+   original ts/payload preserved.
+2. merged scans needed origin visibility (W12) →
+   `ledger stats` shows scans-by-os.
+3. foreign events needed attribution (W13) → `ledger.imported`
+   records `first_id..last_id` ranges.
+4. foreign findings must not pollute local recs (W14) →
+   `localEvents` filters imported ranges in doctor/report/why/diff.
+   Raw queries see everything; derived views stay local.
+5. API parity (W15) → `POST /import` accepts a JSONL body.
+6. falsification (W16) → selftest claim: insert, dedupe,
+   provenance — all deterministic.
+
+Companion primitives from the same method:
+
+- **route calibration** — physics tok/s is an upper bound;
+  the ledger's measured/predicted median corrects it into an
+  honest estimate. Prediction learns from measurement.
+- **auto.skipped** — "looked and chose not to act" is itself
+  evidence; the automation engine now records safe decisions,
+  making the safety claim falsifiable.
+- **external-change honesty** — a launcher deleted outside fabi
+  produces a provenance-gap note, not silence (L2 holds even for
+  fabi's own artifacts).
+
+Law L16: **merge is honest.** Imported estates keep their
+provenance; local truth stays local; nothing is hidden and
+nothing is mixed silently.
