@@ -73,8 +73,16 @@ func serveConn(conn net.Conn) {
 			fmt.Sscanf(strings.TrimSpace(h[15:]), "%d", &cl)
 		}
 	}
+	maxCL := 1 << 20
+	if path == "/import" {
+		maxCL = 16 << 20 // estates are bulk — a ledger export is ~MB
+	}
+	if cl >= maxCL {
+		conn.Write([]byte("HTTP/1.1 413 Payload Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"))
+		return
+	}
 	body := ""
-	if cl > 0 && cl < 1<<20 {
+	if cl > 0 {
 		b := make([]byte, cl)
 		if _, err := io.ReadFull(br, b); err == nil {
 			body = string(b)
