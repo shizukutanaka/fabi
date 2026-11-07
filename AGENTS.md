@@ -48,6 +48,7 @@ fabi goal --run         task chains          fabi auto     safe recs only
 fabi serve              12-endpoint API      OLLAMA_HOST   remote engines
 fabi ledger import      multi-PC merge       fabi diff     estate delta
 fabi update             honest update check
+fabi update             honest update check
 ```
 
 ## Numbers that bind (do not regress)
