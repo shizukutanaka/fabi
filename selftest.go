@@ -589,7 +589,27 @@ func runSelfTest() {
 			measured = fmt.Sprintf("launcher exists, %d authorized install(s)", authed)
 			status = passIf(authed > 0)
 		} else if authed > 0 {
-			status = "UNVERIFIED" // installed then uninstalled — honest
+			// Launcher gone + install history → check an uninstall
+			// happened after the last install: absence is then correct,
+			// and the permission lifecycle is verified end-to-end.
+			var lastInstall, lastUninstall int64
+			l.db.QueryRow(
+				`SELECT COALESCE(MAX(ts),0) FROM events
+				 WHERE kind='install.action' AND json_extract(payload,'$.ok')=1`,
+			).Scan(&lastInstall)
+			l.db.QueryRow(
+				`SELECT COALESCE(MAX(ts),0) FROM events
+				 WHERE kind='uninstall.action' AND json_extract(payload,'$.ok')=1`,
+			).Scan(&lastUninstall)
+			if lastUninstall > lastInstall {
+				measured = "installed → uninstalled correctly (lifecycle verified)"
+				status = "PASS"
+			} else {
+				// Install recorded, no uninstall, yet file absent — it
+				// was removed outside fabi's control. L2: report the
+				// provenance gap, don't guess.
+				measured = "install recorded, file absent — removed outside fabi"
+			}
 		} else {
 			status = "PASS" // nothing written, nothing authorized
 		}
