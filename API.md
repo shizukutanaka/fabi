@@ -149,6 +149,16 @@ curl -X POST /import --data-binary @estate.jsonl
 {"imported":142,"duplicates_skipped":3,"malformed":0}
 ```
 
+### GET /update
+
+Honest version check — API parity with `fabi update`. Queries GitHub
+releases once and reports the version delta; `502` when GitHub is
+unreachable. Never auto-downloads.
+
+```json
+{"current":"0.0.6","latest":"0.0.5","behind":false,"url":"https://.../v0.0.5"}
+```
+
 ## Notes
 
 - Everything the API does is also recorded back to `~/.fabi/ledger.db`
