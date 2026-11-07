@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -90,6 +91,33 @@ func ledgerStats(l *ledger) {
 			var c int64
 			rows.Scan(&k, &c)
 			fmt.Printf("  %-28s %d\n", k, c)
+		}
+	}
+
+	// Source breakdown: after `fabi ledger import`, events from other
+	// machines live here too. scan.started carries goos — count scans
+	// per OS so a merged estate still shows where each piece came from.
+	fmt.Println()
+	fmt.Println("scans by os:")
+	srows, err := l.db.Query(
+		`SELECT json_extract(payload,'$.goos'), COUNT(*) FROM events
+		 WHERE kind='scan.started' GROUP BY 1`)
+	if err == nil {
+		defer srows.Close()
+		var total int64
+		for srows.Next() {
+			var g string
+			var c int64
+			srows.Scan(&g, &c)
+			tag := ""
+			if g == runtime.GOOS {
+				tag = " (this machine)"
+			}
+			fmt.Printf("  %-12s %d scan(s)%s\n", g, c, tag)
+			total += c
+		}
+		if total == 0 {
+			fmt.Println("  none")
 		}
 	}
 }
