@@ -104,6 +104,8 @@ func main() {
 		runDiff(dargs)
 	case "why":
 		runWhy(os.Args[2:])
+	case "update":
+		runUpdate()
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
@@ -136,5 +138,6 @@ func usage() {
 	fmt.Println("  pattern  extend detection via data — add/list user patterns (Marketplace seed)")
 	fmt.Println("  diff     what changed between the last two scans (+appeared / -gone)")
 	fmt.Println("  why      explain a recommendation — show its evidence chain")
+	fmt.Println("  update   honest update check — compares to github releases")
 	fmt.Println("  version  print version")
 }
