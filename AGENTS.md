@@ -26,17 +26,18 @@ bash build.sh                              # 4-target release + SHA256
 ## Layout
 
 ```
-main.go      15 commands + usage         report.go    statement + --json + control
-scan.go      orchestrator                doctor.go    7 evidence-based rules
-probes.go    6 probes                    ledger.go    SQLite events
-watch.go     periodic + inference beat   goal/route.go physics + measured routing
+main.go      17 commands + usage         report.go    statement + --json + control
+scan.go      orchestrator                doctor.go    8 evidence-based rules
+probes.go    6 probes                    ledger.go    SQLite events + import
+watch.go     periodic + inference beat   goal/route.go physics + calibrated routing
 run.go       exec/sweep/compare/unload/auto  httpio.go raw TCP (no net/http)
-serve.go     Universal API (8 endpoints)   install.go Startup-folder launcher
-selftest.go  falsification engine        ledgercmd.go stats/events/export
+serve.go     Universal API (12 endpoints)  install.go Startup-folder launcher
+selftest.go  falsification engine        ledgercmd.go stats/events/export/import
 status.go    one-line health (+loaded)   patterns.json detection data
+diff.go      estate delta (N scans)      why.go      evidence chain
 packages_*.go OS package lists           wsl_*.go     WSL distro detection
-sysinfo.go   shared helpers              bench.go    real inference measure
-SPEC_v0.*    the spec — v0.7, Parts 1–16 API.md       serve endpoint docs
+sysinfo.go   shared helpers              patterns.go  Marketplace seed
+SPEC_v0.*    the spec — v0.7, Parts 1–17 API.md       serve endpoint docs
 ```
 
 ## Control surface (Phase 2/3 primitives)
@@ -44,7 +45,8 @@ SPEC_v0.*    the spec — v0.7, Parts 1–16 API.md       serve endpoint docs
 ```
 fabi run/sweep/compare  measure inference    fabi unload   free VRAM
 fabi goal --run         task chains          fabi auto     safe recs only
-fabi serve              8-endpoint API       OLLAMA_HOST   remote engines
+fabi serve              12-endpoint API      OLLAMA_HOST   remote engines
+fabi ledger import      multi-PC merge       fabi diff     estate delta
 ```
 
 ## Numbers that bind (do not regress)

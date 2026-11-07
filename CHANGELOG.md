@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+- **`fabi ledger import` / `POST /import`** — multi-PC estate merging:
+  dedupe on ts|kind|payload, `ledger.imported` provenance events with
+  `first_id..last_id` ranges; derived views (doctor/report/why/diff)
+  exclude imported ranges so foreign estates can't pollute local recs
+- **route calibration** — `fabi route` learns the measured/predicted
+  ratio from the ledger and prints a calibrated estimate under the
+  physics ceiling
+- **auto observability** — `auto.skipped` events record safe
+  no-action decisions (ollama down / nothing loaded / all in use)
+- **`ledger stats` scans-by-os** — merged estates show origin OS
+- **UX** — bare `fabi` is context-aware (first-run intro vs status);
+  doctor ends with next-step guidance; honest tagline everywhere
+- **selftest coverage** — multi-engine discovery, honest-eye notes,
+  auto safety, goal engine, marketplace merge, API shapes, route
+  physics upper bound, explainability resolution, serve daemon,
+  diff delta, watch heartbeat, append-order (pre-import scope),
+  deny-by-default lifecycle, estate import — 23 PASS
+- **CI** — `fabi selftest` runs on ubuntu/windows/macos
+- **docs parity** — API.md, README, AGENTS.md synced; MIT LICENSE
+
 ## v0.0.5 — 2026-11-07
 
 - **`fabi auto`** — Automation Engine seed: applies only safe
