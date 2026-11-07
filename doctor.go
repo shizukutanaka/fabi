@@ -483,6 +483,30 @@ func runDoctor() {
 		}
 	}
 
+	// --json: recommendations as a machine-readable array — the
+	// actionable output scripts consume.
+	if jsonOut {
+		var arr []map[string]any
+		for _, r := range recs {
+			arr = append(arr, map[string]any{
+				"class":         r.class,
+				"target":        r.target,
+				"detail":        r.detail,
+				"confidence":    r.confidence,
+				"reclaim_bytes": r.reclaim,
+				"evidence_ids":  r.evidence,
+			})
+		}
+		out, _ := json.MarshalIndent(map[string]any{
+			"recommendations": arr,
+			"emitted":         emitted,
+			"unchanged":       unchanged,
+			"reclaim_total":   reclaimTotal,
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
+	}
+
 	printDoctor(recs, len(events), len(windows), reclaimTotal, latest, emitted, unchanged)
 }
 

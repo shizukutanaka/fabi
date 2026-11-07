@@ -42,6 +42,11 @@ func main() {
 	case "watch":
 		runWatch(os.Args[2:])
 	case "doctor":
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			}
+		}
 		runDoctor()
 	case "report":
 		for _, a := range os.Args[2:] {
