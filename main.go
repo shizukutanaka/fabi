@@ -44,6 +44,11 @@ func main() {
 	case "doctor":
 		runDoctor()
 	case "report":
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			}
+		}
 		runReport()
 	case "selftest":
 		runSelfTest()

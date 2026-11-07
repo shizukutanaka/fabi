@@ -432,6 +432,29 @@ func runReport() {
 		"scans": len(aggs), "days": days,
 	})
 
+	// --json contract: same numbers, machine-readable. Scripts get the
+	// statement without parsing the text layout.
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"period_from":      first.ts,
+			"period_to":        latest.ts,
+			"scans":            len(aggs),
+			"days":             days,
+			"tools_running":    latest.running,
+			"tools_idle":       latest.installed,
+			"services":         latest.services,
+			"models":           latest.models,
+			"model_bytes":      latest.modelBytes,
+			"verified_reclaim": verified,
+			"recs_by_class":    recByClass,
+			"flagged_reclaim":  reclaimFlagged,
+			"verified_count":   verifiedCount,
+			"verified_savings": verifiedReclaim,
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
+	}
+
 	fmt.Println()
 	fmt.Println("FABI REPORT — your AI estate, measured")
 	fmt.Println("─────────────────────────────────────────────")
