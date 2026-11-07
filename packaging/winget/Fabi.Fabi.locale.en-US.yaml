@@ -6,7 +6,7 @@ Publisher: Fabi
 PackageName: Fabi
 PackageUrl: https://github.com/shizukutanaka/fabi
 License: MIT
-LicenseUrl: https://github.com/shizukutanaka/fabi/blob/main/LICENSE
+LicenseUrl: https://github.com/shizukutanaka/fabi/blob/master/LICENSE
 ShortDescription: Universal AI Control Plane — scan your AI estate, keep one honest ledger, subtract what you don't need.
 Description: |-
   Fabi scans your machine's AI estate — tools, models, services, GPU —
