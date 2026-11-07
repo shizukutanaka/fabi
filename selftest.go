@@ -755,6 +755,50 @@ func runSelfTest() {
 			measured, status)
 	}
 
+	// --- Claim: all 6 probes complete per scan —
+	// A scan that misses a probe silently loses findings. Verifiable:
+	// after the latest scan.started, all 6 probe.completed names must
+	// appear (process, port, filesystem, package, gpu, models).
+	if l.db != nil {
+		want := map[string]bool{"process": true, "port": true,
+			"filesystem": true, "package": true, "gpu": true,
+			"models": true}
+		var lastScan int64
+		l.db.QueryRow(
+			"SELECT COALESCE(MAX(ts),0) FROM events WHERE kind='scan.started'",
+		).Scan(&lastScan)
+		seen := map[string]bool{}
+		rows, err := l.db.Query(
+			`SELECT payload FROM events
+			 WHERE kind='probe.completed' AND ts >= ?`, lastScan)
+		if err == nil {
+			for rows.Next() {
+				var p string
+				rows.Scan(&p)
+				var m map[string]any
+				if json.Unmarshal([]byte(p), &m) == nil {
+					seen[strOf(m, "probe")] = true
+				}
+			}
+			rows.Close()
+		}
+		missing := 0
+		for w := range want {
+			if !seen[w] {
+				missing++
+			}
+		}
+		measured := "no scan yet"
+		status := "UNVERIFIED"
+		if lastScan > 0 {
+			measured = fmt.Sprintf("%d/6 probes completed latest scan, %d missing",
+				len(seen), missing)
+			status = passIf(missing == 0)
+		}
+		add("all 6 probes complete", "no silent probe loss",
+			measured, status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
