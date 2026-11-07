@@ -197,6 +197,11 @@ func ledgerImport(l *ledger, path string) {
 		rows.Close()
 	}
 
+	// Provenance: remember which id range came from this import, so
+	// views can tell local evidence from foreign estate (W13).
+	var firstID int64
+	l.db.QueryRow("SELECT COALESCE(MAX(id),0)+1 FROM events").Scan(&firstID)
+
 	sc := bufio.NewScanner(f)
 	sc.Buffer(make([]byte, 1024*1024), 1024*1024)
 	var imported, dup, bad int
@@ -228,6 +233,7 @@ func ledgerImport(l *ledger, path string) {
 	l.emit("ledger.imported", map[string]any{
 		"source": path, "imported": imported,
 		"duplicates_skipped": dup, "malformed": bad,
+		"first_id": firstID, "last_id": firstID + int64(imported) - 1,
 	})
 	fmt.Printf("fabi ledger import: %d new event(s), %d duplicate(s) skipped, %d malformed\n",
 		imported, dup, bad)
