@@ -30,7 +30,7 @@ func runServe() {
 		return
 	}
 	fmt.Printf("fabi serve — http://127.0.0.1:%s\n", servePort)
-	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff|/why · POST /run|/goal|/unload|/scan|/pattern")
+	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff|/why · POST /run|/goal|/unload|/scan|/pattern|/import")
 	fmt.Println("(loopback only — other agents can call fabi now)")
 	for {
 		conn, err := ln.Accept()
@@ -106,6 +106,8 @@ func serveConn(conn net.Conn) {
 		servePattern(conn, body, query, false)
 	case method == "POST" && path == "/pattern":
 		servePattern(conn, body, query, true)
+	case method == "POST" && path == "/import":
+		serveImport(conn, body)
 	default:
 		writeJSON(conn, 404, map[string]string{"error": "unknown endpoint"})
 	}
@@ -580,6 +582,27 @@ func modelsJSON() map[string]any {
 		}
 	}
 	return map[string]any{"models": names}
+}
+
+// serveImport: POST /import — merge an exported estate (JSONL body)
+// into this ledger. API parity with `fabi ledger import` — local
+// processes can push estates without shell access (loopback only).
+func serveImport(conn net.Conn, body string) {
+	if strings.TrimSpace(body) == "" {
+		writeJSON(conn, 400, map[string]string{"error": "empty body — POST JSONL events"})
+		return
+	}
+	l := openLedger()
+	defer l.close()
+	if l.db == nil {
+		writeJSON(conn, 500, map[string]string{"error": "no ledger"})
+		return
+	}
+	sc := bufio.NewScanner(strings.NewReader(body))
+	imported, dup, bad := importJSONL(l, sc, "api:/import")
+	writeJSON(conn, 200, map[string]any{
+		"imported": imported, "duplicates_skipped": dup, "malformed": bad,
+	})
 }
 
 func writeJSON(conn net.Conn, status int, v any) {

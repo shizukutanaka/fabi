@@ -185,6 +185,18 @@ func ledgerImport(l *ledger, path string) {
 	}
 	defer f.Close()
 
+	sc := bufio.NewScanner(f)
+	imported, dup, bad := importJSONL(l, sc, path)
+	fmt.Printf("fabi ledger import: %d new event(s), %d duplicate(s) skipped, %d malformed\n",
+		imported, dup, bad)
+	if imported > 0 {
+		fmt.Println("estate merged — `fabi diff` and `fabi report` now see the imported history")
+	}
+}
+
+// importJSONL merges exported events from any source (CLI file or API
+// body) — dedupe on ts|kind|payload, provenance range recorded.
+func importJSONL(l *ledger, sc *bufio.Scanner, source string) (imported, dup, bad int) {
 	seen := map[string]bool{}
 	rows, err := l.db.Query("SELECT ts, kind, payload FROM events")
 	if err == nil {
@@ -196,15 +208,9 @@ func ledgerImport(l *ledger, path string) {
 		}
 		rows.Close()
 	}
-
-	// Provenance: remember which id range came from this import, so
-	// views can tell local evidence from foreign estate (W13).
 	var firstID int64
 	l.db.QueryRow("SELECT COALESCE(MAX(id),0)+1 FROM events").Scan(&firstID)
-
-	sc := bufio.NewScanner(f)
 	sc.Buffer(make([]byte, 1024*1024), 1024*1024)
-	var imported, dup, bad int
 	ins, _ := l.db.Prepare("INSERT INTO events (ts, kind, payload) VALUES (?, ?, ?)")
 	defer ins.Close()
 	for sc.Scan() {
@@ -231,15 +237,11 @@ func ledgerImport(l *ledger, path string) {
 		}
 	}
 	l.emit("ledger.imported", map[string]any{
-		"source": path, "imported": imported,
+		"source": source, "imported": imported,
 		"duplicates_skipped": dup, "malformed": bad,
 		"first_id": firstID, "last_id": firstID + int64(imported) - 1,
 	})
-	fmt.Printf("fabi ledger import: %d new event(s), %d duplicate(s) skipped, %d malformed\n",
-		imported, dup, bad)
-	if imported > 0 {
-		fmt.Println("estate merged — `fabi diff` and `fabi report` now see the imported history")
-	}
+	return imported, dup, bad
 }
 
 func kindSuffix(k string) string {
