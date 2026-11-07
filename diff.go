@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -52,6 +53,31 @@ func runDiff(args []string) {
 		if _, ok := now[k]; !ok {
 			removed = append(removed, f)
 		}
+	}
+
+	// --json: estate delta as structured data — scripts consume the
+	// change detection without parsing the text layout.
+	if jsonOut {
+		mk := func(list []findingRec) []map[string]any {
+			var out []map[string]any
+			for _, f := range list {
+				out = append(out, map[string]any{
+					"kind": f.kind, "name": f.name,
+					"detail": f.detail, "running": f.running,
+					"size_bytes": f.size,
+				})
+			}
+			return out
+		}
+		out, _ := json.MarshalIndent(map[string]any{
+			"from_ts":    prev.startTs,
+			"to_ts":      latest.startTs,
+			"scans_back": back,
+			"appeared":   mk(added),
+			"gone":       mk(removed),
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
 	}
 
 	fmt.Println()

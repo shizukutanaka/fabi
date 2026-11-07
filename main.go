@@ -93,7 +93,15 @@ func main() {
 	case "pattern":
 		runPattern(os.Args[2:])
 	case "diff":
-		runDiff(os.Args[2:])
+		var dargs []string
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			} else {
+				dargs = append(dargs, a)
+			}
+		}
+		runDiff(dargs)
 	case "why":
 		runWhy(os.Args[2:])
 	case "version", "--version", "-v":
