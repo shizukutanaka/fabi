@@ -22,3 +22,6 @@ jobs:
           echo "binary: $size bytes"
           [ "$size" -lt 10485760 ]
         shell: bash
+      - name: selftest on ${{ matrix.os }}
+        run: ./fabi${{ matrix.os == 'windows-latest' && '.exe' || '' }} selftest
+        shell: bash
