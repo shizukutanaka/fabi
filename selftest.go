@@ -339,7 +339,7 @@ func runSelfTest() {
 	// that don't exist in the ledger.
 	if l.db != nil {
 		var withEv, resolved int64
-		for _, e := range l.events("doctor.recommendation") {
+		for _, e := range localEvents(l.events("doctor.recommendation"), l.importedRanges()) {
 			var p map[string]any
 			if json.Unmarshal([]byte(e.payload), &p) != nil {
 				continue
@@ -405,7 +405,7 @@ func runSelfTest() {
 	// "appeared ∩ gone = ∅" — a finding can't both appear and disappear.
 	// Falsified if the diff logic puts the same key in both sets.
 	if l.db != nil {
-		windows := loadScanWindows(l.allEvents())
+		windows := loadScanWindows(localEvents(l.allEvents(), l.importedRanges()))
 		if len(windows) >= 2 {
 			prev, latest := windows[len(windows)-2], windows[len(windows)-1]
 			key := func(f findingRec) string {
@@ -526,7 +526,7 @@ func runSelfTest() {
 	// "VERIFIED absent" means the flagged item is absent in the latest
 	// scan — falsified if a verified target still appears there.
 	if l.db != nil {
-		windows := loadScanWindows(l.allEvents())
+		windows := loadScanWindows(localEvents(l.allEvents(), l.importedRanges()))
 		if len(windows) >= 2 {
 			latest := windows[len(windows)-1]
 			latestKeys := map[string]bool{}
@@ -537,7 +537,7 @@ func runSelfTest() {
 			// "verified" one should not be in the latest scan. We check
 			// the report's own claim — verified absent items stay absent.
 			var flagged, verified int64
-			for _, e := range l.events("doctor.recommendation") {
+			for _, e := range localEvents(l.events("doctor.recommendation"), l.importedRanges()) {
 				var p map[string]any
 				if json.Unmarshal([]byte(e.payload), &p) != nil {
 					continue

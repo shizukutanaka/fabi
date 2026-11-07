@@ -14,7 +14,7 @@ func runStatus() {
 	l := openLedger()
 	defer l.close()
 
-	events := l.allEvents()
+	events := localEvents(l.allEvents(), l.importedRanges())
 	if len(events) == 0 {
 		fmt.Println("fabi: ledger empty — run `fabi scan`")
 		return

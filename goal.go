@@ -106,7 +106,7 @@ func runGoal(args []string) {
 	defer l.close()
 	var vramMiB float64
 	var gpuName string
-	for _, e := range l.events("resource.found") {
+	for _, e := range localEvents(l.events("resource.found"), l.importedRanges()) {
 		if strings.Contains(e.payload, `"kind":"gpu"`) &&
 			!strings.Contains(e.payload, "unattributed") {
 			var p struct {
@@ -282,7 +282,7 @@ func modelForTask(tp taskProfile) string {
 // resource.found events — same source route uses.
 func gpuBandwidth(l *ledger) float64 {
 	var gpuName string
-	for _, e := range l.events("resource.found") {
+	for _, e := range localEvents(l.events("resource.found"), l.importedRanges()) {
 		if strings.Contains(e.payload, `"kind":"gpu"`) &&
 			!strings.Contains(e.payload, "unattributed") {
 			var p struct{ Name string }
@@ -298,7 +298,7 @@ func gpuBandwidth(l *ledger) float64 {
 func measuredTokS(l *ledger) map[string]float64 {
 	out := map[string]float64{}
 	var xs = map[string][]float64{}
-	for _, e := range l.events("inference.measured") {
+	for _, e := range localEvents(l.events("inference.measured"), l.importedRanges()) {
 		var p map[string]any
 		if err := json.Unmarshal([]byte(e.payload), &p); err != nil {
 			continue

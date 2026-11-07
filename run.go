@@ -427,7 +427,7 @@ func runAuto() {
 		return
 	}
 	lastUse := map[string]int64{}
-	for _, e := range l.allEvents() {
+	for _, e := range localEvents(l.allEvents(), l.importedRanges()) {
 		if e.kind != "task.executed" && e.kind != "inference.measured" {
 			continue
 		}
