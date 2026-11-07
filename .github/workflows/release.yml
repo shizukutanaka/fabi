@@ -1,0 +1,38 @@
+name: release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: go test ./...
+      - name: build 4 targets + checksums
+        run: |
+          mkdir -p dist
+          for t in windows/amd64 linux/amd64 darwin/amd64 darwin/arm64; do
+            os="${t%/*}"; arch="${t#*/}"
+            bin="fabi-${os}-${arch}"
+            [ "$os" = windows ] && bin="${bin}.exe"
+            GOOS="$os" GOARCH="$arch" go build -ldflags="-s -w" -o "dist/$bin" .
+          done
+          cd dist && sha256sum fabi-* > SHA256SUMS.txt && ls -la
+      - name: binary size gate (≤10MB)
+        run: |
+          for f in dist/fabi-*; do
+            s=$(stat -c%s "$f"); echo "$f: $s"
+            [ "$s" -lt 10485760 ]
+          done
+      - name: create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
