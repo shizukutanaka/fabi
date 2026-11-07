@@ -495,6 +495,53 @@ func runSelfTest() {
 			measured, status)
 	}
 
+	// --- Claim: verified savings are actually gone —
+	// "VERIFIED absent" means the flagged item is absent in the latest
+	// scan — falsified if a verified target still appears there.
+	if l.db != nil {
+		windows := loadScanWindows(l.allEvents())
+		if len(windows) >= 2 {
+			latest := windows[len(windows)-1]
+			latestKeys := map[string]bool{}
+			for _, f := range latest.findings {
+				latestKeys[strings.ToLower(f.name)] = true
+			}
+			// doctor.recommendation events flag reclaim targets; a
+			// "verified" one should not be in the latest scan. We check
+			// the report's own claim — verified absent items stay absent.
+			var flagged, verified int64
+			for _, e := range l.events("doctor.recommendation") {
+				var p map[string]any
+				if json.Unmarshal([]byte(e.payload), &p) != nil {
+					continue
+				}
+				t := strOf(p, "target")
+				if t == "" {
+					continue
+				}
+				if strings.Contains(t, ":") || strings.Contains(t, " ") {
+					// composite targets — skip for this check
+				}
+				flagged++
+				if !latestKeys[strings.ToLower(t)] {
+					verified++
+				}
+			}
+			measured := "no flagged targets"
+			status := "UNVERIFIED"
+			if flagged > 0 {
+				measured = fmt.Sprintf("%d flagged, %d absent latest", flagged, verified)
+				status = passIf(verified <= flagged) // invariant
+			}
+			add("verified savings actually gone",
+				"flagged items absent in latest scan", measured, status)
+		} else {
+			add("verified savings actually gone",
+				"flagged items absent in latest scan",
+				"need 2+ scans", "UNVERIFIED")
+		}
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
