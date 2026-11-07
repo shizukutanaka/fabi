@@ -11,11 +11,19 @@ import (
 // user-visible: every recommendation carries evidence_ids back to
 // the ledger events that justify it. Show that chain.
 func runWhy(args []string) {
-	if len(args) == 0 {
-		fmt.Println("usage: fabi why <name> — explain a recommendation/finding")
+	var wargs []string
+	for _, a := range args {
+		if a == "--json" {
+			jsonOut = true
+		} else {
+			wargs = append(wargs, a)
+		}
+	}
+	if len(wargs) == 0 {
+		fmt.Println("usage: fabi why <name> [--json] — explain a recommendation/finding")
 		return
 	}
-	term := strings.ToLower(strings.Join(args, " "))
+	term := strings.ToLower(strings.Join(wargs, " "))
 	l := openLedger()
 	defer l.close()
 	events := localEvents(l.allEvents(), l.importedRanges())
@@ -54,6 +62,52 @@ func runWhy(args []string) {
 			ids                         []int64
 		}{strOf(p, "class"), t, strOf(p, "detail"),
 			strOf(p, "confidence"), ids}
+	}
+
+	// --json: the evidence chain as structured data — explainability
+	// becomes machine-auditable.
+	if jsonOut && best != nil {
+		var ev []map[string]any
+		for _, id := range best.ids {
+			e, ok := byID[id]
+			if !ok {
+				continue
+			}
+			var p map[string]any
+			json.Unmarshal([]byte(e.payload), &p)
+			ev = append(ev, map[string]any{
+				"id": id, "ts": e.ts, "kind": e.kind, "payload": p,
+			})
+		}
+		out, _ := json.MarshalIndent(map[string]any{
+			"target": best.target, "class": best.class,
+			"detail": best.detail, "confidence": best.conf,
+			"evidence": ev,
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
+	}
+	if jsonOut && best == nil {
+		var ev []map[string]any
+		var n int
+		for i := len(events) - 1; i >= 0 && n < 10; i-- {
+			e := events[i]
+			if !strings.Contains(strings.ToLower(e.payload), term) {
+				continue
+			}
+			var p map[string]any
+			json.Unmarshal([]byte(e.payload), &p)
+			ev = append(ev, map[string]any{
+				"id": e.id, "ts": e.ts, "kind": e.kind, "payload": p,
+			})
+			n++
+		}
+		out, _ := json.MarshalIndent(map[string]any{
+			"target": term, "recommendation": nil,
+			"observations": ev,
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
 	}
 
 	fmt.Println()
