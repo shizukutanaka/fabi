@@ -404,6 +404,25 @@ func runSelfTest() {
 				status = "FAIL"
 				measured += " + /import failed"
 			}
+			// Every GET endpoint must return 200 + valid JSON — the API
+			// surface is only real if all of it responds.
+			// /why returns 404 when no recommendation matches the target —
+			// honest "no evidence", not an endpoint failure. Use a real
+			// target so the check exercises the evidence path.
+			gets := []string{"/models", "/ledger", "/doctor", "/diff",
+				"/why?target=gpu", "/pattern"}
+			failed := 0
+			for _, g := range gets {
+				st3, b3, err3 := rawHTTP("127.0.0.1:11435", "GET", g, "", 5*time.Second)
+				var v any
+				if err3 != nil || st3 != 200 || json.Unmarshal(b3, &v) != nil {
+					failed++
+				}
+			}
+			measured += fmt.Sprintf(" + %d/%d GETs ok", len(gets)-failed, len(gets))
+			if failed > 0 {
+				status = "FAIL"
+			}
 			cmd.Process.Kill()
 			add("serve daemon actually serves", "spawn + query /status",
 				measured, status)
