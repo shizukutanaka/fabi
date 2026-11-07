@@ -465,13 +465,23 @@ func runSelfTest() {
 			"inference.measured op=watch-generate", measured, status)
 	}
 
-	// --- Claim: ledger is append-only ordered —
-	// Concurrent probes emit with their own timestamps, so ts can skew
-	// a few hundred ms while id order stays correct. Falsified only by
-	// real corruption: an event >5s out of order.
+	// --- Claim: locally-emitted events are append-ordered —
+	// Concurrent probes skew ts by ~ms, and `fabi ledger import` merges
+	// foreign ts — so global ordering isn't the invariant. The honest
+	// claim: events emitted locally (before the first ledger.imported)
+	// are never >5s out of order. Falsified only by real corruption.
 	if l.db != nil {
+		var boundary int64
+		l.db.QueryRow(
+			"SELECT COALESCE(MIN(id),0) FROM events WHERE kind='ledger.imported'",
+		).Scan(&boundary)
+		q := "SELECT ts FROM events ORDER BY id ASC"
+		if boundary > 0 {
+			q = fmt.Sprintf(
+				"SELECT ts FROM events WHERE id < %d ORDER BY id ASC", boundary)
+		}
 		var prev, bad int64
-		rows, err := l.db.Query("SELECT ts FROM events ORDER BY id ASC")
+		rows, err := l.db.Query(q)
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {
@@ -485,13 +495,17 @@ func runSelfTest() {
 				}
 			}
 		}
-		measured := "no events"
+		measured := "no local events"
 		status := "UNVERIFIED"
 		if prev > 0 {
-			measured = fmt.Sprintf("%d event(s) >5s out of order", bad)
+			scope := "all events"
+			if boundary > 0 {
+				scope = fmt.Sprintf("local (pre-import, id<%d)", boundary)
+			}
+			measured = fmt.Sprintf("%d event(s) >5s out of order in %s", bad, scope)
 			status = passIf(bad == 0)
 		}
-		add("ledger append-only ordered", "no event >5s out of order",
+		add("local events append-ordered", "no local event >5s out of order",
 			measured, status)
 	}
 
@@ -540,6 +554,35 @@ func runSelfTest() {
 				"flagged items absent in latest scan",
 				"need 2+ scans", "UNVERIFIED")
 		}
+	}
+
+	// --- Claim: deny-by-default was never violated —
+	// If a startup launcher exists, an install.action ok event must
+	// exist too — files can't appear without an authorized write (L9).
+	// Falsified if the file exists with no matching install event.
+	{
+		_, err := os.Stat(startupCmdPath())
+		installed := err == nil
+		var authed int64
+		if l.db != nil {
+			l.db.QueryRow(
+				`SELECT COUNT(*) FROM events
+				 WHERE kind='install.action'
+				 AND json_extract(payload,'$.ok')=1`,
+			).Scan(&authed)
+		}
+		measured := "no launcher installed"
+		status := "UNVERIFIED"
+		if installed {
+			measured = fmt.Sprintf("launcher exists, %d authorized install(s)", authed)
+			status = passIf(authed > 0)
+		} else if authed > 0 {
+			status = "UNVERIFIED" // installed then uninstalled — honest
+		} else {
+			status = "PASS" // nothing written, nothing authorized
+		}
+		add("deny-by-default (L9)", "no file without authorized install",
+			measured, status)
 	}
 
 	// Emit the result set — falsification records are themselves ledger data.
