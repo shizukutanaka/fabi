@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -47,8 +49,14 @@ func runLedgerCmd(args []string) {
 		ledgerTail(l, kind, n)
 	case "export":
 		ledgerExport(l)
+	case "import":
+		if len(args) < 2 {
+			fmt.Println("usage: fabi ledger import <file>")
+			return
+		}
+		ledgerImport(l, args[1])
 	default:
-		fmt.Println("usage: fabi ledger [stats | events [-k kind] [-n N] | export]")
+		fmt.Println("usage: fabi ledger [stats | events [-k kind] [-n N] | export | import <file>]")
 	}
 }
 
@@ -134,6 +142,69 @@ func ledgerExport(l *ledger) {
 			"ts": ts, "kind": k, "payload": p,
 		})
 		fmt.Println(string(out))
+	}
+}
+
+// ledgerImport merges another machine's exported JSONL into this ledger —
+// the first multi-PC primitive (SPEC: estate merging). Original ts and
+// payload are preserved; exact duplicates are skipped; the merge itself is
+// recorded so provenance stays honest.
+func ledgerImport(l *ledger, path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		fmt.Println("fabi: cannot open", path, "—", err)
+		return
+	}
+	defer f.Close()
+
+	seen := map[string]bool{}
+	rows, err := l.db.Query("SELECT ts, kind, payload FROM events")
+	if err == nil {
+		for rows.Next() {
+			var ts int64
+			var k, p string
+			rows.Scan(&ts, &k, &p)
+			seen[fmt.Sprintf("%d|%s|%s", ts, k, p)] = true
+		}
+		rows.Close()
+	}
+
+	sc := bufio.NewScanner(f)
+	sc.Buffer(make([]byte, 1024*1024), 1024*1024)
+	var imported, dup, bad int
+	ins, _ := l.db.Prepare("INSERT INTO events (ts, kind, payload) VALUES (?, ?, ?)")
+	defer ins.Close()
+	for sc.Scan() {
+		line := strings.TrimSpace(sc.Text())
+		if line == "" {
+			continue
+		}
+		var e struct {
+			Ts      int64           `json:"ts"`
+			Kind    string          `json:"kind"`
+			Payload json.RawMessage `json:"payload"`
+		}
+		if err := json.Unmarshal([]byte(line), &e); err != nil || e.Kind == "" || e.Ts == 0 {
+			bad++
+			continue
+		}
+		p := string(e.Payload)
+		if seen[fmt.Sprintf("%d|%s|%s", e.Ts, e.Kind, p)] {
+			dup++
+			continue
+		}
+		if _, err := ins.Exec(e.Ts, e.Kind, p); err == nil {
+			imported++
+		}
+	}
+	l.emit("ledger.imported", map[string]any{
+		"source": path, "imported": imported,
+		"duplicates_skipped": dup, "malformed": bad,
+	})
+	fmt.Printf("fabi ledger import: %d new event(s), %d duplicate(s) skipped, %d malformed\n",
+		imported, dup, bad)
+	if imported > 0 {
+		fmt.Println("estate merged — `fabi diff` and `fabi report` now see the imported history")
 	}
 }
 
