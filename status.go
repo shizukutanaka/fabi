@@ -83,6 +83,24 @@ func runStatus() {
 		stale = fmt.Sprintf(" ⚠ data %.0f h old — run `fabi scan`", age.Hours())
 	}
 
+	// --json: the one-line health becomes a machine-readable object —
+	// same numbers, scriptable.
+	if jsonOut {
+		n, vram := loadedModels()
+		out, _ := json.MarshalIndent(map[string]any{
+			"running": running, "installed_idle": installed,
+			"services": services, "hidden_services": hidden,
+			"models": models, "dead_wsl": deadWSL,
+			"gpu_util_pct": gpuUtil, "gpu_temp_c": gpuTemp,
+			"vram_used_mib": vramUsed, "vram_total_mib": vramTotal,
+			"last_tok_s": lastToks, "last_model": lastModel,
+			"loaded_models": n, "loaded_vram_bytes": vram,
+			"scan_age_s": age.Seconds(),
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
+	}
+
 	fmt.Printf("fabi: %d running / %d installed-idle | %d svc (%d hidden) | %d models | gpu %.0f%% %.0f°C %.0f/%.0fGiB",
 		running, installed, services, hidden, models,
 		gpuUtil, gpuTemp, vramUsed/1024, vramTotal/1024)

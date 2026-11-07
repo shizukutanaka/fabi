@@ -71,6 +71,11 @@ func main() {
 		// (generative benchmarks across engines). Musk: delete beats add.
 		fmt.Println("fabi bench removed — use `fabi run --sweep`")
 	case "status":
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			}
+		}
 		runStatus()
 	case "run":
 		runRun(os.Args[2:])
