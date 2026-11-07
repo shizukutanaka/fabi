@@ -119,6 +119,33 @@ func runRoute(taskName string) {
 	fmt.Println("physics:")
 	fmt.Printf("  %.0f GB/s ÷ %.1f GB = %.0f tok/s (decode, #48)\n",
 		bw, float64(resident)/1e9, toks)
+
+	// Calibration: physics is an upper bound — real decode pays KV cache,
+	// attention and contention overhead. If the ledger has measured runs,
+	// learn the measured/predicted ratio and correct the ceiling into an
+	// honest estimate.
+	var ratios []float64
+	for _, e := range l.events("inference.measured") {
+		var p map[string]any
+		if err := json.Unmarshal([]byte(e.payload), &p); err == nil &&
+			strOf(p, "op") == "generate" {
+			sz := numOf(p, "bytes")
+			v := numOf(p, "tok_s")
+			if sz > 0 && v > 0 {
+				pred := bw * 1e9 / sz
+				if pred > 0 {
+					ratios = append(ratios, v/pred)
+				}
+			}
+		}
+	}
+	if len(ratios) > 0 {
+		sort.Float64s(ratios)
+		med := ratios[len(ratios)/2]
+		cal := toks * med
+		fmt.Printf("  calibrated: ~%.0f tok/s (median measured/predicted %.2f, n=%d)\n",
+			cal, med, len(ratios))
+	}
 	if gpuName == "" {
 		fmt.Println("verdict:     NO LOCAL GPU — cloud or smaller model required")
 		return
