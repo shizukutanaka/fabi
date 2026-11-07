@@ -3,19 +3,23 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os/exec"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // updateCheck queries GitHub releases once and reports the version
 // delta — the only network call fabi makes, user-invoked only.
+// It shells out to the OS's curl (present on Win10+, macOS, Linux)
+// rather than linking crypto/tls — keeps ~2 MB out of the binary.
 func updateCheck() (cur, latest, url string, behind bool, err error) {
-	st, body, err := httpsGet("api.github.com",
-		"/repos/shizukutanaka/fabi/releases/latest", 8*time.Second)
-	if err != nil || st != 200 {
-		return "", "", "", false, fmt.Errorf("github releases: %v", err)
+	out, err := exec.Command("curl", "-sf", "--max-time", "8",
+		"https://api.github.com/repos/shizukutanaka/fabi/releases/latest").Output()
+	if err != nil {
+		return "", "", "", false,
+			fmt.Errorf("github releases unreachable (curl: %v)", err)
 	}
+	body := out
 	var rel struct {
 		TagName string `json:"tag_name"`
 		HTMLURL string `json:"html_url"`
