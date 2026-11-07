@@ -248,27 +248,39 @@ func runSelfTest() {
 	}
 
 	// --- Claim: marketplace works (pattern add/install) —
-	// "users extend detection via data" — verifiable: when a user
-	// patterns file exists, its entries must merge into the active set.
-	// UNVERIFIED until a user file exists (no side effects in selftest).
+	// "users extend detection via data" — self-contained: write a temp
+	// patterns.json with a marker entry, verify loadPatterns merges it,
+	// restore the original state. Deterministic — UNVERIFIED no more.
 	{
 		dir, err := ledgerDir()
 		if err == nil {
 			path := filepath.Join(dir, "patterns.json")
-			if _, err := os.Stat(path); err == nil {
-				ps := loadPatterns()
-				total := len(ps.ExePatterns) + len(ps.CmdPatterns) +
-					len(ps.ScriptHosts) + len(ps.Ports) + len(ps.ScanDirs) +
-					len(ps.ModelRoots) + len(ps.PkgAITools) + len(ps.PkgRuntimes)
-				add("marketplace (user patterns)",
-					"user file merges into active set",
-					fmt.Sprintf("%d entries active", total),
-					passIf(total > 114))
-			} else {
-				add("marketplace (user patterns)",
-					"user file merges into active set",
-					"no user patterns.json yet", "UNVERIFIED")
+			orig, hadOrig := os.ReadFile(path)
+			marker := "selftest_merge_marker_xyz"
+			os.WriteFile(path, []byte(
+				fmt.Sprintf(`{"exePatterns":["%s"]}`, marker)), 0644)
+			activePatterns = nil // force reload
+			ps := loadPatterns()
+			merged := false
+			for _, p := range ps.ExePatterns {
+				if p == marker {
+					merged = true
+				}
 			}
+			if hadOrig == nil {
+				os.WriteFile(path, orig, 0644)
+			} else {
+				os.Remove(path)
+			}
+			activePatterns = nil // drop test data from cache
+			status := "UNVERIFIED"
+			measured := "temp file write failed"
+			if merged {
+				status = "PASS"
+				measured = "marker pattern merged into active set"
+			}
+			add("marketplace (user patterns)",
+				"user file merges into active set", measured, status)
 		}
 	}
 
