@@ -23,8 +23,16 @@ func runLedgerCmd(args []string) {
 	}
 
 	sub := "stats"
-	if len(args) > 0 {
-		sub = args[0]
+	var rest []string
+	for _, a := range args {
+		if a == "--json" {
+			jsonOut = true
+		} else {
+			rest = append(rest, a)
+		}
+	}
+	if len(rest) > 0 {
+		sub = rest[0]
 	}
 	switch sub {
 	case "stats", "":
@@ -66,6 +74,41 @@ func ledgerStats(l *ledger) {
 	l.db.QueryRow("SELECT COUNT(*) FROM events").Scan(&total)
 	var minTs, maxTs int64
 	l.db.QueryRow("SELECT COALESCE(MIN(ts),0), COALESCE(MAX(ts),0) FROM events").Scan(&minTs, &maxTs)
+
+	// --json: ledger stats as structured data — the append-only truth
+	// becomes queryable by scripts.
+	if jsonOut {
+		byKind := map[string]int64{}
+		rows, err := l.db.Query("SELECT kind, COUNT(*) FROM events GROUP BY kind")
+		if err == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var k string
+				var c int64
+				rows.Scan(&k, &c)
+				byKind[k] = c
+			}
+		}
+		byOS := map[string]int64{}
+		srows, err := l.db.Query(
+			`SELECT json_extract(payload,'$.goos'), COUNT(*) FROM events
+			 WHERE kind='scan.started' GROUP BY 1`)
+		if err == nil {
+			defer srows.Close()
+			for srows.Next() {
+				var g string
+				var c int64
+				srows.Scan(&g, &c)
+				byOS[g] = c
+			}
+		}
+		out, _ := json.MarshalIndent(map[string]any{
+			"events": total, "first_ts": minTs, "last_ts": maxTs,
+			"by_kind": byKind, "scans_by_os": byOS,
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
+	}
 
 	fmt.Println()
 	fmt.Println("FABI LEDGER — the single truth")
