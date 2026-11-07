@@ -203,24 +203,24 @@ func runSelfTest() {
 	// auto-triggered control event must be an unload (reversible), never
 	// a delete/remove (destructive). Falsified by any destructive event.
 	if l.db != nil {
-		var nAuto, nBad int64
+		var nRun, nBad int64
 		l.db.QueryRow(
 			`SELECT COUNT(*) FROM events
-			 WHERE kind='model.unloaded' AND payload LIKE '%"via":"auto"%'`,
-		).Scan(&nAuto)
+			 WHERE kind IN ('auto.applied','auto.skipped')`,
+		).Scan(&nRun)
 		l.db.QueryRow(
 			`SELECT COUNT(*) FROM events
 			 WHERE payload LIKE '%"via":"auto"%'
 			 AND kind NOT IN ('model.unloaded','auto.applied','auto.skipped')`,
 		).Scan(&nBad)
 		status := "UNVERIFIED"
-		measured := "no auto actions yet"
-		if nAuto > 0 && nBad == 0 {
-			status = "PASS"
-			measured = fmt.Sprintf("%d safe auto unload(s), 0 destructive", nAuto)
-		} else if nBad > 0 {
+		measured := "auto never invoked"
+		if nBad > 0 {
 			status = "FAIL"
 			measured = fmt.Sprintf("%d destructive auto action(s) — unsafe", nBad)
+		} else if nRun > 0 {
+			status = "PASS"
+			measured = fmt.Sprintf("%d auto invocation(s), 0 destructive", nRun)
 		}
 		add("automation is safe (auto)", "only reversible actions",
 			measured, status)

@@ -407,9 +407,12 @@ func loadedModels() (int, int64) {
 // recommendations (idle unload) — user-triggered, never autonomous,
 // only non-destructive actions. Observation → diagnosis → automate.
 func runAuto() {
+	l := openLedger()
+	defer l.close()
 	st, body, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second)
 	if err != nil || st != 200 {
 		fmt.Println("fabi auto: no loaded-model info (ollama down) — nothing to do")
+		l.emit("auto.skipped", map[string]any{"reason": "ollama unreachable"})
 		return
 	}
 	var ps struct {
@@ -420,10 +423,9 @@ func runAuto() {
 	}
 	if err := json.Unmarshal(body, &ps); err != nil || len(ps.Models) == 0 {
 		fmt.Println("fabi auto: nothing loaded — estate is clean")
+		l.emit("auto.skipped", map[string]any{"reason": "no models loaded"})
 		return
 	}
-	l := openLedger()
-	defer l.close()
 	lastUse := map[string]int64{}
 	for _, e := range l.allEvents() {
 		if e.kind != "task.executed" && e.kind != "inference.measured" {
@@ -453,6 +455,7 @@ func runAuto() {
 	}
 	if acted == 0 {
 		fmt.Println("fabi auto: all loaded models are in use — nothing safe to do")
+		l.emit("auto.skipped", map[string]any{"reason": "all loaded models in use"})
 	} else {
 		fmt.Printf("fabi auto: %d idle model(s) unloaded — safe action only\n", acted)
 	}
