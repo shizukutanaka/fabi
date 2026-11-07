@@ -886,6 +886,30 @@ func runSelfTest() {
 			measured, status)
 	}
 
+	// --- Claim: every --json flag emits valid JSON —
+	// the machine-readable contract was added to 7 commands; falsified
+	// if any --json output isn't parseable or is empty.
+	{
+		exe, _ := os.Executable()
+		cmds := [][]string{
+			{"scan", "--json"}, {"status", "--json"}, {"report", "--json"},
+			{"doctor", "--json"}, {"diff", "--json"},
+			{"ledger", "stats", "--json"}, {"why", "gpu", "--json"},
+		}
+		var bad []string
+		for _, c := range cmds {
+			out, err := exec.Command(exe, c...).Output()
+			var js map[string]any
+			if err != nil || json.Unmarshal(out, &js) != nil || len(js) == 0 {
+				bad = append(bad, strings.Join(c, " "))
+			}
+		}
+		measured := fmt.Sprintf("%d/%d --json valid", len(cmds)-len(bad), len(cmds))
+		status := passIf(len(bad) == 0)
+		add("every --json flag valid", "machine-readable contract",
+			measured, status)
+	}
+
 	// --- Claim: version comparison is correct —
 	// `fabi update` decides "newer release" via semverLess — falsified
 	// if it orders known version pairs wrong.
