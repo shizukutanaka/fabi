@@ -658,6 +658,35 @@ func runSelfTest() {
 			measured, status)
 	}
 
+	// --- Claim: authorized install writes correctly —
+	// The deny invariant checks what must NOT happen; this checks the
+	// authorized path: installStartup to a temp dir must write a real
+	// launcher file with the watch command.
+	{
+		dir, err := os.MkdirTemp("", "fabi-install")
+		if err == nil {
+			defer os.RemoveAll(dir)
+			exe, _ := os.Executable()
+			target := filepath.Join(dir, "fabi-watch.cmd")
+			installStartup(exe, target)
+			b, rerr := os.ReadFile(target)
+			ok := rerr == nil &&
+				strings.Contains(string(b), "watch") &&
+				strings.Contains(string(b), exe)
+			measured := "no file written"
+			status := "FAIL"
+			if ok {
+				measured = "launcher written, content verified"
+				status = "PASS"
+			}
+			add("authorized install writes (L9)",
+				"temp path write + content", measured, status)
+		} else {
+			add("authorized install writes (L9)",
+				"temp path write + content", "tmpdir failed", "UNVERIFIED")
+		}
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
