@@ -38,9 +38,12 @@ func loadPatterns() *patternSet {
 		fmt.Fprintf(os.Stderr, "fabi: embedded patterns broken: %v\n", err)
 	}
 	// User override merges: user's entries append to defaults.
+	// A malformed user file must not be silently ignored — L2:
+	// report the gap, don't guess.
 	dir, err := ledgerDir()
 	if err == nil {
-		if b, err := os.ReadFile(filepath.Join(dir, "patterns.json")); err == nil {
+		path := filepath.Join(dir, "patterns.json")
+		if b, err := os.ReadFile(path); err == nil {
 			var user patternSet
 			if err := json.Unmarshal(b, &user); err == nil {
 				ps.ExePatterns = append(ps.ExePatterns, user.ExePatterns...)
@@ -50,6 +53,12 @@ func loadPatterns() *patternSet {
 				ps.ModelRoots = append(ps.ModelRoots, user.ModelRoots...)
 				ps.PkgAITools = append(ps.PkgAITools, user.PkgAITools...)
 				ps.PkgRuntimes = append(ps.PkgRuntimes, user.PkgRuntimes...)
+			} else {
+				// Honest-eye: the user's patterns are broken — say so,
+				// don't pretend the file doesn't exist.
+				fmt.Fprintf(os.Stderr,
+					"fabi: %s is malformed (%v) — user patterns ignored\n",
+					path, err)
 			}
 		}
 	}
