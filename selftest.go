@@ -687,6 +687,74 @@ func runSelfTest() {
 		}
 	}
 
+	// --- Claim: executed models actually exist —
+	// The scheduler must never hallucinate a model: every task.executed
+	// model is either engine-prefixed (lmstudio:/remote) or matches a
+	// resource.found model name (allowing the "library/" suffix form).
+	if l.db != nil {
+		found := map[string]bool{}
+		for _, e := range localEvents(l.events("resource.found"),
+			l.importedRanges()) {
+			var p map[string]any
+			if json.Unmarshal([]byte(e.payload), &p) == nil &&
+				strOf(p, "kind") == "model" {
+				found[strOf(p, "name")] = true
+			}
+		}
+		var total, real int64
+		var ghosts []string
+		for _, e := range localEvents(l.events("task.executed"),
+			l.importedRanges()) {
+			var p map[string]any
+			if json.Unmarshal([]byte(e.payload), &p) != nil {
+				continue
+			}
+			m := strOf(p, "model")
+			if m == "" {
+				continue
+			}
+			total++
+			// Real by proof: a successful execution IS existence.
+			// Real by discovery: engine-prefixed names come from the
+			// engine's own API. Real by finding: matches a found model.
+			if strOf(p, "ok") == "true" || p["ok"] == true {
+				real++
+				continue
+			}
+			if strings.HasPrefix(m, "lmstudio:") ||
+				strings.HasPrefix(m, "remote:") ||
+				strings.HasPrefix(m, "ollama:") {
+				real++
+				continue
+			}
+			ok := found[m]
+			if !ok {
+				for n := range found {
+					if strings.HasSuffix(n, "/"+m) {
+						ok = true
+						break
+					}
+				}
+			}
+			if ok {
+				real++
+			} else {
+				ghosts = append(ghosts, m)
+			}
+		}
+		measured := "no executions yet"
+		status := "UNVERIFIED"
+		if total > 0 {
+			measured = fmt.Sprintf("%d/%d executed models real", real, total)
+			if len(ghosts) > 0 && len(ghosts) <= 3 {
+				measured += " ghost:" + strings.Join(ghosts, ",")
+			}
+			status = passIf(real == total)
+		}
+		add("executed models exist", "no hallucinated models",
+			measured, status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
