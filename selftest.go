@@ -886,6 +886,30 @@ func runSelfTest() {
 			measured, status)
 	}
 
+	// --- Claim: version comparison is correct —
+	// `fabi update` decides "newer release" via semverLess — falsified
+	// if it orders known version pairs wrong.
+	{
+		cases := []struct {
+			a, b string
+			want bool
+		}{
+			{"0.0.5", "0.0.6", true}, {"0.0.6", "0.0.5", false},
+			{"0.1.0", "1.0.0", true}, {"1.0.0", "0.1.0", false},
+			{"0.0.5", "0.0.5", false}, {"0.0.10", "0.0.9", false},
+		}
+		var bad []string
+		for _, c := range cases {
+			if got := semverLess(c.a, c.b); got != c.want {
+				bad = append(bad, c.a+"<"+c.b)
+			}
+		}
+		measured := fmt.Sprintf("%d/%d cases correct", len(cases)-len(bad), len(cases))
+		status := passIf(len(bad) == 0)
+		add("version comparison correct", "semverLess orders pairs",
+			measured, status)
+	}
+
 	// Emit the result set — falsification records are themselves ledger data.
 	var np, nf, nu int
 	for _, c := range checks {
