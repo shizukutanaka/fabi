@@ -134,6 +134,21 @@ curl "http://127.0.0.1:11435/ledger?kind=task.executed&n=5"
 {"count":5,"events":[{"id":1,"ts":...,"kind":"task.executed","payload":{...}}]}
 ```
 
+### POST /import
+
+Merge an exported estate (JSONL body — `fabi ledger export` output)
+into this ledger. API parity with `fabi ledger import`: exact
+duplicates are skipped, original ts/payload preserved, and a
+`ledger.imported` provenance event records the imported id range.
+
+```sh
+curl -X POST /import --data-binary @estate.jsonl
+```
+
+```json
+{"imported":142,"duplicates_skipped":3,"malformed":0}
+```
+
 ## Notes
 
 - Everything the API does is also recorded back to `~/.fabi/ledger.db`

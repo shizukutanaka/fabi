@@ -15,7 +15,7 @@ fabi watch      periodic scan, timeseries (default 5 min) + inference heartbeat
 fabi doctor     evidence-based recommendations (remove / idle / investigate)
 fabi report     statement — estate trend + measured inference stats
 fabi selftest   falsification engine — every spec claim gets a test
-fabi ledger     query the event log (stats | events | export)
+fabi ledger     query the event log (stats | events | export | import)
 fabi diff       estate delta between scans (+appeared / -gone; N for N back)
 fabi why        explain a recommendation — show its evidence chain
 fabi route      physics + measured model verdict for a task
@@ -23,7 +23,7 @@ fabi goal       purpose → task chain → per-task model scheduling (--run)
 fabi install    register fabi watch in Startup (fully reversible)
 fabi status     one-line health: estate + GPU + tok/s + loaded models
 fabi run        execute on a live model (--model, --ctx, --sweep, --compare)
-fabi serve      JSON API :11435 (GET /status|/models|/ledger|/doctor · POST /run|/goal)
+fabi serve      JSON API :11435 (GET /status|/models|/ledger|/doctor|/diff|/why|/pattern · POST /run|/goal|/unload|/scan|/pattern|/import)
 fabi unload     free VRAM — unload loaded models (real control action)
 fabi auto       apply safe recs only — idle unload, user-triggered (Automation seed)
 fabi pattern    extend detection via data — add/list user patterns (Marketplace seed)
