@@ -107,6 +107,45 @@ func (l *ledger) events(kind string) []ledgerEvent {
 	return out
 }
 
+// importedRanges returns the id ranges that arrived via
+// `fabi ledger import` — foreign estate inside this ledger.
+func (l *ledger) importedRanges() [][2]int64 {
+	var out [][2]int64
+	for _, e := range l.events("ledger.imported") {
+		var p struct {
+			FirstID int64 `json:"first_id"`
+			LastID  int64 `json:"last_id"`
+		}
+		if json.Unmarshal([]byte(e.payload), &p) == nil && p.LastID >= p.FirstID && p.FirstID > 0 {
+			out = append(out, [2]int64{p.FirstID, p.LastID})
+		}
+	}
+	return out
+}
+
+// localEvents drops events inside imported ranges — foreign estate
+// must not pollute local recommendations (W13/W14). Raw queries
+// (ledger events/stats) still see everything; derived views stay local.
+func localEvents(events []ledgerEvent, ranges [][2]int64) []ledgerEvent {
+	if len(ranges) == 0 {
+		return events
+	}
+	out := events[:0]
+	for _, e := range events {
+		foreign := false
+		for _, r := range ranges {
+			if e.id >= r[0] && e.id <= r[1] {
+				foreign = true
+				break
+			}
+		}
+		if !foreign {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
 // allEvents returns every event, oldest first.
 func (l *ledger) allEvents() []ledgerEvent {
 	if l.db == nil {

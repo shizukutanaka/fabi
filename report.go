@@ -317,7 +317,7 @@ func runReport() {
 	l := openLedger()
 	defer l.close()
 
-	events := l.allEvents()
+	events := localEvents(l.allEvents(), l.importedRanges())
 	if len(events) == 0 {
 		fmt.Println("FABI REPORT — ledger is empty. Run `fabi scan` first.")
 		return

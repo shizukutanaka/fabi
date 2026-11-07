@@ -18,7 +18,7 @@ func runWhy(args []string) {
 	term := strings.ToLower(strings.Join(args, " "))
 	l := openLedger()
 	defer l.close()
-	events := l.allEvents()
+	events := localEvents(l.allEvents(), l.importedRanges())
 	byID := map[int64]ledgerEvent{}
 	for _, e := range events {
 		byID[e.id] = e
