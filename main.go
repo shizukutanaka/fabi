@@ -111,7 +111,7 @@ func main() {
 	case "bench":
 		// Deleted — Phase-1 proof, superseded by `fabi run --sweep`
 		// (generative benchmarks across engines). Musk: delete beats add.
-		fmt.Println("fabi bench removed — use `fabi run --sweep`")
+		fmt.Println(tr("bench.removed"))
 	case "status":
 		for _, a := range os.Args[2:] {
 			if a == "--json" {
