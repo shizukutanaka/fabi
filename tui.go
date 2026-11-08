@@ -49,6 +49,7 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 	var gpuUtil, gpuTemp, vramUsed, vramTotal, lastToks float64
 	var lastModel string
 	var toolsRun, toolsIdle, modelsList, svcList, rtList, pkgList []findingRec
+	var gpuName string
 	for _, f := range latest.findings {
 		switch {
 		case f.kind == "tool" && f.running:
@@ -70,6 +71,8 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 			rtList = append(rtList, f)
 		case f.kind == "package":
 			pkgList = append(pkgList, f)
+		case f.kind == "gpu":
+			gpuName = f.name
 		}
 	}
 	for i := len(events) - 1; i >= 0; i-- {
@@ -103,6 +106,9 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 	}
 	b.WriteString(fmt.Sprintf(tr("status.line"), running, installed, services, hidden, models,
 		gpuUtil, gpuTemp, vramUsed/1024, vramTotal/1024) + stale + "\n")
+	if gpuName != "" {
+		b.WriteString("  gpu: " + gpuName + "\n")
+	}
 	if lastModel != "" {
 		b.WriteString(fmt.Sprintf("  last: %.0f tok/s · %s\n", lastToks, lastModel))
 	}
