@@ -95,6 +95,11 @@ func main() {
 		}
 		runStatus()
 	case "run":
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			}
+		}
 		runRun(os.Args[2:])
 	case "serve":
 		runServe()

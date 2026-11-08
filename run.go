@@ -61,6 +61,8 @@ func runRun(args []string) {
 		} else if args[i] == "--ctx" && i+1 < len(args) {
 			fmt.Sscanf(args[i+1], "%d", &numCtx)
 			i++
+		} else if args[i] == "--json" {
+			// consumed by main
 		} else {
 			parts = append(parts, args[i])
 		}
@@ -118,32 +120,51 @@ func runRun(args []string) {
 		best = forceModel
 	}
 
-	fmt.Println()
-	fmt.Println(tr("run.title"))
-	fmt.Println("─────────────────────────────────────────────")
-	fmt.Printf("model:   %s (%.1f GB)\n", best, float64(sizes[best])/1e9)
-	fmt.Printf("prompt:  %s\n", trunc(prompt, 80))
-	fmt.Println(tr("run.running"))
-	fmt.Println()
+	if !jsonOut {
+		fmt.Println()
+		fmt.Println(tr("run.title"))
+		fmt.Println("─────────────────────────────────────────────")
+		fmt.Printf("model:   %s (%.1f GB)\n", best, float64(sizes[best])/1e9)
+		fmt.Printf("prompt:  %s\n", trunc(prompt, 80))
+		fmt.Println(tr("run.running"))
+		fmt.Println()
+	}
 
 	r, toks, wall, err := execPromptCtx(best, prompt, numCtx)
 	l := openLedger()
 	defer l.close()
 	if err != nil {
-		fmt.Printf("failed: %v\n", err)
+		if jsonOut {
+			out, _ := json.MarshalIndent(map[string]any{
+				"ok": false, "model": best, "error": err.Error(),
+			}, "", "  ")
+			fmt.Println(string(out))
+		} else {
+			fmt.Printf("failed: %v\n", err)
+		}
 		l.emit("task.executed", map[string]any{
 			"ok": false, "model": best, "error": err.Error(),
 		})
 		return
 	}
 
-	fmt.Println(tr("run.response"))
-	fmt.Println("  " + trunc(strings.TrimSpace(r.Response), 400))
-	fmt.Println()
-	fmt.Printf("measured: %d tokens in %.1fs = %.1f tok/s · ttft %.0f ms (prefill %d tok)",
-		r.EvalCount, wall.Seconds(), toks, r.ttftMs, r.PromptEvalCount)
-	fmt.Println("  [M]")
-	fmt.Println()
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"ok": true, "model": best, "endpoint": ollamaBase,
+			"prompt": trunc(prompt, 200), "response": strings.TrimSpace(r.Response),
+			"eval_count": r.EvalCount, "tok_s": toks, "ttft_ms": r.ttftMs,
+			"prefill_tok": r.PromptEvalCount, "wall_s": wall.Seconds(),
+		}, "", "  ")
+		fmt.Println(string(out))
+	} else {
+		fmt.Println(tr("run.response"))
+		fmt.Println("  " + trunc(strings.TrimSpace(r.Response), 400))
+		fmt.Println()
+		fmt.Printf("measured: %d tokens in %.1fs = %.1f tok/s · ttft %.0f ms (prefill %d tok)",
+			r.EvalCount, wall.Seconds(), toks, r.ttftMs, r.PromptEvalCount)
+		fmt.Println("  [M]")
+		fmt.Println()
+	}
 
 	l.emit("task.executed", map[string]any{
 		"ok": true, "model": best, "endpoint": ollamaBase,
