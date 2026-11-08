@@ -32,14 +32,14 @@ func runInstall(args []string) {
 	fmt.Println()
 	fmt.Println(tr("install.title"))
 	fmt.Println("─────────────────────────────────────────────")
-	fmt.Println("this will place a launcher so `fabi watch` runs at logon:")
+	fmt.Println(tr("install.will"))
 	fmt.Println()
 	fmt.Printf("  write: %s\n", cmd)
 	fmt.Printf("  contents: \"%s\" watch\n", exe)
 	fmt.Println()
 	fmt.Println(tr("install.apply"))
 	fmt.Printf("  fabi install --yes\n")
-	fmt.Println("undo later:")
+	fmt.Println(tr("install.undo"))
 	fmt.Printf("  fabi uninstall\n")
 }
 
@@ -53,7 +53,7 @@ func installStartup(exe, cmd string) {
 		return
 	}
 	fmt.Printf("FABI INSTALL — wrote %s\n", cmd)
-	fmt.Println("`fabi watch` will accumulate history at next logon.")
+	fmt.Println(tr("install.willrun"))
 	fmt.Println("verify:  dir \"%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\"")
 	l.emit("install.action", map[string]any{"ok": true, "path": cmd})
 }
@@ -64,17 +64,17 @@ func runUninstall(args []string) {
 	cmd := startupCmdPath()
 	if !hasYesFlag(args) {
 		fmt.Println()
-		fmt.Println("FABI UNINSTALL — dry run")
+		fmt.Println(tr("uninstall.title"))
 		fmt.Println("─────────────────────────────────────────────")
 		fmt.Printf("  delete: %s\n", cmd)
-		fmt.Println("  (ledger ~/.fabi/ is NOT deleted — your data stays)")
+		fmt.Println(tr("uninstall.keep"))
 		fmt.Println()
-		fmt.Println("run with --yes to apply: fabi uninstall --yes")
+		fmt.Println(tr("uninstall.apply"))
 		return
 	}
 	if err := os.Remove(cmd); err != nil {
 		if os.IsNotExist(err) {
-			fmt.Println("nothing installed — no launcher found")
+			fmt.Println(tr("uninstall.none"))
 			return
 		}
 		fmt.Printf("fabi: uninstall failed: %v\n", err)

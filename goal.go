@@ -78,8 +78,8 @@ func runGoal(args []string) {
 	}
 	goal := strings.Join(parts, " ")
 	if goal == "" {
-		fmt.Println("usage: fabi goal \"<purpose>\" [--run]")
-		fmt.Println("example: fabi goal \"build a homepage\" --run")
+		fmt.Println(tr("goal.usage"))
+		fmt.Println(tr("goal.example"))
 		return
 	}
 
@@ -216,7 +216,7 @@ func runGoalTask(l *ledger, goal string, tasks []string) {
 	}
 	if len(skipped) > 0 {
 		fmt.Println()
-		fmt.Println("skipped (no engine for these yet):")
+		fmt.Println(tr("goal.skipped"))
 		for _, s := range skipped {
 			fmt.Println("  - " + s)
 		}
@@ -224,14 +224,14 @@ func runGoalTask(l *ledger, goal string, tasks []string) {
 		// installed but down, starting it enables these tasks — route
 		// the user to the fix instead of a dead end.
 		if st, _, err := rawHTTP("127.0.0.1:8188", "GET", "/", "", 2*time.Second); err == nil && st > 0 {
-			fmt.Println("    → ComfyUI is UP on :8188 — image routing can be added")
+			fmt.Println(tr("goal.comfy.up"))
 		} else {
-			fmt.Println("    → ComfyUI is installed (idle) — start it to enable image tasks")
+			fmt.Println(tr("goal.comfy.idle"))
 		}
 	}
 	if executed == 0 {
 		fmt.Println()
-		fmt.Println("no text-generatable task in this goal (image/video need other engines)")
+		fmt.Println(tr("goal.notext"))
 	} else {
 		fmt.Printf("\n%d task(s) executed as a chain — outputs threaded\n", executed)
 	}
