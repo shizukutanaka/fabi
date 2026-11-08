@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"runtime"
@@ -184,6 +185,19 @@ func main() {
 			langs = append(langs, k)
 		}
 		sort.Strings(langs)
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			}
+		}
+		if jsonOut {
+			out, _ := json.MarshalIndent(map[string]any{
+				"detected": code, "source": src, "supported": langs,
+				"override": "FABI_LANG=<code>",
+			}, "", "  ")
+			fmt.Println(string(out))
+			return
+		}
 		fmt.Println("detected:", code, "(source:", src+")")
 		fmt.Println("supported:", strings.Join(langs, " "))
 		fmt.Println("override:  set FABI_LANG=<code> — e.g. set FABI_LANG=en")
