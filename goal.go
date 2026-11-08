@@ -134,6 +134,7 @@ func runGoal(args []string) {
 	fmt.Println()
 
 	ok := 0
+	var jtasks []map[string]any
 	for _, tn := range tasks {
 		tp, has := taskProfiles[tn]
 		if !has {
@@ -141,15 +142,34 @@ func runGoal(args []string) {
 		}
 		r := evalTask(tp, gpuName, vramMiB)
 		r.task = tn
-		if tp.modelClass == "img" {
-			fmt.Printf("  %-12s %3s class | diffusion | %s\n", tn, tp.modelClass, r.verdict)
-		} else {
-			fmt.Printf("  %-12s %3s class | %.0f tok/s → %.1fs vs %.1fs | %s\n",
-				tn, tp.modelClass, r.toks, r.latency, tp.latencyS, r.verdict)
+		if !jsonOut {
+			if tp.modelClass == "img" {
+				fmt.Printf("  %-12s %3s class | diffusion | %s\n", tn, tp.modelClass, r.verdict)
+			} else {
+				fmt.Printf("  %-12s %3s class | %.0f tok/s → %.1fs vs %.1fs | %s\n",
+					tn, tp.modelClass, r.toks, r.latency, tp.latencyS, r.verdict)
+			}
 		}
 		if r.verdict == "LOCAL OK" {
 			ok++
 		}
+		jtasks = append(jtasks, map[string]any{
+			"task": tn, "class": tp.modelClass, "verdict": r.verdict,
+			"tok_s": r.toks, "latency_s": r.latency, "target_s": tp.latencyS,
+		})
+	}
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"goal": goal, "tasks": jtasks,
+			"local_ok": ok, "total": len(tasks),
+			"gpu": gpuName, "vram_mib": vramMiB,
+		}, "", "  ")
+		fmt.Println(string(out))
+		l.emit("goal.evaluated", map[string]any{
+			"goal": goal, "tasks": tasks,
+			"local_ok": ok, "gpu": gpuName, "vram_mib": vramMiB,
+		})
+		return
 	}
 	fmt.Println()
 	fmt.Printf("verdict: %d/%d tasks feasible locally", ok, len(tasks))

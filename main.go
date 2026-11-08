@@ -66,7 +66,15 @@ func main() {
 		}
 		runRoute(arg)
 	case "goal":
-		runGoal(os.Args[2:])
+		var gargs []string
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			} else {
+				gargs = append(gargs, a)
+			}
+		}
+		runGoal(gargs)
 	case "install":
 		runInstall(os.Args[2:])
 	case "uninstall":
