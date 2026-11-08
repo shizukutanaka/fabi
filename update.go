@@ -37,7 +37,16 @@ func updateCheck() (cur, latest, url string, behind bool, err error) {
 func runUpdate() {
 	cur, latest, url, behind, err := updateCheck()
 	if err != nil {
-		fmt.Println(trf("update.err", err))
+		if jsonOut {
+			out, _ := json.MarshalIndent(map[string]any{
+				"ok": false, "error": err.Error(),
+				"current":      strings.TrimSuffix(strings.TrimPrefix(version, "v"), "-dev"),
+				"auto_install": false,
+			}, "", "  ")
+			fmt.Println(string(out))
+		} else {
+			fmt.Println(trf("update.err", err))
+		}
 		return
 	}
 	if jsonOut {

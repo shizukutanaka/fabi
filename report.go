@@ -471,7 +471,7 @@ func runReport() {
 	fmt.Printf("  GPU          %s\n", gpuLine)
 	fmt.Println()
 
-	fmt.Printf("TREND (%d scans)\n", len(aggs))
+	fmt.Println(trf("report.trend.hdr", len(aggs)))
 	delta := ""
 	if verified > 0 {
 		delta = fmt.Sprintf(" — %s reclaimed, verified", formatBytes(verified))
@@ -480,9 +480,9 @@ func runReport() {
 	} else {
 		delta = " — nothing reclaimed yet"
 	}
-	fmt.Printf("  model disk   %s → %s%s\n",
-		formatBytes(first.modelBytes), formatBytes(latest.modelBytes), delta)
-	fmt.Printf("  running tools %d → %d\n", first.running, latest.running)
+	fmt.Println(trf("report.trend.models",
+		formatBytes(first.modelBytes), formatBytes(latest.modelBytes), delta))
+	fmt.Println(trf("report.trend.tools", first.running, latest.running))
 	fmt.Println(tr("report.deltas.note"))
 	fmt.Println()
 
@@ -524,14 +524,14 @@ func runReport() {
 		fmt.Println(tr("report.inference"))
 		for _, m := range order {
 			s := stats[m]
-			fmt.Printf("  %-18s %3d samples  avg %5.0f  min %5.0f  max %5.0f\n",
-				m, s.n, s.sum/float64(s.n), s.mn, s.mx)
+			fmt.Println(trf("report.infer.row",
+				m, s.n, s.sum/float64(s.n), s.mn, s.mx))
 		}
 		fmt.Println()
 	}
 
 	fmt.Println(tr("report.work"))
-	fmt.Printf("  recommendations open: %d\n", len(recLatest))
+	fmt.Println(trf("report.recs.open", len(recLatest)))
 	parts := []string{}
 	for _, c := range []string{"remove", "idle", "investigate"} {
 		if n := recByClass[c]; n > 0 {
@@ -592,7 +592,7 @@ func runReport() {
 		}
 	}
 	if len(goals) > 0 {
-		fmt.Printf("  executions: %d goal(s), %d step(s) run\n", len(goals), steps)
+		fmt.Println(trf("report.execs", len(goals), steps))
 	}
 	fmt.Println()
 
