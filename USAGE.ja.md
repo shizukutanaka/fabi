@@ -54,6 +54,9 @@ fabi report --json     # ステートメントを数値で
 fabi ledger stats --json
 fabi why X --json      # 証拠チェーン
 fabi update --json     # バージョンデルタ
+fabi goal "..." --json # タスク分解+判定
+fabi route X --json    # 物理判定
+fabi run "..." --json  # 計測推論
 ```
 
 ## Universal API
@@ -62,7 +65,7 @@ fabi update --json     # バージョンデルタ
 設計上ループバックのみ:
 
 ```
-GET  /status /models /ledger /doctor /diff /why /pattern /update
+GET  /status /models /ledger /doctor /diff /why /pattern /update /route
 POST /run /goal /unload /scan /pattern /import
 ```
 

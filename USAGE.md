@@ -53,6 +53,10 @@ fabi scan --json       # full findings as JSON
 fabi report --json     # the statement as numbers
 fabi ledger stats --json
 fabi why X --json      # evidence chain
+fabi update --json     # version delta
+fabi goal "..." --json # task decomposition + verdicts
+fabi route X --json    # physics verdict
+fabi run "..." --json  # measured inference
 ```
 
 ## The Universal API
@@ -61,7 +65,7 @@ fabi why X --json      # evidence chain
 loopback only by design:
 
 ```
-GET  /status /models /ledger /doctor /diff /why /pattern
+GET  /status /models /ledger /doctor /diff /why /pattern /update /route
 POST /run /goal /unload /scan /pattern /import
 ```
 
