@@ -674,6 +674,7 @@ button:hover{border-color:#58a6ff}
 <h2>AI tools</h2><div id=t></div>
 <h2>Models</h2><div id=m></div>
 <h2>Recommendations</h2><div id=r></div>
+<h2>Scan history</h2><div id=h></div>
 <h2>Control</h2>
 <div class=card><button onclick="do('unload')">unload idle models</button>
 <button onclick="do('auto')">fabi auto (safe only)</button><div id=c></div></div>
@@ -688,6 +689,19 @@ function card(t,d){return '<div class=card>'+t+(d?'<div class=dim>'+d+'</div>':'
  m.innerHTML=(ms.models||[]).map(x=>card('<b>'+x.name+'</b> <span class=pill>'+(x.size_gb||'').toFixed?.(1)+'GB</span>')).join('')||'<div class=dim>(none)</div>';
  const d=await J('/doctor');
  r.innerHTML=(d.recommendations||[]).map(x=>card('<span class=pill>'+x.class+'</span> <b>'+x.target+'</b><pre>'+x.detail+'</pre>')).join('')||'<div class=dim>(none)</div>';
+ // Scan history — the ledger's time dimension as a bar sparkline.
+ const h=await J('/ledger?kind=report.generated&n=30');
+ const ev=(h.events||[]).reverse();
+ if(ev.length){
+  const mx=Math.max(...ev.map(e=>e.payload.findings||0),1);
+  h.innerHTML=card(ev.map(e=>{
+   const p=Math.round((e.payload.findings||0)/mx*100);
+   const d=new Date(e.ts).toLocaleString();
+   return '<div class=dim title="'+d+' — '+(e.payload.findings||0)+' findings">'
+    +'<span style="display:inline-block;background:#58a6ff;height:.7rem;width:'+p+'%;border-radius:2px;vertical-align:middle"></span>'
+    +' <span class=num>'+(e.payload.findings||0)+'</span> <span style="font-size:.7rem">'+d+'</span></div>';
+  }).join(''));
+ } else h.innerHTML='<div class=dim>(no scans yet — run fabi scan)</div>';
  x.innerHTML='<div class=dim><pre>'+JSON.stringify(st,null,2)+'</pre></div>';
 })();
 async function do(p){
