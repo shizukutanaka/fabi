@@ -778,25 +778,26 @@ bs.textContent=L.scan; bu.textContent=L.unload; ba.textContent=L.auto;
 const none=L.none;
 async function tick(){
  const st=await J('/status');
- s.innerHTML=card('<span class=num>'+st.tools_running+'</span> running · <span class=num>'+st.tools_installed+'</span> installed · <span class=num>'+st.models+'</span> models · gpu '+st.gpu_util+'% '+st.vram_gib_used+'/'+st.vram_gib_total+'GiB'+(st.gpu?' <span class=dim>'+st.gpu+'</span>':'')+' <span class=dim>· refreshed '+new Date().toLocaleTimeString()+'</span>', st.stale||'');
+ s.innerHTML=card('<span class=num>'+st.tools_running+'</span> '+L.running+' · <span class=num>'+st.tools_installed+'</span> '+L.installed+' · <span class=num>'+st.models+'</span> '+plain(L.models)+' · gpu '+st.gpu_util+'% '+st.vram_gib_used+'/'+st.vram_gib_total+'GiB'+(st.gpu?' <span class=dim>'+st.gpu+'</span>':'')+' <span class=dim>· '+L.refreshed+' '+new Date().toLocaleTimeString()+'</span>', st.stale||'');
  const ms=await J('/models');
- m.innerHTML=(ms.models||[]).map(x=>card('<b>'+x.name+'</b> <span class=pill>'+(x.size_gb||'').toFixed?.(1)+'GB</span>')).join('')||'<div class=dim>(none)</div>';
+ m.innerHTML=(ms.models||[]).map(x=>card('<b>'+x.name+'</b> <span class=pill>'+(x.size_gb||'').toFixed?.(1)+'GB</span>')).join('')||'<div class=dim>'+none+'</div>';
  const d=await J('/doctor');
  const act=(c,t)=>({idle:'fabi unload '+t,remove:'fabi report',investigate:'fabi scan'})[c]||'fabi auto';
  const rec=(d.recommendations||[]).filter(x=>x.class=='remove').reduce((a,x)=>a+(x.reclaim_bytes||0),0);
- if(rec>0)s.innerHTML+=card('reclaimable: <span class=num>~'+(rec/1073741824).toFixed(1)+' GB</span> — flagged duplicates, awaiting manual removal');
- r.innerHTML=(d.recommendations||[]).map(x=>card('<span class=pill>'+x.class+'</span> <b>'+x.target+'</b>'+(x.reclaim_bytes?' <span class=pill>~'+(x.reclaim_bytes/1073741824).toFixed(1)+'GB</span>':'')+'<pre>'+x.detail+'</pre><div class=dim>action: '+act(x.class,x.target)+'</div>')).join('')||'<div class=dim>(none)</div>';
+ if(rec>0)s.innerHTML+=card(L.reclaimable+': <span class=num>~'+(rec/1073741824).toFixed(1)+' GB</span> — '+L.reclaimableNote);
+ r.innerHTML=(d.recommendations||[]).map(x=>card('<span class=pill>'+x.class+'</span> <b>'+x.target+'</b>'+(x.reclaim_bytes?' <span class=pill>~'+(x.reclaim_bytes/1073741824).toFixed(1)+'GB</span>':'')+'<pre>'+x.detail+'</pre><div class=dim>'+L.action+': '+act(x.class,x.target)+'</div>')).join('')||'<div class=dim>'+none+'</div>';
  const fd=await J('/findings');
  const grp=(fd.groups||{});
  const sec=(n,items)=>(items&&items.length)?'<div class=dim>'+n+'</div>'+(items||[]).map(x=>'<div class=card><b>'+x.name+'</b><pre class=dim>'+x.detail+'</pre></div>').join(''):'';
- g.innerHTML=sec('services',grp.service)+sec('runtimes',grp.runtime)+sec('packages',grp.package)||'<div class=dim>(none)</div>';
+ const plain=t=>(t||'').replace(/ *\(%[ds]\)/,'').replace(/ *%[ds].*/,'');
+ g.innerHTML=sec(plain(L.services),grp.service)+sec(plain(L.runtimes),grp.runtime)+sec(plain(L.packages),grp.package)||'<div class=dim>'+none+'</div>';
  // Watch-daemon liveness — ui.state events mean fabi watch is alive.
  const w=await J('/ledger?kind=ui.state&n=1');
  const we=(w.events||[])[0];
  if(we){
   const age=(Date.now()-we.ts)/60000;
   const live=age<10;
-  s.innerHTML+=card('<span class=dot style="background:'+(live?'#3fb950':'#8b949e')+'"></span> '+(live?'fabi watch alive':'fabi watch stale')+' <span class=dim>'+age.toFixed(0)+'m ago</span>');
+  s.innerHTML+=card('<span class=dot style="background:'+(live?'#3fb950':'#8b949e')+'"></span> '+(live?L.watchAlive:L.watchStale)+' <span class=dim>'+age.toFixed(0)+'m ago</span>');
  }
  // Scan history — the ledger's time dimension as a bar sparkline.
  const h=await J('/ledger?kind=report.generated&n=30');
@@ -810,7 +811,7 @@ async function tick(){
     +'<span style="display:inline-block;background:#58a6ff;height:.7rem;width:'+p+'%;border-radius:2px;vertical-align:middle"></span>'
     +' <span class=num>'+(e.payload.findings||0)+'</span> <span style="font-size:.7rem">'+d+'</span></div>';
   }).join(''));
- } else h.innerHTML='<div class=dim>(no scans yet — run fabi scan)</div>';
+ } else h.innerHTML='<div class=dim>'+L.noScans+'</div>';
  // Inference trend — measured tok/s over time from inference.measured.
  const inf=await J('/ledger?kind=inference.measured&n=30');
  const iev=(inf.events||[]).reverse();
@@ -823,7 +824,7 @@ async function tick(){
     +'<span style="display:inline-block;background:#3fb950;height:.7rem;width:'+p+'%;border-radius:2px;vertical-align:middle"></span>'
     +' <span class=num>'+(e.payload.tok_s||0).toFixed(0)+'</span> <span style="font-size:.7rem">'+m+'</span></div>';
   }).join(''));
- } else i.innerHTML='<div class=dim>(no measurements yet — run fabi run / fabi watch)</div>';
+ } else i.innerHTML='<div class=dim>'+L.noMeasure+'</div>';
  x.innerHTML='<div class=dim><pre>'+JSON.stringify(st,null,2)+'</pre></div>';
 }
 tick(); setInterval(tick, 4000);
