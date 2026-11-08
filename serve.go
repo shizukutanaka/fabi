@@ -579,6 +579,7 @@ func statusJSON() map[string]any {
 	}
 	latest := windows[len(windows)-1]
 	var running, installed, services, models int
+	var gpuName string
 	for _, f := range latest.findings {
 		switch f.kind {
 		case "tool":
@@ -591,12 +592,14 @@ func statusJSON() map[string]any {
 			services++
 		case "model":
 			models++
+		case "gpu":
+			gpuName = f.name
 		}
 	}
 	resp := map[string]any{
 		"running": running, "installed_idle": installed,
 		"services": services, "models": models,
-		"scans": len(windows), "version": version,
+		"scans": len(windows), "version": version, "gpu": gpuName,
 	}
 	if n, vram := loadedModels(); n > 0 {
 		resp["loaded_models"] = n
@@ -708,7 +711,7 @@ const J = async p => (await fetch(p)).json();
 function card(t,d){return '<div class=card>'+t+(d?'<div class=dim>'+d+'</div>':'')+'</div>'}
 async function tick(){
  const st=await J('/status');
- s.innerHTML=card('<span class=num>'+st.tools_running+'</span> running · <span class=num>'+st.tools_installed+'</span> installed · <span class=num>'+st.models+'</span> models · gpu '+st.gpu_util+'% '+st.vram_gib_used+'/'+st.vram_gib_total+'GiB <span class=dim>· refreshed '+new Date().toLocaleTimeString()+'</span>', st.stale||'');
+ s.innerHTML=card('<span class=num>'+st.tools_running+'</span> running · <span class=num>'+st.tools_installed+'</span> installed · <span class=num>'+st.models+'</span> models · gpu '+st.gpu_util+'% '+st.vram_gib_used+'/'+st.vram_gib_total+'GiB'+(st.gpu?' <span class=dim>'+st.gpu+'</span>':'')+' <span class=dim>· refreshed '+new Date().toLocaleTimeString()+'</span>', st.stale||'');
  const ms=await J('/models');
  m.innerHTML=(ms.models||[]).map(x=>card('<b>'+x.name+'</b> <span class=pill>'+(x.size_gb||'').toFixed?.(1)+'GB</span>')).join('')||'<div class=dim>(none)</div>';
  const d=await J('/doctor');
