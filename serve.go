@@ -686,6 +686,7 @@ h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:#8b949e;m
 .num{font-weight:600;color:#d2a8ff}
 .dim{color:#8b949e;font-size:.85rem}
 .pill{display:inline-block;padding:.1rem .5rem;border-radius:99px;background:#21262d;font-size:.75rem}
+.dot{display:inline-block;width:.6rem;height:.6rem;border-radius:50%;vertical-align:middle}
 .ok{color:#3fb950}.warn{color:#d29922}.bad{color:#f85149}
 table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:.2rem .4rem;font-size:.85rem;border-bottom:1px solid #21262d}
 th{color:#8b949e;font-weight:500}
@@ -723,6 +724,14 @@ async function tick(){
  const grp=(fd.groups||{});
  const sec=(n,items)=>(items&&items.length)?'<div class=dim>'+n+'</div>'+(items||[]).map(x=>'<div class=card><b>'+x.name+'</b><pre class=dim>'+x.detail+'</pre></div>').join(''):'';
  g.innerHTML=sec('services',grp.service)+sec('runtimes',grp.runtime)+sec('packages',grp.package)||'<div class=dim>(none)</div>';
+ // Watch-daemon liveness — ui.state events mean fabi watch is alive.
+ const w=await J('/ledger?kind=ui.state&n=1');
+ const we=(w.events||[])[0];
+ if(we){
+  const age=(Date.now()-we.ts)/60000;
+  const live=age<10;
+  s.innerHTML+=card('<span class=dot style="background:'+(live?'#3fb950':'#8b949e')+'"></span> '+(live?'fabi watch alive':'fabi watch stale')+' <span class=dim>'+age.toFixed(0)+'m ago</span>');
+ }
  // Scan history — the ledger's time dimension as a bar sparkline.
  const h=await J('/ledger?kind=report.generated&n=30');
  const ev=(h.events||[]).reverse();
