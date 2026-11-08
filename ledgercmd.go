@@ -53,6 +53,8 @@ func runLedgerCmd(args []string) {
 					kind = rest[i+1]
 					i++
 				}
+			case "--json":
+				jsonOut = true
 			}
 		}
 		ledgerTail(l, kind, n)
@@ -184,6 +186,23 @@ func ledgerTail(l *ledger, kind string, n int) {
 		return
 	}
 	defer rows.Close()
+	if jsonOut {
+		var jev []map[string]any
+		for rows.Next() {
+			var ts int64
+			var k, payload string
+			rows.Scan(&ts, &k, &payload)
+			jev = append(jev, map[string]any{
+				"ts": ts, "kind": k, "payload": payload,
+				"time": time.UnixMilli(ts).Format("15:04:05.000"),
+			})
+		}
+		out, _ := json.MarshalIndent(map[string]any{
+			"kind": kind, "limit": n, "events": jev,
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
+	}
 	fmt.Println()
 	fmt.Printf("FABI LEDGER — last %d events%s\n", n, kindSuffix(kind))
 	fmt.Println("─────────────────────────────────────────────")
