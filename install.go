@@ -61,7 +61,7 @@ func installStartup(exe, cmd string) {
 		if jsonOut {
 			fmt.Printf(`{"ok":false,"error":"%v"}`+"\n", err)
 		} else {
-			fmt.Printf("FABI INSTALL — failed: %v\n", err)
+			fmt.Println(trf("install.failed", err))
 		}
 		l.emit("install.action", map[string]any{"ok": false, "error": err.Error()})
 		return
@@ -72,7 +72,7 @@ func installStartup(exe, cmd string) {
 		}, "", "  ")
 		fmt.Println(string(out))
 	} else {
-		fmt.Printf("FABI INSTALL — wrote %s\n", cmd)
+		fmt.Println(trf("install.wrote", cmd))
 		fmt.Println(tr("install.willrun"))
 		fmt.Println("verify:  dir \"%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\"")
 	}
@@ -113,7 +113,7 @@ func runUninstall(args []string) {
 		if jsonOut {
 			fmt.Printf(`{"ok":false,"error":"%v"}`+"\n", err)
 		} else {
-			fmt.Printf("fabi: uninstall failed: %v\n", err)
+			fmt.Println(trf("uninstall.failed", err))
 		}
 		l.emit("uninstall.action", map[string]any{"ok": false})
 		return
@@ -124,7 +124,7 @@ func runUninstall(args []string) {
 		}, "", "  ")
 		fmt.Println(string(out))
 	} else {
-		fmt.Printf("removed %s. ledger kept at ~/.fabi/\n", cmd)
+		fmt.Println(trf("uninstall.removed", cmd))
 	}
 	l.emit("uninstall.action", map[string]any{"ok": true})
 }

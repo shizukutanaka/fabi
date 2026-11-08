@@ -81,9 +81,9 @@ func runDiff(args []string) {
 	}
 
 	fmt.Println()
-	fmt.Printf("FABI DIFF — %s → %s (%d scans back)\n",
+	fmt.Println(trf("diff.hdr",
 		time.UnixMilli(prev.startTs).Format("15:04"),
-		time.UnixMilli(latest.startTs).Format("15:04"), back)
+		time.UnixMilli(latest.startTs).Format("15:04"), back))
 	fmt.Println("─────────────────────────────────────────────")
 	if len(added) == 0 && len(removed) == 0 {
 		fmt.Println(tr("diff.none"))
@@ -95,5 +95,5 @@ func runDiff(args []string) {
 	for _, f := range removed {
 		fmt.Printf("  - %-9s %s — %s\n", f.kind, f.name, trunc(f.detail, 50))
 	}
-	fmt.Printf("\n%d appeared, %d gone\n", len(added), len(removed))
+	fmt.Println(trf("diff.delta", len(added), len(removed)))
 }

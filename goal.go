@@ -124,11 +124,11 @@ func runGoal(args []string) {
 
 	fmt.Println()
 	if !jsonOut {
-		fmt.Printf("FABI GOAL — %q\n", goal)
+		fmt.Println(trf("goal.hdr", goal))
 		fmt.Println("─────────────────────────────────────────────")
-		fmt.Printf("tasks (%d): %s\n", len(tasks), strings.Join(tasks, ", "))
+		fmt.Println(trf("goal.tasks", len(tasks), strings.Join(tasks, ", ")))
 		if gpuName != "" {
-			fmt.Printf("hardware: %s — %.0f GiB VRAM\n", gpuName, vramMiB/1024)
+			fmt.Println(trf("goal.hw", gpuName, vramMiB/1024))
 		} else {
 			fmt.Println(tr("goal.nogpu"))
 		}
@@ -174,7 +174,7 @@ func runGoal(args []string) {
 		return
 	}
 	fmt.Println()
-	fmt.Printf("verdict: %d/%d tasks feasible locally", ok, len(tasks))
+	fmt.Print(trf("goal.verdict", ok, len(tasks)))
 	switch {
 	case ok == len(tasks):
 		fmt.Println(tr("goal.go"))
@@ -255,7 +255,7 @@ func runGoalTask(l *ledger, goal string, tasks []string) {
 		fmt.Println()
 		fmt.Println(tr("goal.notext"))
 	} else {
-		fmt.Printf("\n%d task(s) executed as a chain — outputs threaded\n", executed)
+		fmt.Println(trf("goal.chain", executed))
 	}
 }
 

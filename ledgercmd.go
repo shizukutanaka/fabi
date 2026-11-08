@@ -70,12 +70,12 @@ func runLedgerCmd(args []string) {
 			}
 		}
 		if len(iargs) < 1 {
-			fmt.Println("usage: fabi ledger import <file>")
+			fmt.Println(tr("ledger.usage.import"))
 			return
 		}
 		ledgerImport(l, iargs[0])
 	default:
-		fmt.Println("usage: fabi ledger [stats | events [-k kind] [-n N] | export | import <file>]")
+		fmt.Println(tr("ledger.usage"))
 	}
 }
 
@@ -125,14 +125,14 @@ func ledgerStats(l *ledger) {
 	fmt.Println("─────────────────────────────────────────────")
 	dir, _ := ledgerDir()
 	if st, err := os.Stat(filepath.Join(dir, "ledger.db")); err == nil {
-		fmt.Printf("file:     %s (%.1f KB)\n", filepath.Join(dir, "ledger.db"),
-			float64(st.Size())/1024)
+		fmt.Println(trf("ledger.file", filepath.Join(dir, "ledger.db"),
+			float64(st.Size())/1024))
 	}
-	fmt.Printf("events:   %d\n", total)
+	fmt.Println(trf("ledger.events.count", total))
 	if minTs > 0 {
-		fmt.Printf("range:    %s → %s\n",
+		fmt.Println(trf("ledger.range",
 			time.UnixMilli(minTs).Format("2006-01-02 15:04"),
-			time.UnixMilli(maxTs).Format("2006-01-02 15:04"))
+			time.UnixMilli(maxTs).Format("2006-01-02 15:04")))
 	}
 	fmt.Println()
 	fmt.Println(tr("ledger.bykind"))
@@ -212,7 +212,7 @@ func ledgerTail(l *ledger, kind string, n int) {
 		return
 	}
 	fmt.Println()
-	fmt.Printf("FABI LEDGER — last %d events%s\n", n, kindSuffix(kind))
+	fmt.Println(trf("ledger.events.hdr", n, kindSuffix(kind)))
 	fmt.Println("─────────────────────────────────────────────")
 	for rows.Next() {
 		var ts int64
@@ -265,8 +265,7 @@ func ledgerImport(l *ledger, path string) {
 		fmt.Println(string(out))
 		return
 	}
-	fmt.Printf("fabi ledger import: %d new event(s), %d duplicate(s) skipped, %d malformed\n",
-		imported, dup, bad)
+	fmt.Println(trf("ledger.import.result", imported, dup, bad))
 	if imported > 0 {
 		fmt.Println(tr("ledger.merged"))
 	}

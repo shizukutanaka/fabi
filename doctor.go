@@ -102,7 +102,7 @@ func runDoctor() {
 
 	events := localEvents(l.allEvents(), l.importedRanges())
 	if len(events) == 0 {
-		fmt.Println("FABI DOCTOR — ledger is empty. Run `fabi scan` first.")
+		fmt.Println(tr("doctor.empty"))
 		return
 	}
 
@@ -558,8 +558,8 @@ func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, late
 	fmt.Println()
 	fmt.Println(tr("doctor.title"))
 	fmt.Println("─────────────────────────────────────────────")
-	fmt.Printf("ledger: %d events across %d scans | latest scan: %d findings\n",
-		nEvents, nScans, len(latest.findings))
+	fmt.Println(trf("doctor.ledgerline",
+		nEvents, nScans, len(latest.findings)))
 	fmt.Println()
 
 	if len(recs) == 0 {
@@ -579,7 +579,7 @@ func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, late
 	}
 
 	if len(remove) > 0 {
-		fmt.Printf("REMOVE — duplicate content (~%s reclaimable)\n", formatBytes(reclaim))
+		fmt.Println(trf("doctor.remove.hdr", formatBytes(reclaim)))
 		for _, r := range remove {
 			fmt.Printf("  [%s] %s\n", r.confidence, r.target)
 			for _, line := range strings.Split(r.detail, "\n") {
@@ -611,7 +611,7 @@ func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, late
 	}
 
 	fmt.Println("─────────────────────────────────────────────")
-	fmt.Printf("recommendations: %d new, %d unchanged\n", emitted, unchanged)
+	fmt.Println(trf("doctor.recs.count", emitted, unchanged))
 	fmt.Println(tr("doctor.footer"))
 	fmt.Println()
 	fmt.Println(tr("doctor.next"))
