@@ -298,12 +298,11 @@ func runDoctor() {
 		if loadedVRAM > 0 {
 			explained := float64(loadedVRAM) / 1048576
 			pct := explained / gapMiB * 100
-			detail += fmt.Sprintf(
-				"\n    explained: %.0f MiB (%.0f%%) is loaded models — %s",
+			detail += trf("rec.vram.explained",
 				explained, pct, strings.Join(loadedNames, ", "))
 		}
 		if len(suspects) > 0 {
-			detail += "\n    suspects (running ai-workloads):\n      " +
+			detail += tr("rec.vram.suspects") +
 				strings.Join(suspects, "\n      ")
 		}
 		recs = append(recs, recommendation{
@@ -357,9 +356,7 @@ func runDoctor() {
 			recs = append(recs, recommendation{
 				class:  "investigate",
 				target: "inference " + model,
-				detail: fmt.Sprintf(
-					"tok/s fell from ~%.0f to ~%.0f (-%.0f%%) across %d samples\n"+
-						"    causes: thermal throttle, memory/CPU contention, engine swap",
+				detail: trf("rec.regress.detail",
 					oldAvg, newAvg, (1-newAvg/oldAvg)*100, len(ms)),
 				confidence: "medium — measured regression in ledger timeseries",
 				evidence:   ev[:min(3, len(ev))],
@@ -401,9 +398,7 @@ func runDoctor() {
 				recs = append(recs, recommendation{
 					class:  "idle",
 					target: "model " + m.Name,
-					detail: fmt.Sprintf(
-						"loaded, holding %.1f GB VRAM, unused >15min\n"+
-							"    action: fabi unload %s",
+					detail: trf("rec.idlemodel.unload",
 						float64(m.SizeVRAM)/1e9, m.Name),
 					confidence: "high — resident but idle, reclaimable",
 				})
@@ -440,9 +435,7 @@ func runDoctor() {
 				recs = append(recs, recommendation{
 					class:  "idle",
 					target: "model " + m.Name,
-					detail: fmt.Sprintf(
-						"installed (%.1f GB) but never invoked via fabi — "+
-							"reclaim disk by removing manually if unneeded",
+					detail: trf("rec.neverinvoked",
 						float64(m.Size)/1e9),
 					confidence: "medium — untracked, may predate fabi",
 				})
