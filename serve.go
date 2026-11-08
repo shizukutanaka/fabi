@@ -98,6 +98,8 @@ func serveConn(conn net.Conn) {
 		writeJSON(conn, 200, modelsJSON())
 	case method == "GET" && path == "/findings":
 		writeJSON(conn, 200, findingsJSON())
+	case method == "GET" && path == "/lang":
+		writeJSON(conn, 200, uiLabelsJSON())
 	case method == "GET" && path == "/events":
 		serveSSE(conn)
 	case method == "POST" && path == "/run":
@@ -420,6 +422,25 @@ func serveSSE(conn net.Conn) {
 	}
 }
 
+// uiLabelsJSON — the dashboard's labels in the detected language.
+// The embedded /ui is English-only HTML until the JS asks for this
+// map — the same tr() engine the CLI uses, served as data.
+func uiLabelsJSON() map[string]any {
+	return map[string]any{
+		"models": tr("sec.models"), "services": tr("sec.services"),
+		"runtimes": tr("scan.runtimes"), "packages": tr("sec.packages"),
+		"recs": tr("doctor.title"), "action": tr("doctor.next"),
+		"scan": tr("ui.scan"), "unload": tr("ui.unload"), "auto": tr("ui.auto"),
+		"running": tr("ui.running"), "installed": tr("ui.installed"),
+		"reclaimable": tr("ui.reclaimable"), "refreshed": tr("ui.refreshed"),
+		"watchAlive": tr("ui.watch.alive"), "watchStale": tr("ui.watch.stale"),
+		"none": tr("ui.none"), "noScans": tr("ui.noscans"),
+		"noMeasure": tr("ui.nomeasure"), "estate": tr("ui.estate"),
+		"history": tr("ui.history"), "inference": tr("ui.inference"),
+		"control": tr("ui.control"), "detected": langCode,
+	}
+}
+
 // serveScan: POST /scan — trigger a fresh observation over the API.
 // Agents can ask fabi to look again; the full probe pipeline runs
 // and every finding lands in the ledger before we answer.
@@ -733,20 +754,28 @@ button:hover{border-color:#58a6ff}
 </style>
 <h1>fabi — the honest eye on this PC's AI estate</h1>
 <div id=s></div>
-<h2>AI tools</h2><div id=t></div>
-<h2>Models</h2><div id=m></div>
-<h2>Services / runtimes / packages</h2><div id=g></div>
-<h2>Recommendations</h2><div id=r></div>
-<h2>Scan history</h2><div id=h></div>
-<h2>Inference trend</h2><div id=i></div>
-<h2>Control</h2>
-<div class=card><button onclick="do('scan')">scan now</button>
-<button onclick="do('unload')">unload idle models</button>
-<button onclick="do('auto')">fabi auto (safe only)</button><div id=c></div></div>
+<h2 id=ht>AI tools</h2><div id=t></div>
+<h2 id=hm>Models</h2><div id=m></div>
+<h2 id=hg>Services / runtimes / packages</h2><div id=g></div>
+<h2 id=hr>Recommendations</h2><div id=r></div>
+<h2 id=hh>Scan history</h2><div id=h></div>
+<h2 id=hi>Inference trend</h2><div id=i></div>
+<h2 id=hc>Control</h2>
+<div class=card><button id=bs onclick="do('scan')">scan now</button>
+<button id=bu onclick="do('unload')">unload idle models</button>
+<button id=ba onclick="do('auto')">fabi auto (safe only)</button><div id=c></div></div>
 <h2>Raw</h2><div id=x></div>
 <script>
 const J = async p => (await fetch(p)).json();
 function card(t,d){return '<div class=card>'+t+(d?'<div class=dim>'+d+'</div>':'')+'</div>'}
+// Localized labels — the same tr() engine the CLI uses, served by /lang.
+const L = await (await fetch('/lang')).json();
+ht.textContent=L.estate.replace(/\/[^/]*$/,'').trim().split('/')[0]+' / AI tools';
+hm.textContent=L.models.replace(/%.*/,'').trim();
+hg.textContent=L.estate; hr.textContent=L.recs;
+hh.textContent=L.history; hi.textContent=L.inference; hc.textContent=L.control;
+bs.textContent=L.scan; bu.textContent=L.unload; ba.textContent=L.auto;
+const none=L.none;
 async function tick(){
  const st=await J('/status');
  s.innerHTML=card('<span class=num>'+st.tools_running+'</span> running · <span class=num>'+st.tools_installed+'</span> installed · <span class=num>'+st.models+'</span> models · gpu '+st.gpu_util+'% '+st.vram_gib_used+'/'+st.vram_gib_total+'GiB'+(st.gpu?' <span class=dim>'+st.gpu+'</span>':'')+' <span class=dim>· refreshed '+new Date().toLocaleTimeString()+'</span>', st.stale||'');
