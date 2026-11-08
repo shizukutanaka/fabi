@@ -105,6 +105,11 @@ func main() {
 	case "why":
 		runWhy(os.Args[2:])
 	case "update":
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			}
+		}
 		runUpdate()
 	case "help", "-h", "--help":
 		usage()

@@ -40,6 +40,14 @@ func runUpdate() {
 		fmt.Println(trf("update.err", err))
 		return
 	}
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"current": cur, "latest": latest, "behind": behind,
+			"url": url, "auto_install": false,
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
+	}
 	fmt.Println()
 	fmt.Println(tr("update.title"))
 	fmt.Println("─────────────────────────────────────────────")

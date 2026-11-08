@@ -893,7 +893,7 @@ func runSelfTest() {
 		exe, _ := os.Executable()
 		cmds := [][]string{
 			{"scan", "--json"}, {"status", "--json"}, {"report", "--json"},
-			{"doctor", "--json"}, {"diff", "--json"},
+			{"doctor", "--json"}, {"diff", "--json"}, {"update", "--json"},
 			{"ledger", "stats", "--json"}, {"why", "gpu", "--json"},
 		}
 		var bad []string
