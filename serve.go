@@ -98,6 +98,8 @@ func serveConn(conn net.Conn) {
 		writeJSON(conn, 200, modelsJSON())
 	case method == "GET" && path == "/findings":
 		writeJSON(conn, 200, findingsJSON())
+	case method == "GET" && path == "/events":
+		serveSSE(conn)
 	case method == "POST" && path == "/run":
 		serveRun(conn, body)
 	case method == "POST" && path == "/goal":
@@ -381,6 +383,41 @@ func serveUnload(conn net.Conn) {
 	writeJSON(conn, 200, map[string]any{
 		"unloaded": names, "vram_freed_bytes": freed, "count": len(names),
 	})
+}
+
+// serveSSE: GET /events — Server-Sent Events stream of new ledger
+// events. The conn has a 120s deadline; the client (EventSource)
+// auto-reconnects, so the stream is effectively continuous.
+func serveSSE(conn net.Conn) {
+	fmt.Fprintf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\n"+
+		"Cache-Control: no-cache\r\nConnection: keep-alive\r\n\r\n")
+	l := openLedger()
+	defer l.close()
+	last := int64(0)
+	deadline := time.Now().Add(100 * time.Second)
+	for time.Now().Before(deadline) {
+		var latest []map[string]any
+		for _, e := range l.allEvents() {
+			if e.id > last {
+				var p map[string]any
+				json.Unmarshal([]byte(e.payload), &p)
+				latest = append(latest, map[string]any{
+					"id": e.id, "ts": e.ts, "kind": e.kind, "payload": p,
+				})
+				last = e.id
+			}
+		}
+		for _, ev := range latest {
+			b, _ := json.Marshal(ev)
+			if _, err := fmt.Fprintf(conn, "data: %s\n\n", b); err != nil {
+				return
+			}
+		}
+		if _, err := fmt.Fprintf(conn, ": keepalive\n\n"); err != nil {
+			return
+		}
+		time.Sleep(2 * time.Second)
+	}
 }
 
 // serveScan: POST /scan — trigger a fresh observation over the API.
