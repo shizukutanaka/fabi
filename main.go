@@ -86,9 +86,25 @@ func main() {
 		}
 		runGoal(gargs)
 	case "install":
-		runInstall(os.Args[2:])
+		var iargs []string
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			} else {
+				iargs = append(iargs, a)
+			}
+		}
+		runInstall(iargs)
 	case "uninstall":
-		runUninstall(os.Args[2:])
+		var xargs []string
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			} else {
+				xargs = append(xargs, a)
+			}
+		}
+		runUninstall(xargs)
 	case "bench":
 		// Deleted — Phase-1 proof, superseded by `fabi run --sweep`
 		// (generative benchmarks across engines). Musk: delete beats add.

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -29,6 +30,15 @@ func runInstall(args []string) {
 		return
 	}
 
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"dry_run": true, "will_write": cmd,
+			"contents": fmt.Sprintf("\"%s\" watch", exe),
+			"apply":    "fabi install --yes", "undo": "fabi uninstall",
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
+	}
 	fmt.Println()
 	fmt.Println(tr("install.title"))
 	fmt.Println("─────────────────────────────────────────────")
@@ -48,13 +58,24 @@ func installStartup(exe, cmd string) {
 	defer l.close()
 	content := fmt.Sprintf("@echo off\r\nstart \"\" /min \"%s\" watch\r\n", exe)
 	if err := os.WriteFile(cmd, []byte(content), 0644); err != nil {
-		fmt.Printf("FABI INSTALL — failed: %v\n", err)
+		if jsonOut {
+			fmt.Printf(`{"ok":false,"error":"%v"}`+"\n", err)
+		} else {
+			fmt.Printf("FABI INSTALL — failed: %v\n", err)
+		}
 		l.emit("install.action", map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
-	fmt.Printf("FABI INSTALL — wrote %s\n", cmd)
-	fmt.Println(tr("install.willrun"))
-	fmt.Println("verify:  dir \"%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\"")
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"ok": true, "path": cmd, "runs": "fabi watch at logon",
+		}, "", "  ")
+		fmt.Println(string(out))
+	} else {
+		fmt.Printf("FABI INSTALL — wrote %s\n", cmd)
+		fmt.Println(tr("install.willrun"))
+		fmt.Println("verify:  dir \"%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\"")
+	}
 	l.emit("install.action", map[string]any{"ok": true, "path": cmd})
 }
 
@@ -63,6 +84,14 @@ func runUninstall(args []string) {
 	defer l.close()
 	cmd := startupCmdPath()
 	if !hasYesFlag(args) {
+		if jsonOut {
+			out, _ := json.MarshalIndent(map[string]any{
+				"dry_run": true, "will_delete": cmd,
+				"ledger_kept": true, "apply": "fabi uninstall --yes",
+			}, "", "  ")
+			fmt.Println(string(out))
+			return
+		}
 		fmt.Println()
 		fmt.Println(tr("uninstall.title"))
 		fmt.Println("─────────────────────────────────────────────")
@@ -74,14 +103,29 @@ func runUninstall(args []string) {
 	}
 	if err := os.Remove(cmd); err != nil {
 		if os.IsNotExist(err) {
-			fmt.Println(tr("uninstall.none"))
+			if jsonOut {
+				fmt.Println(`{"ok":true,"removed":false,"reason":"nothing installed"}`)
+			} else {
+				fmt.Println(tr("uninstall.none"))
+			}
 			return
 		}
-		fmt.Printf("fabi: uninstall failed: %v\n", err)
+		if jsonOut {
+			fmt.Printf(`{"ok":false,"error":"%v"}`+"\n", err)
+		} else {
+			fmt.Printf("fabi: uninstall failed: %v\n", err)
+		}
 		l.emit("uninstall.action", map[string]any{"ok": false})
 		return
 	}
-	fmt.Printf("removed %s. ledger kept at ~/.fabi/\n", cmd)
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"ok": true, "removed": cmd, "ledger_kept": true,
+		}, "", "  ")
+		fmt.Println(string(out))
+	} else {
+		fmt.Printf("removed %s. ledger kept at ~/.fabi/\n", cmd)
+	}
 	l.emit("uninstall.action", map[string]any{"ok": true})
 }
 
