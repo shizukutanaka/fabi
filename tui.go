@@ -165,6 +165,7 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 			b.WriteString("  [" + r.class + "] " + r.target +
 				"  →  " + whyAction(r.class, r.target) + "\n")
 		}
+		b.WriteString("  " + tr("doctor.next") + "\n")
 	}
 	fmt.Print(b.String())
 }
