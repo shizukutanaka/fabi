@@ -116,16 +116,16 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 	}
 	if watchTs > 0 {
 		if age := time.Since(time.UnixMilli(watchTs)); age < 10*time.Minute {
-			b.WriteString(fmt.Sprintf("  watch: alive (%.0fm ago)\n", age.Minutes()))
+			b.WriteString(fmt.Sprintf("  "+tr("tui.watch.alive")+"\n", age.Minutes()))
 		} else {
-			b.WriteString(fmt.Sprintf("  watch: stale (%.0fm ago)\n", age.Minutes()))
+			b.WriteString(fmt.Sprintf("  "+tr("tui.watch.stale")+"\n", age.Minutes()))
 		}
 	}
 	if gpuName != "" {
-		b.WriteString("  gpu: " + gpuName + "\n")
+		b.WriteString("  " + trf("tui.gpu", gpuName) + "\n")
 	}
 	if lastModel != "" {
-		b.WriteString(fmt.Sprintf("  last: %.0f tok/s · %s\n", lastToks, lastModel))
+		b.WriteString("  " + trf("tui.last", lastToks, lastModel) + "\n")
 	}
 	b.WriteString("\n")
 
@@ -185,7 +185,7 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 		for _, v := range toks {
 			spark.WriteRune(bars[int(v/mx*float64(len(bars)-1))])
 		}
-		b.WriteString(fmt.Sprintf("inference: %s  (%.0f–%.0f tok/s)\n",
+		b.WriteString(fmt.Sprintf(tr("tui.inference")+"\n",
 			spark.String(), func() float64 {
 				m := toks[0]
 				for _, v := range toks {
@@ -218,7 +218,7 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 			}
 			spark.WriteRune(bars[h])
 		}
-		b.WriteString("\nhistory: " + spark.String() + fmt.Sprintf("  (%d scans)\n", len(windows)-start))
+		b.WriteString("\n" + trf("tui.history", spark.String(), len(windows)-start) + "\n")
 	}
 
 	if len(modelsList) > 0 {
@@ -241,7 +241,7 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 		}
 	}
 	if reclaim > 0 {
-		b.WriteString("  reclaimable: ~" + formatBytes(reclaim) + "\n")
+		b.WriteString("  " + trf("tui.reclaimable", formatBytes(reclaim)) + "\n")
 	}
 	if len(recs) > 0 {
 		b.WriteString("\n" + tr("doctor.title") + "\n")
