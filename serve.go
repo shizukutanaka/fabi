@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"time"
@@ -38,10 +39,20 @@ func runServe() {
 		"addr": "127.0.0.1:" + servePort, "ts": time.Now().UnixMilli(),
 	})
 	l.close()
+	// Graceful Ctrl+C: stop accepting, ledger the stop, exit cleanly.
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+	go func() {
+		<-sig
+		l2 := openLedger()
+		l2.emit("serve.stopped", map[string]any{"ts": time.Now().UnixMilli()})
+		l2.close()
+		ln.Close()
+	}()
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			continue
+			return // listener closed — graceful stop
 		}
 		go serveConn(conn)
 	}
