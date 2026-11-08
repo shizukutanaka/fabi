@@ -1,5 +1,7 @@
 # Fabi
 
+[日本語](README.ja.md)
+
 **The honest eye on your PC's AI estate** — sees what exists, what's
 idle, what holds VRAM, what changed, and why it says what it says —
 all on one append-only ledger.
