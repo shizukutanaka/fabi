@@ -91,7 +91,7 @@ func runPattern(args []string) {
 			fmt.Println(string(out))
 			return
 		}
-		fmt.Println("FABI PATTERNS — user additions in ~/.fabi/patterns.json")
+		fmt.Println(tr("pattern.hdr"))
 		fmt.Println("─────────────────────────────────────────────")
 		empty := true
 		show := func(name string, xs []string) {
@@ -112,7 +112,7 @@ func runPattern(args []string) {
 			empty = false
 		}
 		if empty {
-			fmt.Println("  (none — add with: fabi pattern add <field> <value>)")
+			fmt.Println(tr("pattern.none"))
 		}
 		return
 	}
@@ -124,9 +124,9 @@ func runPattern(args []string) {
 
 	if args[0] != "add" || len(args) != 3 {
 		fmt.Println("usage: fabi pattern add <exe|cmd|scripthost|dir|modelroot|pkgtool|pkgruntime|port> <value>")
-		fmt.Println("        fabi pattern install <url-to-patterns.json>")
-		fmt.Println("example: fabi pattern add exe myserver.exe")
-		fmt.Println("         fabi pattern add port myservice:9000")
+		fmt.Println(tr("pattern.hint.install"))
+		fmt.Println(tr("pattern.example1"))
+		fmt.Println(tr("pattern.example2"))
 		return
 	}
 	field, value := args[1], args[2]
@@ -150,7 +150,7 @@ func runPattern(args []string) {
 // Fetch via curl — present on all supported OSes, no TLS deps added.
 func installPatternPack(url, path string, user *patternSet) {
 	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
-		fmt.Println("fabi pattern install: need http(s) URL")
+		fmt.Println(tr("pattern.need.url"))
 		return
 	}
 	out, err := exec.Command("curl", "-sfL", "--max-time", "15", url).Output()
@@ -160,7 +160,7 @@ func installPatternPack(url, path string, user *patternSet) {
 	}
 	var pack patternSet
 	if err := json.Unmarshal(out, &pack); err != nil {
-		fmt.Println("fabi pattern install: not a pattern pack (bad JSON)")
+		fmt.Println(tr("pattern.notpack"))
 		return
 	}
 	user.ExePatterns = append(user.ExePatterns, pack.ExePatterns...)

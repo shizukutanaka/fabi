@@ -18,7 +18,7 @@ func runLedgerCmd(args []string) {
 	l := openLedger()
 	defer l.close()
 	if l.db == nil {
-		fmt.Println("FABI LEDGER — no database yet. Run `fabi scan` first.")
+		fmt.Println(tr("ledger.nodb"))
 		return
 	}
 
@@ -268,7 +268,7 @@ func ledgerImport(l *ledger, path string) {
 	fmt.Printf("fabi ledger import: %d new event(s), %d duplicate(s) skipped, %d malformed\n",
 		imported, dup, bad)
 	if imported > 0 {
-		fmt.Println("estate merged — `fabi diff` and `fabi report` now see the imported history")
+		fmt.Println(tr("ledger.merged"))
 	}
 }
 
