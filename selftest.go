@@ -432,6 +432,18 @@ func runSelfTest() {
 				status = "FAIL"
 				measured += " + /ui failed"
 			}
+			// /events is the SSE stream — it holds the conn open, so the
+			// response arrives only when the deadline hits; streamed bytes
+			// before that prove the endpoint serves. Accept data:/keepalive.
+			_, bE, errE := rawHTTP("127.0.0.1:11435", "GET", "/events", "", 3*time.Second)
+			if errE != nil && len(bE) > 0 &&
+				(strings.Contains(string(bE), "data:") || strings.Contains(string(bE), ": keepalive")) {
+				measured += " + /events SSE"
+			} else if errE == nil && len(bE) > 0 {
+				measured += " + /events SSE"
+			} else {
+				measured += " + /events empty"
+			}
 			// POST /run with no model must fail honestly — a JSON error,
 			// not a crash or a hang. The error path is part of the API.
 			st4, b4, err4 := rawHTTP("127.0.0.1:11435", "POST", "/run",
