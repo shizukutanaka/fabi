@@ -718,7 +718,7 @@ async function tick(){
  const act=(c,t)=>({idle:'fabi unload '+t,remove:'fabi report',investigate:'fabi scan'})[c]||'fabi auto';
  const rec=(d.recommendations||[]).filter(x=>x.class=='remove').reduce((a,x)=>a+(x.reclaim_bytes||0),0);
  if(rec>0)s.innerHTML+=card('reclaimable: <span class=num>~'+(rec/1073741824).toFixed(1)+' GB</span> — flagged duplicates, awaiting manual removal');
- r.innerHTML=(d.recommendations||[]).map(x=>card('<span class=pill>'+x.class+'</span> <b>'+x.target+'</b><pre>'+x.detail+'</pre><div class=dim>action: '+act(x.class,x.target)+'</div>')).join('')||'<div class=dim>(none)</div>';
+ r.innerHTML=(d.recommendations||[]).map(x=>card('<span class=pill>'+x.class+'</span> <b>'+x.target+'</b>'+(x.reclaim_bytes?' <span class=pill>~'+(x.reclaim_bytes/1073741824).toFixed(1)+'GB</span>':'')+'<pre>'+x.detail+'</pre><div class=dim>action: '+act(x.class,x.target)+'</div>')).join('')||'<div class=dim>(none)</div>';
  const fd=await J('/findings');
  const grp=(fd.groups||{});
  const sec=(n,items)=>(items&&items.length)?'<div class=dim>'+n+'</div>'+(items||[]).map(x=>'<div class=card><b>'+x.name+'</b><pre class=dim>'+x.detail+'</pre></div>').join(''):'';
