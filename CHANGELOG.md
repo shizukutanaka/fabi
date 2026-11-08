@@ -2,26 +2,34 @@
 
 ## Unreleased
 
-- **full i18n** — 124 keys × 10 languages
+- **full i18n** — 125 keys × 10 languages
   (en/ja/zh/es/de/fr/ko/pt/ru/it), audited to zero unlocalized
   literals: `FABI_LANG`/`LANG`/`LC_ALL` + Windows
   `GetUserDefaultUILanguage`; per-language `lang_<code>.go` data
   files; every user-facing surface localized — bare fabi, all
-  22 help descriptions, update, status, doctor, scan, report,
+  23 help descriptions, update, status, doctor, scan, report,
   ledger, diff, why, run, sweep, compare, unload, auto, install,
-  uninstall, goal, route (incl. verdicts), watch, serve; missing
-  keys surface as `tr:key` rather than empty output (L2)
-- **`--json` contract complete** — all 11 data commands:
-  +`goal` (task decomposition + verdicts), +`route` (physics
-  verdict), +`run` (measured inference); all emit pure JSON,
-  11/11 falsified
+  uninstall, goal, route (incl. verdicts), watch, serve, lang;
+  missing keys surface as `tr:key` rather than empty output (L2)
+- **`fabi lang`** — shows detected language, its source
+  (env/OS), the supported list and how to override
+- **`--json` everywhere** — every output-producing command emits
+  pure JSON: scan, report, doctor, status, diff, why, update,
+  goal, route, run, sweep, compare, unload, auto, pattern,
+  install, uninstall, selftest, ledger stats/events/import;
+  **18/18 falsified** in `fabi selftest` (selftest --json itself
+  excluded — recursion)
 - **API parity complete** — `GET /route?task=` (14 endpoints);
   every data command reachable via HTTP
 - **6-arch** — windows/arm64 + linux/arm64; CI cross-compiles
-  all 6 release targets every push; `fabi version` shows os/arch
+  all 6 release targets every push; `fabi version` shows
+  os/arch + detected language
+- **patterns expanded** — +global AI tools: Msty, Cherry Studio,
+  llamafile, Xinference, SillyTavern, Chatbox, Fooocus, Jan,
+  FastChat, localAI (204 detection entries)
 - **docs** — README.ja.md, USAGE.ja.md; `fabi help` exits 0
 - **selftest** — 31 PASS: +i18n honest fallback, +language
-  detection, +every --json flag valid (11 commands)
+  detection, +every --json flag valid (18 commands)
 
 ## v0.0.6 — 2026-11-07
 
