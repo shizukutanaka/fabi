@@ -231,7 +231,11 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 	if len(recs) > 0 {
 		b.WriteString("\n" + tr("doctor.title") + "\n")
 		for _, r := range recs {
-			b.WriteString("  [" + r.class + "] " + r.target +
+			sz := ""
+			if r.class == "remove" && r.reclaim > 0 {
+				sz = "  ~" + formatBytes(r.reclaim)
+			}
+			b.WriteString("  [" + r.class + "] " + r.target + sz +
 				"  →  " + whyAction(r.class, r.target) + "\n")
 		}
 		b.WriteString("  " + tr("doctor.next") + "\n")
