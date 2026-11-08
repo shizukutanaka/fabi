@@ -106,6 +106,21 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 	}
 	b.WriteString(fmt.Sprintf(tr("status.line"), running, installed, services, hidden, models,
 		gpuUtil, gpuTemp, vramUsed/1024, vramTotal/1024) + stale + "\n")
+	// Watch-daemon liveness — a recent ui.state event means fabi watch is alive.
+	var watchTs int64
+	for i := len(events) - 1; i >= 0; i-- {
+		if events[i].kind == "ui.state" {
+			watchTs = events[i].ts
+			break
+		}
+	}
+	if watchTs > 0 {
+		if age := time.Since(time.UnixMilli(watchTs)); age < 10*time.Minute {
+			b.WriteString(fmt.Sprintf("  watch: alive (%.0fm ago)\n", age.Minutes()))
+		} else {
+			b.WriteString(fmt.Sprintf("  watch: stale (%.0fm ago)\n", age.Minutes()))
+		}
+	}
 	if gpuName != "" {
 		b.WriteString("  gpu: " + gpuName + "\n")
 	}
