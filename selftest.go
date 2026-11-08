@@ -895,6 +895,8 @@ func runSelfTest() {
 			{"scan", "--json"}, {"status", "--json"}, {"report", "--json"},
 			{"doctor", "--json"}, {"diff", "--json"}, {"update", "--json"},
 			{"ledger", "stats", "--json"}, {"why", "gpu", "--json"},
+			{"goal", "summarize", "--json"}, {"route", "summarize", "--json"},
+			{"run", "--json", "test"},
 		}
 		var bad []string
 		for _, c := range cmds {

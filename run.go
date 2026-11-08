@@ -99,8 +99,16 @@ func runRun(args []string) {
 		}
 	}
 	if len(models) == 0 {
-		fmt.Println(tr("run.nomodel"))
-		fmt.Println(trf("run.nomodel.hint", ollamaBase))
+		if jsonOut {
+			out, _ := json.MarshalIndent(map[string]any{
+				"ok": false, "error": "no live generative model",
+				"endpoint": ollamaBase,
+			}, "", "  ")
+			fmt.Println(string(out))
+		} else {
+			fmt.Println(tr("run.nomodel"))
+			fmt.Println(trf("run.nomodel.hint", ollamaBase))
+		}
 		return
 	}
 	if prompt == "" {
