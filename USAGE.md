@@ -73,6 +73,11 @@ GET  /ui — embedded dashboard (status/tools/models/doctor + control)
 Open `http://127.0.0.1:11435/ui` in a browser for the visual estate
 view — single file, no external assets, POST actions ask to confirm.
 
+```sh
+fabi tui            # terminal dashboard — status/tools/models live, Ctrl+C stops
+fabi tui 5s         # custom refresh interval
+```
+
 ## Multi-PC estate
 
 ```sh

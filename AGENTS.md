@@ -26,7 +26,7 @@ bash build.sh                              # 4-target release + SHA256
 ## Layout
 
 ```
-main.go      22 commands + usage         report.go    statement + --json + control
+main.go      23 commands + usage         report.go    statement + --json + control
 scan.go      orchestrator                doctor.go    8 evidence-based rules
 probes.go    6 probes                    ledger.go    SQLite events + import
 watch.go     periodic + inference beat   goal/route.go physics + calibrated routing
@@ -46,7 +46,8 @@ SPEC_v0.*    the spec — v0.7, Parts 1–17 API.md       serve endpoint docs
 ```
 fabi run/sweep/compare  measure inference    fabi unload   free VRAM
 fabi goal --run         task chains          fabi auto     safe recs only
-fabi serve              15-endpoint API + /ui  OLLAMA_HOST   remote engines
+fabi serve              15-endpoint API + /ui  fabi tui    live dashboard
+OLLAMA_HOST   remote engines
 fabi ledger import      multi-PC merge       fabi diff     estate delta
 fabi update             honest update check
 ```

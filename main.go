@@ -128,6 +128,8 @@ func main() {
 		runRun(os.Args[2:])
 	case "serve":
 		runServe()
+	case "tui":
+		runTUI(os.Args[2:])
 	case "unload":
 		var uargs []string
 		for _, a := range os.Args[2:] {
@@ -184,7 +186,7 @@ func main() {
 			names := []string{"scan", "doctor", "report", "selftest", "watch",
 				"ledger", "route", "goal", "install", "uninstall", "status",
 				"run", "serve", "unload", "auto", "pattern", "diff", "why",
-				"update", "version", "lang", "help"}
+				"update", "version", "lang", "help", "tui"}
 			var cmds []map[string]any
 			for _, n := range names {
 				cmds = append(cmds, map[string]any{
@@ -269,4 +271,5 @@ func usage() {
 	fmt.Println("  update   " + tr("cmd.update"))
 	fmt.Println("  version  " + tr("cmd.version"))
 	fmt.Println("  lang     " + tr("cmd.lang"))
+	fmt.Println("  tui      " + tr("cmd.tui"))
 }
