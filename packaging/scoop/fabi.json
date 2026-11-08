@@ -1,22 +1,20 @@
 {
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "Universal AI Control Plane — scan your AI estate, keep one honest ledger, subtract what you don't need.",
     "homepage": "https://github.com/shizukutanaka/fabi",
     "license": "MIT",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/shizukutanaka/fabi/releases/download/v0.0.5/fabi-windows-amd64.exe#/fabi.exe",
-            "hash": "b560cd04a59fe4ec8ac21fac35126f6bbb79652b7042dd1aa4af794999b93310"
+            "url": "https://github.com/shizukutanaka/fabi/releases/download/v0.0.6/fabi-windows-amd64.exe#/fabi.exe",
+            "hash": "ff4174ff11e367810aba479e1b6a199c226a2b5c51e551c42fe0896433e2443f"
         }
     },
     "bin": "fabi.exe",
-    "checkver": {
-        "github": "https://github.com/shizukutanaka/fabi"
-    },
+    "checkver": { "github": "https://github.com/shizukutanaka/fabi" },
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "https://github.com/shizukutanaka/fabi/releases/download/v$version/fabi-windows-amd64.exe#/fabi.exe"
+                "url": "https://github.com/shizukutanaka/fabi/releases/download/v0.0.6/fabi-windows-amd64.exe#/fabi.exe"
             }
         }
     }
