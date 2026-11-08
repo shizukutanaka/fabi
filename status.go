@@ -82,6 +82,18 @@ func runStatus() {
 	if age > 24*time.Hour {
 		stale = trf("status.stale", age.Hours())
 	}
+	// Watch-daemon liveness — a recent ui.state event means fabi watch is alive.
+	var watchTs int64
+	for i := len(events) - 1; i >= 0; i-- {
+		if events[i].kind == "ui.state" {
+			watchTs = events[i].ts
+			break
+		}
+	}
+	watchAgeMin := int64(-1)
+	if watchTs > 0 {
+		watchAgeMin = time.Since(time.UnixMilli(watchTs)).Milliseconds() / 60000
+	}
 
 	// --json: the one-line health becomes a machine-readable object —
 	// same numbers, scriptable.
@@ -96,6 +108,7 @@ func runStatus() {
 			"last_tok_s": lastToks, "last_model": lastModel,
 			"loaded_models": n, "loaded_vram_bytes": vram,
 			"scan_age_s": age.Seconds(), "data_dir": dataDirForDisplay(),
+			"watch_age_min": watchAgeMin,
 		}, "", "  ")
 		fmt.Println(string(out))
 		return
@@ -113,6 +126,13 @@ func runStatus() {
 	// Loaded-model state — installed ≠ loaded. Which models hold VRAM?
 	if n, vram := loadedModels(); n > 0 {
 		fmt.Printf(" | loaded %d (%.1f GB)", n, float64(vram)/1e9)
+	}
+	if watchAgeMin >= 0 {
+		if watchAgeMin < 10 {
+			fmt.Printf(" | watch %dm", watchAgeMin)
+		} else {
+			fmt.Printf(" | watch stale %dm", watchAgeMin)
+		}
 	}
 	fmt.Println(stale)
 	fmt.Println(tr("status.hint"))
