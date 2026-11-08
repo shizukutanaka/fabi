@@ -61,11 +61,19 @@ func runLedgerCmd(args []string) {
 	case "export":
 		ledgerExport(l)
 	case "import":
-		if len(args) < 2 {
+		var iargs []string
+		for _, a := range args[1:] {
+			if a == "--json" {
+				jsonOut = true
+			} else {
+				iargs = append(iargs, a)
+			}
+		}
+		if len(iargs) < 1 {
 			fmt.Println("usage: fabi ledger import <file>")
 			return
 		}
-		ledgerImport(l, args[1])
+		ledgerImport(l, iargs[0])
 	default:
 		fmt.Println("usage: fabi ledger [stats | events [-k kind] [-n N] | export | import <file>]")
 	}
@@ -249,6 +257,14 @@ func ledgerImport(l *ledger, path string) {
 
 	sc := bufio.NewScanner(f)
 	imported, dup, bad := importJSONL(l, sc, path)
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"ok": true, "file": path, "imported": imported,
+			"duplicates": dup, "malformed": bad,
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
+	}
 	fmt.Printf("fabi ledger import: %d new event(s), %d duplicate(s) skipped, %d malformed\n",
 		imported, dup, bad)
 	if imported > 0 {
