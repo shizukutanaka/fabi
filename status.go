@@ -80,7 +80,7 @@ func runStatus() {
 	age := time.Since(time.UnixMilli(latest.startTs))
 	stale := ""
 	if age > 24*time.Hour {
-		stale = fmt.Sprintf(" ⚠ data %.0f h old — run `fabi scan`", age.Hours())
+		stale = trf("status.stale", age.Hours())
 	}
 
 	// --json: the one-line health becomes a machine-readable object —
