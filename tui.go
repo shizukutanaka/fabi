@@ -48,7 +48,7 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 	var running, installed, services, hidden, models int
 	var gpuUtil, gpuTemp, vramUsed, vramTotal, lastToks float64
 	var lastModel string
-	var toolsRun, toolsIdle, modelsList []findingRec
+	var toolsRun, toolsIdle, modelsList, svcList []findingRec
 	for _, f := range latest.findings {
 		switch {
 		case f.kind == "tool" && f.running:
@@ -59,6 +59,7 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 			toolsIdle = append(toolsIdle, f)
 		case f.kind == "service":
 			services++
+			svcList = append(svcList, f)
 			if strings.Contains(f.detail, "owner not visible") {
 				hidden++
 			}
@@ -111,6 +112,12 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 		b.WriteString(trf("sec.tools.inst", installed) + "\n")
 		for _, f := range toolsIdle {
 			b.WriteString("  · " + f.name + "\n")
+		}
+	}
+	if len(svcList) > 0 {
+		b.WriteString(trf("sec.services", len(svcList)) + "\n")
+		for _, f := range svcList {
+			b.WriteString("  · " + f.name + " — " + f.detail + "\n")
 		}
 	}
 	// Scan history — the ledger's time dimension as an ASCII sparkline.
