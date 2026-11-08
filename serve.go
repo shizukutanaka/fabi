@@ -699,7 +699,8 @@ button:hover{border-color:#58a6ff}
 <h2>Scan history</h2><div id=h></div>
 <h2>Inference trend</h2><div id=i></div>
 <h2>Control</h2>
-<div class=card><button onclick="do('unload')">unload idle models</button>
+<div class=card><button onclick="do('scan')">scan now</button>
+<button onclick="do('unload')">unload idle models</button>
 <button onclick="do('auto')">fabi auto (safe only)</button><div id=c></div></div>
 <h2>Raw</h2><div id=x></div>
 <script>
@@ -753,6 +754,7 @@ async function do(p){
  c.innerHTML='<div class=dim>running…</div>';
  const r=await (await fetch('/'+p,{method:'POST'})).json();
  c.innerHTML=card(JSON.stringify(r));
+ if(p=='scan')setTimeout(tick,1500); // re-fetch after a scan lands
 }
 </script>`
 
