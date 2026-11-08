@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/signal"
 	"strings"
 	"time"
 )
@@ -23,13 +25,28 @@ func runTUI(args []string) {
 	fmt.Print("\033[?25l")       // hide cursor
 	defer fmt.Print("\033[?25h") // restore on exit
 
-	for {
+	// Graceful Ctrl+C: restore the cursor + a clean exit instead of a
+	// mid-draw kill that could leave the terminal in a bad state.
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+	tick := time.NewTicker(interval)
+
+	render := func() {
 		events := localEvents(l.allEvents(), l.importedRanges())
 		windows := loadScanWindows(events)
 		fmt.Print("\033[2J\033[H") // clear + home
 		renderTUI(events, windows)
 		fmt.Println("\n" + trf("watch.every", interval) + "  (Ctrl+C)")
-		time.Sleep(interval)
+	}
+	render()
+	for {
+		select {
+		case <-tick.C:
+			render()
+		case <-sig:
+			fmt.Println()
+			return
+		}
 	}
 }
 
