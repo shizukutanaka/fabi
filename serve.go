@@ -798,6 +798,11 @@ async function tick(){
  x.innerHTML='<div class=dim><pre>'+JSON.stringify(st,null,2)+'</pre></div>';
 }
 tick(); setInterval(tick, 4000);
+// Live updates — new ledger events refresh the view immediately.
+try{new EventSource('/events').onmessage=e=>{
+ const d=JSON.parse(e.data);
+ if(d.kind=='report.generated'||d.kind=='inference.measured'||d.kind=='model.unloaded')tick();
+};}catch(_){}
 async function do(p){
  if(!confirm(p+' — are you sure?'))return;
  c.innerHTML='<div class=dim>running…</div>';
