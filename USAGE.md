@@ -101,6 +101,16 @@ fabi lang   # shows detected language, its source, supported list
             # and how to override (set FABI_LANG=<code>)
 ```
 
+## Data directory
+
+The ledger and state live in `~/.fabi/` by default. Override with `FABI_HOME`
+to relocate the estate — useful when the system drive is full or the data
+should live elsewhere:
+
+```sh
+FABI_HOME=D:\fabi-home fabi scan   # ledger + patterns on D:
+```
+
 A new language is just data — add `lang_<code>.go` with the
 message map and detection works automatically.
 
