@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 )
 
@@ -131,7 +132,7 @@ func main() {
 	case "help", "-h", "--help":
 		usage()
 	case "version", "--version", "-v":
-		fmt.Println("fabi", version)
+		fmt.Println("fabi", version, runtime.GOOS+"/"+runtime.GOARCH)
 	default:
 		usage()
 		os.Exit(2)
