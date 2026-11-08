@@ -697,6 +697,7 @@ button:hover{border-color:#58a6ff}
 <h2>Services / runtimes / packages</h2><div id=g></div>
 <h2>Recommendations</h2><div id=r></div>
 <h2>Scan history</h2><div id=h></div>
+<h2>Inference trend</h2><div id=i></div>
 <h2>Control</h2>
 <div class=card><button onclick="do('unload')">unload idle models</button>
 <button onclick="do('auto')">fabi auto (safe only)</button><div id=c></div></div>
@@ -731,6 +732,19 @@ async function tick(){
     +' <span class=num>'+(e.payload.findings||0)+'</span> <span style="font-size:.7rem">'+d+'</span></div>';
   }).join(''));
  } else h.innerHTML='<div class=dim>(no scans yet — run fabi scan)</div>';
+ // Inference trend — measured tok/s over time from inference.measured.
+ const inf=await J('/ledger?kind=inference.measured&n=30');
+ const iev=(inf.events||[]).reverse();
+ if(iev.length){
+  const im=Math.max(...iev.map(e=>e.payload.tok_s||0),1);
+  i.innerHTML=card(iev.map(e=>{
+   const p=Math.round((e.payload.tok_s||0)/im*100);
+   const m=e.payload.model||'?';
+   return '<div class=dim title="'+new Date(e.ts).toLocaleString()+' — '+m+'">'
+    +'<span style="display:inline-block;background:#3fb950;height:.7rem;width:'+p+'%;border-radius:2px;vertical-align:middle"></span>'
+    +' <span class=num>'+(e.payload.tok_s||0).toFixed(0)+'</span> <span style="font-size:.7rem">'+m+'</span></div>';
+  }).join(''));
+ } else i.innerHTML='<div class=dim>(no measurements yet — run fabi run / fabi watch)</div>';
  x.innerHTML='<div class=dim><pre>'+JSON.stringify(st,null,2)+'</pre></div>';
 }
 tick(); setInterval(tick, 4000);
