@@ -57,6 +57,11 @@ func main() {
 		}
 		runReport()
 	case "selftest":
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			}
+		}
 		runSelfTest()
 	case "ledger":
 		runLedgerCmd(os.Args[2:])

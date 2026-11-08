@@ -998,6 +998,21 @@ func runSelfTest() {
 		"pass": np, "fail": nf, "unverified": nu,
 	})
 
+	if jsonOut {
+		var jchecks []map[string]any
+		for _, c := range checks {
+			jchecks = append(jchecks, map[string]any{
+				"claim": c.claim, "budget": c.budget,
+				"measured": c.measured, "status": c.status,
+			})
+		}
+		out, _ := json.MarshalIndent(map[string]any{
+			"pass": np, "fail": nf, "unverified": nu,
+			"checks": jchecks,
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
+	}
 	fmt.Println()
 	fmt.Println("FABI SELFTEST — falsification engine")
 	fmt.Println("─────────────────────────────────────────────")
