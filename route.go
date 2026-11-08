@@ -106,16 +106,16 @@ func runRoute(taskName string) {
 
 	if !jsonOut {
 		fmt.Println()
-		fmt.Printf("FABI ROUTE — %s\n", taskName)
+		fmt.Println(trf("route.hdr", taskName))
 		fmt.Println("─────────────────────────────────────────────")
-		fmt.Printf("task:        %s → %d out tokens in %.1f s = %.0f tok/s needed\n",
-			tp.desc, tp.outTokens, tp.latencyS, latTok)
-		fmt.Printf("model class: %s (%.1f GB resident)\n", tp.modelClass, float64(resident)/1e9)
+		fmt.Println(trf("route.task",
+			tp.desc, tp.outTokens, tp.latencyS, latTok))
+		fmt.Println(trf("route.modelclass", tp.modelClass, float64(resident)/1e9))
 		if gpuName == "" {
-			fmt.Println("hardware:    no GPU found in ledger — run `fabi scan` first")
+			fmt.Println(tr("route.nogpu"))
 		} else {
-			fmt.Printf("hardware:    %s — %.0f GiB VRAM, ~%.0f GB/s\n",
-				gpuName, vramMiB/1024, bw)
+			fmt.Println(trf("route.hw",
+				gpuName, vramMiB/1024, bw))
 		}
 		fmt.Println()
 		fmt.Println(tr("route.physics"))
@@ -146,8 +146,8 @@ func runRoute(taskName string) {
 		sort.Float64s(ratios)
 		med := ratios[len(ratios)/2]
 		cal := toks * med
-		fmt.Printf("  calibrated: ~%.0f tok/s (median measured/predicted %.2f, n=%d)\n",
-			cal, med, len(ratios))
+		fmt.Println(trf("route.calibrated",
+			cal, med, len(ratios)))
 	}
 	if gpuName == "" {
 		if jsonOut {
@@ -163,10 +163,10 @@ func runRoute(taskName string) {
 		return
 	}
 	if !jsonOut {
-		fmt.Printf("  latency:   %d tok ÷ %.0f tok/s = %.1f s (target %.1f s)\n",
-			tp.outTokens, toks, latency, tp.latencyS)
-		fmt.Printf("  VRAM:      %.1f GB needed vs %.0f GiB available → %v\n",
-			float64(resident)/1e9, vramMiB/1024, fitVRAM)
+		fmt.Println(trf("route.latency",
+			tp.outTokens, toks, latency, tp.latencyS))
+		fmt.Println(trf("route.vram",
+			float64(resident)/1e9, vramMiB/1024, fitVRAM))
 		fmt.Println()
 	}
 
@@ -187,7 +187,7 @@ func runRoute(taskName string) {
 		verdict = "LOCAL POSSIBLE"
 		if !jsonOut {
 			fmt.Println(trf("route.possible", latency, tp.latencyS, latency/tp.latencyS))
-			fmt.Println("             speculative decoding / draft model may close the gap")
+			fmt.Println(tr("route.specdecode"))
 		}
 	default:
 		verdict = "LOCAL TOO SLOW"

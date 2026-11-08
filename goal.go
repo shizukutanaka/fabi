@@ -223,7 +223,7 @@ func runGoalTask(l *ledger, goal string, tasks []string) {
 		fmt.Printf("── step %d: %s → %s ──\n", executed+1, tn, model)
 		r, toks, wall, err := execPrompt(model, p)
 		if err != nil {
-			fmt.Printf("   failed: %v\n", err)
+			fmt.Println(trf("goal.failed", err))
 			break
 		}
 		fmt.Printf("   %.1f tok/s, %.1fs | %s\n", toks, wall.Seconds(),

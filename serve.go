@@ -29,7 +29,7 @@ func runServe() {
 		fmt.Println("fabi serve:", err)
 		return
 	}
-	fmt.Printf("fabi serve — http://127.0.0.1:%s\n", servePort)
+	fmt.Println(trf("serve.listen", servePort))
 	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff|/why|/route · POST /run|/goal|/unload|/scan|/pattern|/import")
 	fmt.Println(tr("serve.loopback"))
 	for {

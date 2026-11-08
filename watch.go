@@ -71,7 +71,7 @@ func runWatch(args []string) {
 		interval = 5 * time.Second
 	}
 
-	fmt.Printf("fabi watch — scan every %s (Ctrl+C to stop)\n", interval)
+	fmt.Println(trf("watch.every", interval))
 
 	// Graceful exit: close cleanly on Ctrl+C so the ledger isn't left mid-write.
 	sig := make(chan os.Signal, 1)
