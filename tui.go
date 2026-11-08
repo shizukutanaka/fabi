@@ -136,6 +136,46 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 			b.WriteString("  · " + f.name + " — " + f.detail + "\n")
 		}
 	}
+	// Inference trend — measured tok/s over time from inference.measured.
+	var toks []float64
+	for i := len(events) - 1; i >= 0 && len(toks) < 24; i-- {
+		if events[i].kind == "inference.measured" {
+			var p map[string]any
+			if json.Unmarshal([]byte(events[i].payload), &p) == nil {
+				if v := numOf(p, "tok_s"); v > 0 {
+					toks = append(toks, v)
+				}
+			}
+		}
+	}
+	if len(toks) > 0 {
+		// reverse so oldest→newest reads left→right
+		for i, j := 0, len(toks)-1; i < j; i, j = i+1, j-1 {
+			toks[i], toks[j] = toks[j], toks[i]
+		}
+		mx := toks[0]
+		for _, v := range toks {
+			if v > mx {
+				mx = v
+			}
+		}
+		bars := []rune("▁▂▃▄▅▆▇█")
+		var spark strings.Builder
+		for _, v := range toks {
+			spark.WriteRune(bars[int(v/mx*float64(len(bars)-1))])
+		}
+		b.WriteString(fmt.Sprintf("inference: %s  (%.0f–%.0f tok/s)\n",
+			spark.String(), func() float64 {
+				m := toks[0]
+				for _, v := range toks {
+					if v < m {
+						m = v
+					}
+				}
+				return m
+			}(), mx))
+	}
+
 	// Scan history — the ledger's time dimension as an ASCII sparkline.
 	if len(windows) > 1 {
 		start := len(windows) - 24
