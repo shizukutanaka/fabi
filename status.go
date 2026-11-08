@@ -95,7 +95,7 @@ func runStatus() {
 			"vram_used_mib": vramUsed, "vram_total_mib": vramTotal,
 			"last_tok_s": lastToks, "last_model": lastModel,
 			"loaded_models": n, "loaded_vram_bytes": vram,
-			"scan_age_s": age.Seconds(),
+			"scan_age_s": age.Seconds(), "data_dir": dataDirForDisplay(),
 		}, "", "  ")
 		fmt.Println(string(out))
 		return
