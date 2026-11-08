@@ -210,7 +210,7 @@ func formatBytes(b int64) string {
 
 func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 	fmt.Println()
-	fmt.Println("FABI SCAN — AI estate report")
+	fmt.Println(tr("scan.title"))
 	fmt.Println("─────────────────────────────────────────────")
 	fmt.Printf("scan time: %d ms | fabi RSS: %s | RAM: %s / %s used\n",
 		elapsed.Milliseconds(), formatBytes(int64(r.FabiRSS)),
@@ -232,7 +232,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 		fmt.Printf("  %-28s %s\n", f.Name, f.Detail)
 	}
 	if len(r.ToolsRunning) == 0 {
-		fmt.Println("  (none)")
+		fmt.Println(tr("list.none"))
 	}
 	fmt.Println()
 
@@ -241,7 +241,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 		fmt.Printf("  %-28s %s\n", f.Name, f.Detail)
 	}
 	if len(r.ToolsInstalled) == 0 {
-		fmt.Println("  (none)")
+		fmt.Println(tr("list.none"))
 	}
 	fmt.Println()
 
@@ -250,7 +250,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 		fmt.Printf("  %-28s %s\n", f.Name, f.Detail)
 	}
 	if len(r.Services) == 0 {
-		fmt.Println("  (none)")
+		fmt.Println(tr("list.none"))
 	}
 	fmt.Println()
 
@@ -299,7 +299,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 
 	fmt.Println("─────────────────────────────────────────────")
 	fmt.Println("ledger: ~/.fabi/ledger.db (append-only events)")
-	fmt.Println("next:   fabi doctor  — evidence-based subtraction")
+	fmt.Println(tr("report.next"))
 }
 
 // ---- fabi report — the monthly statement (#87, #76) ----
@@ -319,7 +319,7 @@ func runReport() {
 
 	events := localEvents(l.allEvents(), l.importedRanges())
 	if len(events) == 0 {
-		fmt.Println("FABI REPORT — ledger is empty. Run `fabi scan` first.")
+		fmt.Println(tr("report.empty.ledger"))
 		return
 	}
 	windows := loadScanWindows(events)
@@ -354,7 +354,7 @@ func runReport() {
 		aggs = append(aggs, agg)
 	}
 	if len(aggs) == 0 {
-		fmt.Println("FABI REPORT — no scans in ledger.")
+		fmt.Println(tr("report.empty.scans"))
 		return
 	}
 	first, latest := aggs[0], aggs[len(aggs)-1]
@@ -456,7 +456,7 @@ func runReport() {
 	}
 
 	fmt.Println()
-	fmt.Println("FABI REPORT — your AI estate, measured")
+	fmt.Println(tr("report.title"))
 	fmt.Println("─────────────────────────────────────────────")
 	fmt.Printf("period: %s → %s (%d scans, %.1f days)\n",
 		time.UnixMilli(first.ts).Format("2006-01-02 15:04"),
@@ -464,7 +464,7 @@ func runReport() {
 		len(aggs), days)
 	fmt.Println()
 
-	fmt.Println("ESTATE (latest scan)")
+	fmt.Println(tr("report.estate"))
 	fmt.Printf("  AI tools     %d running, %d installed-idle\n", latest.running, latest.installed)
 	fmt.Printf("  services     %d answering on localhost\n", latest.services)
 	fmt.Printf("  models       %d entries, %s on disk\n", latest.models, formatBytes(latest.modelBytes))
@@ -521,7 +521,7 @@ func runReport() {
 		}
 	}
 	if len(order) > 0 {
-		fmt.Println("INFERENCE — measured tok/s (real, not predicted)")
+		fmt.Println(tr("report.inference"))
 		for _, m := range order {
 			s := stats[m]
 			fmt.Printf("  %-18s %3d samples  avg %5.0f  min %5.0f  max %5.0f\n",
@@ -530,7 +530,7 @@ func runReport() {
 		fmt.Println()
 	}
 
-	fmt.Println("FABI'S WORK")
+	fmt.Println(tr("report.work"))
 	fmt.Printf("  recommendations open: %d\n", len(recLatest))
 	parts := []string{}
 	for _, c := range []string{"remove", "idle", "investigate"} {
