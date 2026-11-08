@@ -52,7 +52,7 @@ func runTUI(args []string) {
 
 func renderTUI(events []ledgerEvent, windows []scanWindow) {
 	var b strings.Builder
-	b.WriteString("FABI TUI — " + tr("tagline") + "\n")
+	b.WriteString("FABI TUI v" + version + " — " + tr("tagline") + "\n")
 	b.WriteString(strings.Repeat("─", 46) + "\n")
 
 	if len(windows) == 0 {
