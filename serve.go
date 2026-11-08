@@ -96,6 +96,8 @@ func serveConn(conn net.Conn) {
 		writeJSON(conn, 200, statusJSON())
 	case method == "GET" && path == "/models":
 		writeJSON(conn, 200, modelsJSON())
+	case method == "GET" && path == "/findings":
+		writeJSON(conn, 200, findingsJSON())
 	case method == "POST" && path == "/run":
 		serveRun(conn, body)
 	case method == "POST" && path == "/goal":
@@ -603,6 +605,25 @@ func statusJSON() map[string]any {
 	return resp
 }
 
+// findingsJSON — the latest scan's findings grouped by kind, for the
+// /ui dashboard's full estate view (tools/services/models/runtimes/packages).
+func findingsJSON() map[string]any {
+	l := openLedger()
+	defer l.close()
+	windows := loadScanWindows(l.allEvents())
+	if len(windows) == 0 {
+		return map[string]any{"error": "no scans yet"}
+	}
+	groups := map[string][]map[string]any{}
+	for _, f := range windows[len(windows)-1].findings {
+		groups[f.kind] = append(groups[f.kind], map[string]any{
+			"name": f.name, "detail": f.detail,
+			"size_bytes": f.size, "running": f.running,
+		})
+	}
+	return map[string]any{"groups": groups}
+}
+
 func modelsJSON() map[string]any {
 	names := []string{}
 	if st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second); err == nil && st == 200 {
@@ -673,6 +694,7 @@ button:hover{border-color:#58a6ff}
 <div id=s></div>
 <h2>AI tools</h2><div id=t></div>
 <h2>Models</h2><div id=m></div>
+<h2>Services / runtimes / packages</h2><div id=g></div>
 <h2>Recommendations</h2><div id=r></div>
 <h2>Scan history</h2><div id=h></div>
 <h2>Control</h2>
@@ -692,6 +714,10 @@ async function tick(){
  const rec=(d.recommendations||[]).filter(x=>x.class=='remove').reduce((a,x)=>a+(x.reclaim_bytes||0),0);
  if(rec>0)s.innerHTML+=card('reclaimable: <span class=num>~'+(rec/1073741824).toFixed(1)+' GB</span> — flagged duplicates, awaiting manual removal');
  r.innerHTML=(d.recommendations||[]).map(x=>card('<span class=pill>'+x.class+'</span> <b>'+x.target+'</b><pre>'+x.detail+'</pre><div class=dim>action: '+act(x.class,x.target)+'</div>')).join('')||'<div class=dim>(none)</div>';
+ const fd=await J('/findings');
+ const grp=(fd.groups||{});
+ const sec=(n,items)=>(items&&items.length)?'<div class=dim>'+n+'</div>'+(items||[]).map(x=>'<div class=card><b>'+x.name+'</b><pre class=dim>'+x.detail+'</pre></div>').join(''):'';
+ g.innerHTML=sec('services',grp.service)+sec('runtimes',grp.runtime)+sec('packages',grp.package)||'<div class=dim>(none)</div>';
  // Scan history — the ledger's time dimension as a bar sparkline.
  const h=await J('/ledger?kind=report.generated&n=30');
  const ev=(h.events||[]).reverse();
