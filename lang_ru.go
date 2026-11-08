@@ -116,5 +116,6 @@ func init() {
 		"uninstall.apply":       "запустите с --yes для применения: fabi uninstall --yes",
 		"uninstall.none":        "ничего не установлено — лаунчер не найден",
 		"serve.loopback":        "(только loopback — другие агенты теперь могут вызывать fabi)",
+		"cmd.lang":              "показывает определённый язык + список + как поменять",
 	}
 }

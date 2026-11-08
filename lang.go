@@ -177,6 +177,7 @@ var messages = map[string]map[string]string{
 		"doctor.next":           "next:   fabi why <target> — see the evidence behind a recommendation",
 		"estate.tools":          "  AI tools     %d running, %d installed-idle",
 		"estate.verified":       "  VERIFIED: %d flagged item(s) absent in latest scan — ~%s proven reclaimed",
+		"cmd.lang":              "show detected language + supported list + how to override",
 	},
 	"ja": {
 		"tagline":               "fabi — あなたのPCのAI資産を見る正直な目",
@@ -299,6 +300,7 @@ var messages = map[string]map[string]string{
 		"doctor.next":           "次:     fabi why <target> — 推奨の背後の証拠を見る",
 		"estate.tools":          "  AIツール    %d実行中, %dインストール済み遊休",
 		"estate.verified":       "  検証済み: %d件が最新スキャンで不在 — ~%sが証明された回収",
+		"cmd.lang":              "検出言語・対応一覧・変更方法を表示",
 	},
 	"zh": {
 		"tagline":               "fabi — 您的 PC AI 资产的诚实之眼",
@@ -413,6 +415,7 @@ var messages = map[string]map[string]string{
 		"uninstall.apply":       "使用 --yes 运行以应用: fabi uninstall --yes",
 		"uninstall.none":        "未安装 — 未找到启动器",
 		"serve.loopback":        "(仅回环 — 其他代理现在可以调用 fabi)",
+		"cmd.lang":              "显示检测到的语言 + 支持列表 + 覆盖方法",
 	},
 	"es": {
 		"tagline":               "fabi — el ojo honesto sobre los activos de IA de tu PC",
@@ -527,6 +530,7 @@ var messages = map[string]map[string]string{
 		"uninstall.apply":       "ejecuta con --yes para aplicar: fabi uninstall --yes",
 		"uninstall.none":        "nada instalado — no se encontró lanzador",
 		"serve.loopback":        "(solo loopback — otros agentes ya pueden llamar a fabi)",
+		"cmd.lang":              "muestra el idioma detectado + lista + cómo cambiarlo",
 	},
 	"de": {
 		"tagline":               "fabi — das ehrliche Auge auf dem KI-Bestand deines PCs",
@@ -641,6 +645,7 @@ var messages = map[string]map[string]string{
 		"uninstall.apply":       "mit --yes ausführen zum Anwenden: fabi uninstall --yes",
 		"uninstall.none":        "nichts installiert — kein Launcher gefunden",
 		"serve.loopback":        "(nur Loopback — andere Agents können fabi jetzt aufrufen)",
+		"cmd.lang":              "zeigt erkannte Sprache + Liste + wie man sie ändert",
 	},
 	"fr": {
 		"tagline":               "fabi — l'œil honnête sur les actifs IA de votre PC",
@@ -755,6 +760,7 @@ var messages = map[string]map[string]string{
 		"uninstall.apply":       "lancez avec --yes pour appliquer : fabi uninstall --yes",
 		"uninstall.none":        "rien d'installé — aucun lanceur trouvé",
 		"serve.loopback":        "(loopback uniquement — d'autres agents peuvent appeler fabi)",
+		"cmd.lang":              "affiche la langue détectée + la liste + comment changer",
 	},
 	"ko": {
 		"tagline":               "fabi — PC의 AI 자산을 보는 정직한 눈",
@@ -869,5 +875,6 @@ var messages = map[string]map[string]string{
 		"uninstall.apply":       "적용하려면 --yes로 실행: fabi uninstall --yes",
 		"uninstall.none":        "설치된 것 없음 — 런처를 찾을 수 없음",
 		"serve.loopback":        "(루프백 전용 — 이제 다른 에이전트가 fabi를 호출할 수 있습니다)",
+		"cmd.lang":              "감지된 언어 + 지원 목록 + 변경 방법 표시",
 	},
 }

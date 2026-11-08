@@ -219,4 +219,5 @@ func usage() {
 	fmt.Println("  why      " + tr("cmd.why"))
 	fmt.Println("  update   " + tr("cmd.update"))
 	fmt.Println("  version  " + tr("cmd.version"))
+	fmt.Println("  lang     " + tr("cmd.lang"))
 }

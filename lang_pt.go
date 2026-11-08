@@ -116,5 +116,6 @@ func init() {
 		"uninstall.apply":       "executa com --yes para aplicar: fabi uninstall --yes",
 		"uninstall.none":        "nada instalado — nenhum lançador encontrado",
 		"serve.loopback":        "(só loopback — outros agentes já podem chamar o fabi)",
+		"cmd.lang":              "mostra o idioma detectado + a lista + como alterar",
 	}
 }

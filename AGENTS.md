@@ -26,7 +26,7 @@ bash build.sh                              # 4-target release + SHA256
 ## Layout
 
 ```
-main.go      18 commands + usage         report.go    statement + --json + control
+main.go      19 commands + usage         report.go    statement + --json + control
 scan.go      orchestrator                doctor.go    8 evidence-based rules
 probes.go    6 probes                    ledger.go    SQLite events + import
 watch.go     periodic + inference beat   goal/route.go physics + calibrated routing
