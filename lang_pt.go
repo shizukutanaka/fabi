@@ -249,6 +249,7 @@ func init() {
 		"ui.refreshed":          "atualizado",
 		"ui.watch.alive":        "fabi watch ativo",
 		"ui.watch.stale":        "fabi watch inativo",
+		"ui.watch.stopped":      "fabi watch parado",
 		"ui.none":               "(nenhum)",
 		"ui.noscans":            "(sem análises — rode fabi scan)",
 		"ui.nomeasure":          "(sem medições — rode fabi run / fabi watch)",

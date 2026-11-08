@@ -440,7 +440,8 @@ func uiLabelsJSON() map[string]any {
 		"running": tr("ui.running"), "installed": tr("ui.installed"),
 		"reclaimable": tr("ui.reclaimable"), "refreshed": tr("ui.refreshed"),
 		"watchAlive": tr("ui.watch.alive"), "watchStale": tr("ui.watch.stale"),
-		"none": tr("ui.none"), "noScans": tr("ui.noscans"),
+		"watchStopped": tr("ui.watch.stopped"),
+		"none":         tr("ui.none"), "noScans": tr("ui.noscans"),
 		"noMeasure": tr("ui.nomeasure"), "estate": tr("ui.estate"),
 		"history": tr("ui.history"), "inference": tr("ui.inference"),
 		"control": tr("ui.control"), "detected": langCode,
@@ -802,8 +803,11 @@ async function tick(){
  const we=(w.events||[])[0];
  if(we){
   const age=(Date.now()-we.ts)/60000;
-  const live=age<10;
-  s.innerHTML+=card('<span class=dot style="background:'+(live?'#3fb950':'#8b949e')+'"></span> '+(live?L.watchAlive:L.watchStale)+' <span class=dim>'+age.toFixed(0)+'m ago</span>');
+  const stopped=we.payload&&we.payload.stopped;
+  const live=!stopped&&age<10;
+  const lbl=stopped?L.watchStopped:(live?L.watchAlive:L.watchStale);
+  const col=live?'#3fb950':(stopped?'#d29922':'#8b949e');
+  s.innerHTML+=card('<span class=dot style="background:'+col+'"></span> '+lbl+' <span class=dim>'+age.toFixed(0)+'m ago</span>');
  }
  // Scan history — the ledger's time dimension as a bar sparkline.
  const h=await J('/ledger?kind=report.generated&n=30');

@@ -249,6 +249,7 @@ func init() {
 		"ui.refreshed":          "обновлено",
 		"ui.watch.alive":        "fabi watch активен",
 		"ui.watch.stale":        "fabi watch простаивает",
+		"ui.watch.stopped":      "fabi watch остановлен",
 		"ui.none":               "(нет)",
 		"ui.noscans":            "(сканов нет — запустите fabi scan)",
 		"ui.nomeasure":          "(измерений нет — запустите fabi run / fabi watch)",
