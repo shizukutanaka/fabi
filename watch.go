@@ -86,7 +86,7 @@ func runWatch(args []string) {
 			runScan(time.Now(), true)
 			measureLiveInference()
 		case <-sig:
-			fmt.Println("\nwatch stopped — ledger complete.")
+			fmt.Println("\n" + tr("watch.stopped"))
 			return
 		}
 	}

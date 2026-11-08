@@ -129,7 +129,7 @@ func runGoal(args []string) {
 	if gpuName != "" {
 		fmt.Printf("hardware: %s — %.0f GiB VRAM\n", gpuName, vramMiB/1024)
 	} else {
-		fmt.Println("hardware: no GPU in ledger — local verdicts are pessimistic")
+		fmt.Println(tr("goal.nogpu"))
 	}
 	fmt.Println()
 
@@ -155,11 +155,11 @@ func runGoal(args []string) {
 	fmt.Printf("verdict: %d/%d tasks feasible locally", ok, len(tasks))
 	switch {
 	case ok == len(tasks):
-		fmt.Println(" — GO")
+		fmt.Println(tr("goal.go"))
 	case ok == 0:
-		fmt.Println(" — needs cloud or downgrade")
+		fmt.Println(tr("goal.cloud"))
 	default:
-		fmt.Println(" — partial local; hybrid route")
+		fmt.Println(tr("goal.hybrid"))
 	}
 	fmt.Println()
 

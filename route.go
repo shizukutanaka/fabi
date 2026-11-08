@@ -117,7 +117,7 @@ func runRoute(taskName string) {
 			gpuName, vramMiB/1024, bw)
 	}
 	fmt.Println()
-	fmt.Println("physics:")
+	fmt.Println(tr("route.physics"))
 	fmt.Printf("  %.0f GB/s ÷ %.1f GB = %.0f tok/s (decode, #48)\n",
 		bw, float64(resident)/1e9, toks)
 
@@ -148,7 +148,7 @@ func runRoute(taskName string) {
 			cal, med, len(ratios))
 	}
 	if gpuName == "" {
-		fmt.Println("verdict:     NO LOCAL GPU — cloud or smaller model required")
+		fmt.Println(tr("route.nolocal"))
 		return
 	}
 	fmt.Printf("  latency:   %d tok ÷ %.0f tok/s = %.1f s (target %.1f s)\n",
@@ -159,8 +159,8 @@ func runRoute(taskName string) {
 
 	switch {
 	case !fitVRAM:
-		fmt.Println("verdict:     DOESN'T FIT — smaller model or cloud required")
-		fmt.Println("             → OLLAMA_HOST=<host>:11434 routes to a remote engine")
+		fmt.Println(tr("route.nofit"))
+		fmt.Println(tr("route.nofit.hint"))
 	case latency <= tp.latencyS:
 		fmt.Printf("verdict:     LOCAL OK — %.0f tok/s ≥ %.0f needed, %.1fs ≤ %.1fs\n",
 			toks, latTok, latency, tp.latencyS)
