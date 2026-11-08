@@ -159,6 +159,17 @@ unreachable. Never auto-downloads.
 {"current":"0.0.6","latest":"0.0.5","behind":false,"url":"https://.../v0.0.5"}
 ```
 
+### GET /route?task=summarize
+
+Physics-derived routing verdict — API parity with `fabi route <task>`.
+`400` when `?task=` is missing or unknown.
+
+```json
+{"task":"summarize","model_class":"8b","gpu":"NVIDIA RTX A2000 12GB",
+ "vram_mib":11514,"bandwidth_gbps":288,"tok_s":61.3,"needed_tok_s":150,
+ "latency_s":9.8,"target_s":4,"fit_vram":true,"verdict":"LOCAL POSSIBLE"}
+```
+
 ## Notes
 
 - Everything the API does is also recorded back to `~/.fabi/ledger.db`

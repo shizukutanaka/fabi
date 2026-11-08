@@ -266,3 +266,58 @@ func taskNames() []string {
 	}
 	return out
 }
+
+// routeData mirrors runRoute's compute for the API — same GPU
+// lookup, physics, and verdict, returned as data instead of printed.
+func routeData(taskName string) (map[string]any, bool) {
+	tp, ok := taskProfiles[strings.ToLower(taskName)]
+	if !ok {
+		return nil, false
+	}
+	l := openLedger()
+	defer l.close()
+	ranges := l.importedRanges()
+	var vramMiB float64
+	var gpuName string
+	for _, e := range localEvents(l.events("resource.found"), ranges) {
+		if strings.Contains(e.payload, `"kind":"gpu"`) &&
+			!strings.Contains(e.payload, "unattributed") {
+			var p struct {
+				Name    string             `json:"name"`
+				Metrics map[string]float64 `json:"metrics"`
+			}
+			if err := json.Unmarshal([]byte(e.payload), &p); err == nil && p.Metrics != nil {
+				if t := p.Metrics["vram_total_mib"]; t > 0 {
+					vramMiB = t
+					gpuName = p.Name
+				}
+			}
+		}
+	}
+	latTok := float64(tp.outTokens) / tp.latencyS
+	resident := modelBytes[tp.modelClass]
+	bw := bandwidthForGPU(gpuName)
+	toks := bw * 1e9 / float64(resident)
+	latency := float64(tp.outTokens) / toks
+	fitVRAM := float64(resident)/1048576 <= vramMiB
+	verdict := ""
+	switch {
+	case gpuName == "":
+		verdict = "NO LOCAL GPU"
+	case !fitVRAM:
+		verdict = "DOESN'T FIT"
+	case latency <= tp.latencyS:
+		verdict = "LOCAL OK"
+	case latency <= tp.latencyS*3:
+		verdict = "LOCAL POSSIBLE"
+	default:
+		verdict = "LOCAL TOO SLOW"
+	}
+	return map[string]any{
+		"task": taskName, "model_class": tp.modelClass,
+		"gpu": gpuName, "vram_mib": vramMiB, "bandwidth_gbps": bw,
+		"tok_s": toks, "needed_tok_s": latTok,
+		"latency_s": latency, "target_s": tp.latencyS,
+		"fit_vram": fitVRAM, "verdict": verdict,
+	}, true
+}

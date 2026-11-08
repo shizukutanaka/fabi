@@ -30,7 +30,7 @@ func runServe() {
 		return
 	}
 	fmt.Printf("fabi serve — http://127.0.0.1:%s\n", servePort)
-	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff|/why · POST /run|/goal|/unload|/scan|/pattern|/import")
+	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff|/why|/route · POST /run|/goal|/unload|/scan|/pattern|/import")
 	fmt.Println(tr("serve.loopback"))
 	for {
 		conn, err := ln.Accept()
@@ -118,9 +118,31 @@ func serveConn(conn net.Conn) {
 		serveImport(conn, body)
 	case method == "GET" && path == "/update":
 		serveUpdate(conn)
+	case method == "GET" && path == "/route":
+		serveRoute(conn, query)
 	default:
 		writeJSON(conn, 404, map[string]string{"error": "unknown endpoint"})
 	}
+}
+
+// serveRoute — GET /route?task=summarize: physics verdict as JSON.
+func serveRoute(conn net.Conn, query string) {
+	task := ""
+	for _, kv := range strings.Split(strings.TrimPrefix(query, "?"), "&") {
+		if p := strings.SplitN(kv, "=", 2); len(p) == 2 && p[0] == "task" {
+			task = p[1]
+		}
+	}
+	if task == "" {
+		writeJSON(conn, 400, map[string]string{"error": "need ?task= — tasks: " + strings.Join(taskNames(), ", ")})
+		return
+	}
+	d, ok := routeData(task)
+	if !ok {
+		writeJSON(conn, 400, map[string]string{"error": "unknown task — tasks: " + strings.Join(taskNames(), ", ")})
+		return
+	}
+	writeJSON(conn, 200, d)
 }
 
 // serveUpdate — GET /update: honest version check over the API.
