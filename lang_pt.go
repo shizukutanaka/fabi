@@ -250,6 +250,8 @@ func init() {
 		"ui.watch.alive":        "fabi watch ativo",
 		"ui.watch.stale":        "fabi watch inativo",
 		"ui.watch.stopped":      "fabi watch parado",
+		"ui.action":             "ação",
+		"ui.title":              "fabi — o olho honesto do inventário de IA deste PC",
 		"ui.none":               "(nenhum)",
 		"ui.noscans":            "(sem análises — rode fabi scan)",
 		"ui.nomeasure":          "(sem medições — rode fabi run / fabi watch)",

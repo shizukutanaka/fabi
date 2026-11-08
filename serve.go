@@ -435,7 +435,7 @@ func uiLabelsJSON() map[string]any {
 	return map[string]any{
 		"models": tr("sec.models"), "services": tr("sec.services"),
 		"runtimes": tr("scan.runtimes"), "packages": tr("sec.packages"),
-		"recs": tr("doctor.title"), "action": tr("doctor.next"),
+		"recs": tr("doctor.title"), "action": tr("ui.action"),
 		"scan": tr("ui.scan"), "unload": tr("ui.unload"), "auto": tr("ui.auto"),
 		"running": tr("ui.running"), "installed": tr("ui.installed"),
 		"reclaimable": tr("ui.reclaimable"), "refreshed": tr("ui.refreshed"),
@@ -444,7 +444,7 @@ func uiLabelsJSON() map[string]any {
 		"none":         tr("ui.none"), "noScans": tr("ui.noscans"),
 		"noMeasure": tr("ui.nomeasure"), "estate": tr("ui.estate"),
 		"history": tr("ui.history"), "inference": tr("ui.inference"),
-		"control": tr("ui.control"), "detected": langCode,
+		"control": tr("ui.control"), "detected": langCode, "title": tr("ui.title"),
 	}
 }
 
@@ -759,7 +759,7 @@ pre{white-space:pre-wrap;word-break:break-all;margin:0}
 button{background:#21262d;color:#c9d1d9;border:1px solid #30363d;border-radius:6px;padding:.3rem .8rem;font:inherit;cursor:pointer}
 button:hover{border-color:#58a6ff}
 </style>
-<h1>fabi — the honest eye on this PC's AI estate</h1>
+<h1 id=hl>fabi — the honest eye on this PC's AI estate</h1>
 <div id=s></div>
 <h2 id=ht>AI tools</h2><div id=t></div>
 <h2 id=hm>Models</h2><div id=m></div>
@@ -777,6 +777,7 @@ const J = async p => (await fetch(p)).json();
 function card(t,d){return '<div class=card>'+t+(d?'<div class=dim>'+d+'</div>':'')+'</div>'}
 // Localized labels — the same tr() engine the CLI uses, served by /lang.
 const L = await (await fetch('/lang')).json();
+hl.textContent=L.title;
 ht.textContent=L.estate.replace(/\/[^/]*$/,'').trim().split('/')[0]+' / AI tools';
 hm.textContent=L.models.replace(/%.*/,'').trim();
 hg.textContent=L.estate; hr.textContent=L.recs;
