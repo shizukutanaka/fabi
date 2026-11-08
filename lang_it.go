@@ -72,5 +72,13 @@ func init() {
 		"cmd.update":            "verifica onesta — confronta con github releases",
 		"cmd.ledger":            "interroga il log eventi (stats | events | export | import)",
 		"cmd.diff":              "cosa è cambiato tra le ultime due scansioni (+appeared / -gone)",
+		"report.ledger.line":    "ledger: ~/.fabi/ledger.db (eventi solo-aggiunti)",
+		"report.deltas.note":    "  (i delta includono cambi di copertura delle sonde, non solo file)",
+		"report.verified.none":  "  verificato: 0 — agisci su una raccomandazione, ri-scansiona, il risparmio è provato",
+		"report.notyet":         "NON ANCORA MISURATO — sezione onesta",
+		"report.cloud.spend":    "  ¥ spesa cloud      richiede dati di routing (Fase 2)",
+		"report.gpu.hours":      "  ore GPU            richiede storico di utilizzo (Fase 2)",
+		"report.numbers.line":   "i numeri vengono solo dal ledger.",
+		"report.savings.line":   "il risparmio verificato appare solo dopo aver agito e ri-scansionato.",
 	}
 }

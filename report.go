@@ -298,7 +298,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 	}
 
 	fmt.Println("─────────────────────────────────────────────")
-	fmt.Println("ledger: ~/.fabi/ledger.db (append-only events)")
+	fmt.Println(tr("report.ledger.line"))
 	fmt.Println(tr("report.next"))
 }
 
@@ -483,7 +483,7 @@ func runReport() {
 	fmt.Printf("  model disk   %s → %s%s\n",
 		formatBytes(first.modelBytes), formatBytes(latest.modelBytes), delta)
 	fmt.Printf("  running tools %d → %d\n", first.running, latest.running)
-	fmt.Println("  (deltas include probe-coverage changes, not just file changes)")
+	fmt.Println(tr("report.deltas.note"))
 	fmt.Println()
 
 	// Measured inference throughput per model — the statement records
@@ -548,7 +548,7 @@ func runReport() {
 		fmt.Printf("  VERIFIED: %d flagged item(s) absent in latest scan — ~%s proven reclaimed\n",
 			verifiedCount, formatBytes(verifiedReclaim))
 	} else {
-		fmt.Println("  verified: 0 — act on a recommendation, re-scan, savings become proven")
+		fmt.Println(tr("report.verified.none"))
 	}
 
 	// Control actions: model.unloaded events = VRAM actually freed —
@@ -596,11 +596,11 @@ func runReport() {
 	}
 	fmt.Println()
 
-	fmt.Println("NOT YET MEASURED — honest section")
-	fmt.Println("  ¥ cloud spend      requires routing data (Phase 2)")
-	fmt.Println("  GPU-hours          requires utilization history (Phase 2)")
+	fmt.Println(tr("report.notyet"))
+	fmt.Println(tr("report.cloud.spend"))
+	fmt.Println(tr("report.gpu.hours"))
 	fmt.Println()
 	fmt.Println("─────────────────────────────────────────────")
-	fmt.Println("numbers come only from the ledger.")
-	fmt.Println("verified savings appear only after you act and re-scan.")
+	fmt.Println(tr("report.numbers.line"))
+	fmt.Println(tr("report.savings.line"))
 }
