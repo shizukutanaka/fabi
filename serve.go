@@ -689,6 +689,8 @@ async function tick(){
  m.innerHTML=(ms.models||[]).map(x=>card('<b>'+x.name+'</b> <span class=pill>'+(x.size_gb||'').toFixed?.(1)+'GB</span>')).join('')||'<div class=dim>(none)</div>';
  const d=await J('/doctor');
  const act=(c,t)=>({idle:'fabi unload '+t,remove:'fabi report',investigate:'fabi scan'})[c]||'fabi auto';
+ const rec=(d.recommendations||[]).filter(x=>x.class=='remove').reduce((a,x)=>a+(x.reclaim_bytes||0),0);
+ if(rec>0)s.innerHTML+=card('reclaimable: <span class=num>~'+(rec/1073741824).toFixed(1)+' GB</span> — flagged duplicates, awaiting manual removal');
  r.innerHTML=(d.recommendations||[]).map(x=>card('<span class=pill>'+x.class+'</span> <b>'+x.target+'</b><pre>'+x.detail+'</pre><div class=dim>action: '+act(x.class,x.target)+'</div>')).join('')||'<div class=dim>(none)</div>';
  // Scan history — the ledger's time dimension as a bar sparkline.
  const h=await J('/ledger?kind=report.generated&n=30');
