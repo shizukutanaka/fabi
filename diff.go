@@ -15,7 +15,7 @@ func runDiff(args []string) {
 	defer l.close()
 	windows := loadScanWindows(localEvents(l.allEvents(), l.importedRanges()))
 	if len(windows) < 2 {
-		fmt.Println("fabi diff — need at least 2 scans (run `fabi scan` twice)")
+		fmt.Println(tr("diff.need2"))
 		return
 	}
 	back := 1

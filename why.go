@@ -20,7 +20,7 @@ func runWhy(args []string) {
 		}
 	}
 	if len(wargs) == 0 {
-		fmt.Println("usage: fabi why <name> [--json] — explain a recommendation/finding")
+		fmt.Println(tr("why.usage"))
 		return
 	}
 	term := strings.ToLower(strings.Join(wargs, " "))
