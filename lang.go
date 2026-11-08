@@ -10,7 +10,17 @@ import (
 // Detection: FABI_LANG > LANG > LC_ALL ("ja_JP.UTF-8" → "ja").
 // English is always the fallback — a missing key is honest output,
 // not an error.
-var langCode = detectLang()
+// langCode is computed lazily inside tr(): package-level var init runs
+// BEFORE init() functions, and pt/ru/it register via init() in their own
+// files — detecting at var-init time would never see them (real bug).
+var langCode string
+
+func activeLang() string {
+	if langCode == "" {
+		langCode = detectLang()
+	}
+	return langCode
+}
 
 func detectLang() string {
 	l, _ := detectLangSource()
@@ -42,7 +52,7 @@ func detectLangSource() (string, string) {
 // the key itself as last resort so a missing string is VISIBLE
 // rather than silently empty (L2: gaps must be shown, not hidden).
 func tr(key string) string {
-	if s, ok := messages[langCode][key]; ok {
+	if s, ok := messages[activeLang()][key]; ok {
 		return s
 	}
 	if s, ok := messages["en"][key]; ok {
