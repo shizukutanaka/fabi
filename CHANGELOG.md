@@ -3,7 +3,7 @@
 ## Unreleased
 
 - **global scale groundwork** — i18n skeleton with 7 languages
-  (en/ja/zh/es/de/fr/ko): `FABI_LANG`/`LANG`/`LC_ALL` detection plus
+  (en/ja/zh/es/de/fr/ko/pt/ru/it): `FABI_LANG`/`LANG`/`LC_ALL` detection plus
   Windows `GetUserDefaultUILanguage`; localized entry surfaces
   (tagline, first-run, hints, update, usage, status, doctor frames);
   missing keys surface as `tr:key` rather than empty output (L2);

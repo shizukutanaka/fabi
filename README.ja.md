@@ -45,7 +45,7 @@ fabi selftest   反証エンジン — 全claimにテスト
 
 ## 言語
 
-出力は7言語対応(en/ja/zh/es/de/fr/ko)。`FABI_LANG`、`LANG`、
+出力は10言語対応(en/ja/zh/es/de/fr/ko/pt/ru/it)。`FABI_LANG`、`LANG`、
 `LC_ALL` 環境変数、またはWindows UI言語で自動検出。
 言語追加は `lang.go` にデータを追加するだけ。
 
