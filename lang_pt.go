@@ -117,5 +117,10 @@ func init() {
 		"uninstall.none":        "nada instalado — nenhum lançador encontrado",
 		"serve.loopback":        "(só loopback — outros agentes já podem chamar o fabi)",
 		"cmd.lang":              "mostra o idioma detectado + a lista + como alterar",
+		"sec.probes":            "SONDAS (%d)",
+		"sec.tools.run":         "FERRAMENTAS IA — em execução (%d)",
+		"sec.tools.inst":        "FERRAMENTAS IA — instaladas, sem executar (%d)",
+		"sec.services":          "SERVIÇOS respondendo em localhost (%d)",
+		"sec.models":            "MODELOS — %d entradas, %s em disco",
 	}
 }

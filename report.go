@@ -217,7 +217,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 		formatBytes(int64(r.RamUsed)), formatBytes(int64(r.RamTotal)))
 	fmt.Println()
 
-	fmt.Printf("PROBES (%d)\n", len(results))
+	fmt.Println(trf("sec.probes", len(results)))
 	for _, p := range results {
 		status := "ok"
 		if p.Err != nil {
@@ -227,7 +227,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 	}
 	fmt.Println()
 
-	fmt.Printf("AI TOOLS — running (%d)\n", len(r.ToolsRunning))
+	fmt.Println(trf("sec.tools.run", len(r.ToolsRunning)))
 	for _, f := range r.ToolsRunning {
 		fmt.Printf("  %-28s %s\n", f.Name, f.Detail)
 	}
@@ -236,7 +236,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 	}
 	fmt.Println()
 
-	fmt.Printf("AI TOOLS — installed, not running (%d)\n", len(r.ToolsInstalled))
+	fmt.Println(trf("sec.tools.inst", len(r.ToolsInstalled)))
 	for _, f := range r.ToolsInstalled {
 		fmt.Printf("  %-28s %s\n", f.Name, f.Detail)
 	}
@@ -245,7 +245,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 	}
 	fmt.Println()
 
-	fmt.Printf("SERVICES answering on localhost (%d)\n", len(r.Services))
+	fmt.Println(trf("sec.services", len(r.Services)))
 	for _, f := range r.Services {
 		fmt.Printf("  %-28s %s\n", f.Name, f.Detail)
 	}
@@ -263,7 +263,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 			unsized++
 		}
 	}
-	fmt.Printf("MODELS — %d entries, %s on disk\n", len(r.Models), formatBytes(r.ModelBytes))
+	fmt.Println(trf("sec.models", len(r.Models), formatBytes(r.ModelBytes)))
 	fmt.Printf("  sized files: %d | manifests/other: %d\n", sized, unsized)
 	if r.DupModels > 0 {
 		fmt.Printf("  duplicates: %d names, ~%s reclaimable\n", r.DupModels, formatBytes(r.DupBytes))
