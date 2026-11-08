@@ -113,6 +113,30 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 			b.WriteString("  · " + f.name + "\n")
 		}
 	}
+	// Scan history — the ledger's time dimension as an ASCII sparkline.
+	if len(windows) > 1 {
+		start := len(windows) - 24
+		if start < 0 {
+			start = 0
+		}
+		max := 1
+		for _, w := range windows[start:] {
+			if len(w.findings) > max {
+				max = len(w.findings)
+			}
+		}
+		bars := []rune("▁▂▃▄▅▆▇█")
+		var spark strings.Builder
+		for _, w := range windows[start:] {
+			h := len(w.findings) * (len(bars) - 1) / max
+			if h < 0 {
+				h = 0
+			}
+			spark.WriteRune(bars[h])
+		}
+		b.WriteString("\nhistory: " + spark.String() + fmt.Sprintf("  (%d scans)\n", len(windows)-start))
+	}
+
 	if len(modelsList) > 0 {
 		var disk int64
 		for _, f := range modelsList {
