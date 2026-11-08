@@ -25,7 +25,8 @@ fabi goal       purpose → task chain → per-task model scheduling (--run)
 fabi install    register fabi watch in Startup (fully reversible)
 fabi status     one-line health: estate + GPU + tok/s + loaded models
 fabi run        execute on a live model (--model, --ctx, --sweep, --compare)
-fabi serve      JSON API :11435 (GET /status|/models|/ledger|/doctor|/diff|/why|/pattern · POST /run|/goal|/unload|/scan|/pattern|/import)
+fabi serve      JSON API :11435 (GET /status|/models|/ledger|/doctor|/diff|/why|/pattern · POST /run|/goal|/unload|/scan|/pattern|/import) + /ui dashboard
+fabi tui        live terminal dashboard (status/tools/models/recommendations)
 fabi unload     free VRAM — unload loaded models (real control action)
 fabi auto       apply safe recs only — idle unload, user-triggered (Automation seed)
 fabi pattern    extend detection via data — add/list user patterns (Marketplace seed)
