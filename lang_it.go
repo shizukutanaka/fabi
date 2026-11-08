@@ -80,5 +80,16 @@ func init() {
 		"report.gpu.hours":      "  ore GPU            richiede storico di utilizzo (Fase 2)",
 		"report.numbers.line":   "i numeri vengono solo dal ledger.",
 		"report.savings.line":   "il risparmio verificato appare solo dopo aver agito e ri-scansionato.",
+		"cmd.watch":             "scansione periodica, storico temporale (default 5m)",
+		"cmd.route":             "verifica di routing derivata dalla fisica per un task",
+		"cmd.goal":              "scopo → task → fattibilità, solo fisica",
+		"cmd.install":           "registra watch all'accesso (richiede --yes)",
+		"cmd.uninstall":         "rimuove il task watch (ledger conservato)",
+		"cmd.bench":             "(rimosso — usa run --sweep)",
+		"cmd.unload":            "libera VRAM — scarica i modelli caricati (prima vera azione di controllo)",
+		"cmd.auto":              "applica solo raccomandazioni sicure — scarica gli inattivi, avviato dall'utente (seme Automation)",
+		"cmd.pattern":           "estende il rilevamento via dati — aggiungi/elenca pattern utente (seme Marketplace)",
+		"cmd.why":               "spiega una raccomandazione — mostra la catena di prove",
+		"cmd.version":           "stampa la versione",
 	}
 }
