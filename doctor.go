@@ -108,7 +108,7 @@ func runDoctor() {
 
 	windows := loadScanWindows(events)
 	if len(windows) == 0 || len(windows[len(windows)-1].findings) == 0 {
-		fmt.Println("FABI DOCTOR — scans exist but no findings recorded yet.")
+		fmt.Println(tr("doctor.empty.findings"))
 		return
 	}
 	latest := windows[len(windows)-1]
@@ -563,14 +563,14 @@ func fileSHA256(p string) string {
 
 func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, latest scanWindow, emitted, unchanged int64) {
 	fmt.Println()
-	fmt.Println("FABI DOCTOR — evidence-based recommendations")
+	fmt.Println(tr("doctor.title"))
 	fmt.Println("─────────────────────────────────────────────")
 	fmt.Printf("ledger: %d events across %d scans | latest scan: %d findings\n",
 		nEvents, nScans, len(latest.findings))
 	fmt.Println()
 
 	if len(recs) == 0 {
-		fmt.Println("No recommendations. Every finding has provenance.")
+		fmt.Println(tr("doctor.none"))
 	}
 
 	var remove, idle, investigate []recommendation
@@ -594,8 +594,7 @@ func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, late
 			}
 			fmt.Printf("      evidence: events %v\n", r.evidence)
 		}
-		fmt.Println("  note: fabi never deletes user files autonomously.")
-		fmt.Println("        remove candidates manually after review.")
+		fmt.Println(tr("doctor.note"))
 		fmt.Println()
 	}
 
