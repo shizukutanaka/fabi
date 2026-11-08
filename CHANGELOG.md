@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **full i18n** — 125 keys × 10 languages
+- **full i18n** — 233 keys × 10 languages
   (en/ja/zh/es/de/fr/ko/pt/ru/it), audited to zero unlocalized
   literals: `FABI_LANG`/`LANG`/`LC_ALL` + Windows
   `GetUserDefaultUILanguage`; per-language `lang_<code>.go` data
@@ -11,6 +11,12 @@
   ledger, diff, why, run, sweep, compare, unload, auto, install,
   uninstall, goal, route (incl. verdicts), watch, serve, lang;
   missing keys surface as `tr:key` rather than empty output (L2)
+- **`FABI_HOME`** — relocates the ledger+state dir (the disk that
+  holds the binary needn't hold the data — survives a full
+  system drive)
+- **`GET /ui`** — embedded single-file dashboard on `fabi serve`
+  (status/tools/models/doctor + control buttons; loopback only,
+  zero external assets, confirm-before-POST)
 - **`fabi lang`** — shows detected language, its source
   (env/OS), the supported list and how to override
 - **`--json` everywhere** — every output-producing command emits
@@ -75,7 +81,7 @@
 - **`OLLAMA_HOST`** — standard env var routes run/goal/serve to
   remote/cloud ollama-compatible endpoints; route's
   "cloud or downgrade" verdict now points to it
-- **serve API complete** — 8 endpoints: added POST /unload (VRAM
+- **serve API complete** — 15 endpoints + /ui: added POST /unload (VRAM
   release) and POST /scan (trigger observation over API)
 - **report control line** — counts VRAM releases in the statement
 - **selftest race fix** — ledger-append check accepts concurrent
