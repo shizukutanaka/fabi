@@ -101,9 +101,9 @@ func runStatus() {
 		return
 	}
 
-	fmt.Printf("fabi: %d running / %d installed-idle | %d svc (%d hidden) | %d models | gpu %.0f%% %.0f°C %.0f/%.0fGiB",
+	fmt.Print(trf("status.line",
 		running, installed, services, hidden, models,
-		gpuUtil, gpuTemp, vramUsed/1024, vramTotal/1024)
+		gpuUtil, gpuTemp, vramUsed/1024, vramTotal/1024))
 	if deadWSL > 0 {
 		fmt.Printf(" | dead-wsl %d", deadWSL)
 	}

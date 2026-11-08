@@ -112,10 +112,11 @@ func runWhy(args []string) {
 
 	fmt.Println()
 	if best != nil {
-		fmt.Printf("WHY %s\n", best.target)
+		fmt.Println(trf("why.hdr", best.target))
 		fmt.Println("─────────────────────────────────────────────")
-		fmt.Printf("  recommendation: [%s] %s\n", best.class, best.detail)
-		fmt.Printf("  confidence: %s\n\n", best.conf)
+		fmt.Println(trf("why.rec", best.class, best.detail))
+		fmt.Println(trf("why.conf", best.conf))
+		fmt.Println()
 		if len(best.ids) == 0 {
 			fmt.Println(tr("why.heuristic"))
 		} else {
@@ -137,7 +138,7 @@ func runWhy(args []string) {
 
 	// No recommendation — show every event mentioning the term so the
 	// user can see fabi's raw observations about it.
-	fmt.Printf("WHY %s — no recommendation; raw observations:\n", term)
+	fmt.Println(trf("why.norec.raw", term))
 	fmt.Println("─────────────────────────────────────────────")
 	var n int
 	for i := len(events) - 1; i >= 0 && n < 10; i-- {

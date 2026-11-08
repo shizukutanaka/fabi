@@ -123,7 +123,7 @@ func runPattern(args []string) {
 	}
 
 	if args[0] != "add" || len(args) != 3 {
-		fmt.Println("usage: fabi pattern add <exe|cmd|scripthost|dir|modelroot|pkgtool|pkgruntime|port> <value>")
+		fmt.Println(tr("pattern.usage.add"))
 		fmt.Println(tr("pattern.hint.install"))
 		fmt.Println(tr("pattern.example1"))
 		fmt.Println(tr("pattern.example2"))

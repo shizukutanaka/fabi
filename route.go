@@ -65,7 +65,7 @@ func bandwidthForGPU(name string) float64 {
 
 func runRoute(taskName string) {
 	if taskName == "" {
-		fmt.Println("usage: fabi route <task>")
+		fmt.Println(tr("route.usage"))
 		fmt.Println(tr("route.tasks") + strings.Join(taskNames(), ", "))
 		return
 	}
