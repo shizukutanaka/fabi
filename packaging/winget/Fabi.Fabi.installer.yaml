@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.9.0.schema.json
 PackageIdentifier: Fabi.Fabi
-PackageVersion: 0.0.6
+PackageVersion: 0.0.7
 InstallerType: portable
 InstallerLocale: en-US
 UpgradeBehavior: install
@@ -8,7 +8,10 @@ Commands:
   - fabi
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/shizukutanaka/fabi/releases/download/v0.0.6/fabi-windows-amd64.exe
-    InstallerSha256: ff4174ff11e367810aba479e1b6a199c226a2b5c51e551c42fe0896433e2443f
+    InstallerUrl: https://github.com/shizukutanaka/fabi/releases/download/v0.0.7/fabi-windows-amd64.exe
+    InstallerSha256: e7855213be634135f8a9afad664367ca086de052ed3909038894b44942b6d6e3
+  - Architecture: arm64
+    InstallerUrl: https://github.com/shizukutanaka/fabi/releases/download/v0.0.7/fabi-windows-arm64.exe
+    InstallerSha256: 8ea12684e4ffaae8618c997303d8a51ba9532a086f0020b6f1fe7877cebd3072
 ManifestType: installer
 ManifestVersion: 1.9.0

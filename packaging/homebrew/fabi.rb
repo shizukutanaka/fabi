@@ -4,23 +4,26 @@
 class Fabi < Formula
   desc "Universal AI Control Plane — the honest eye on your AI estate"
   homepage "https://github.com/shizukutanaka/fabi"
-  version "0.0.6"
+  version "0.0.7"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/shizukutanaka/fabi/releases/download/v0.0.6/fabi-darwin-amd64"
-      sha256 "bf2b8281ddc1641748a49e0687e759a729f5eb57ad8aabd1aab752ba2eacc37c"
+      url "https://github.com/shizukutanaka/fabi/releases/download/v0.0.7/fabi-darwin-amd64"
+      sha256 "a5ce1630ffd9785c19cff9e72c768d3ef1031b1013cad5f38f9985f3772895e8"
     else
-      url "https://github.com/shizukutanaka/fabi/releases/download/v0.0.6/fabi-darwin-arm64"
-      sha256 "a2f2e9281f6862604bcb8567e88d5d339c0d69afa5274924279166b428cbe373"
+      url "https://github.com/shizukutanaka/fabi/releases/download/v0.0.7/fabi-darwin-arm64"
+      sha256 "389927153a86d64a0e86204466ba8d6ffa7ecb13c3e8432905215a3bdc485ddc"
     end
   end
 
   on_linux do
     if Hardware::CPU.intel?
-      url "https://github.com/shizukutanaka/fabi/releases/download/v0.0.6/fabi-linux-amd64"
-      sha256 "b3a674283db7064698f5ecf0077189e057849c45465a11ba017361a1c14d9540"
+      url "https://github.com/shizukutanaka/fabi/releases/download/v0.0.7/fabi-linux-amd64"
+      sha256 "226c424fc51b70b6a9263565211fef311e82fcaf40137715d13a1fa41d472a39"
+    else
+      url "https://github.com/shizukutanaka/fabi/releases/download/v0.0.7/fabi-linux-arm64"
+      sha256 "2205612642276abdd6abf0416591fefd93e8128501ce2e31f0c0556a5607a70a"
     end
   end
 
