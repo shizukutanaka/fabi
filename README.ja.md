@@ -62,7 +62,7 @@ winget install fabi        # 公開後
 
 ## ドキュメント
 
-- [USAGE.md](USAGE.md) — 実践ガイド(英語)
+- [USAGE.md](USAGE.md) · [USAGE.ja.md](USAGE.ja.md) — 実践ガイド(英語)
 - [API.md](API.md) — Universal APIエンドポイント
 - [SECURITY.md](SECURITY.md) — セキュリティポリシー
 - [SPEC_v0.7.md](SPEC_v0.7.md) — 設計仕様
