@@ -88,6 +88,13 @@ func runWatch(args []string) {
 			measureLiveInference()
 			emitUIState()
 		case <-sig:
+			// A final ui.state with stopped=true — dashboards can tell a
+			// graceful stop from a crash (a crash leaves a stale state).
+			l := openLedger()
+			l.emit("ui.state", map[string]any{
+				"ts": time.Now().UnixMilli(), "stopped": true,
+			})
+			l.close()
 			fmt.Println("\n" + tr("watch.stopped"))
 			return
 		}
