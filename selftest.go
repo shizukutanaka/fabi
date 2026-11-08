@@ -938,6 +938,24 @@ func runSelfTest() {
 			measured, status)
 	}
 
+	// --- Claim: language detection honors env —
+	// FABI_LANG must override; unknown codes fall back to "en".
+	{
+		bad := []string{}
+		os.Setenv("FABI_LANG", "ja")
+		if detectLang() != "ja" {
+			bad = append(bad, "ja")
+		}
+		os.Setenv("FABI_LANG", "xx")
+		if got := detectLang(); got == "xx" {
+			bad = append(bad, "unknown code used")
+		}
+		os.Unsetenv("FABI_LANG")
+		measured := fmt.Sprintf("env detect %s", map[bool]string{true: "ok", false: "broken"}[len(bad) == 0])
+		add("language detection honors env", "FABI_LANG override + en fallback",
+			measured, passIf(len(bad) == 0))
+	}
+
 	// --- Claim: version comparison is correct —
 	// `fabi update` decides "newer release" via semverLess — falsified
 	// if it orders known version pairs wrong.

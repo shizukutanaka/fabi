@@ -37,6 +37,7 @@ status.go    one-line health (+loaded)   patterns.json detection data
 diff.go      estate delta (N scans)      why.go      evidence chain
 packages_*.go OS package lists           wsl_*.go     WSL distro detection
 sysinfo.go   shared helpers              patterns.go  Marketplace seed
+lang.go      i18n — strings are data (7 langs, FABI_LANG/OS detect)
 SPEC_v0.*    the spec — v0.7, Parts 1–17 API.md       serve endpoint docs
 ```
 
