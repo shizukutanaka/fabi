@@ -30,8 +30,14 @@ func runServe() {
 		return
 	}
 	fmt.Println(trf("serve.listen", servePort))
-	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff|/why|/route · POST /run|/goal|/unload|/scan|/pattern|/import · /ui dashboard")
+	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff|/why|/route|/findings|/lang|/events · POST /run|/goal|/unload|/scan|/pattern|/import · /ui dashboard")
 	fmt.Println(tr("serve.loopback"))
+	// The control surface starting is itself a ledgered fact — audit.
+	l := openLedger()
+	l.emit("serve.started", map[string]any{
+		"addr": "127.0.0.1:" + servePort, "ts": time.Now().UnixMilli(),
+	})
+	l.close()
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
