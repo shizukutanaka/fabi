@@ -132,7 +132,7 @@ func main() {
 	case "help", "-h", "--help":
 		usage()
 	case "version", "--version", "-v":
-		fmt.Println("fabi", version, runtime.GOOS+"/"+runtime.GOARCH)
+		fmt.Println("fabi", version, runtime.GOOS+"/"+runtime.GOARCH, "lang:"+detectLang())
 	default:
 		usage()
 		os.Exit(2)
