@@ -16,12 +16,12 @@ func runStatus() {
 
 	events := localEvents(l.allEvents(), l.importedRanges())
 	if len(events) == 0 {
-		fmt.Println("fabi: ledger empty — run `fabi scan`")
+		fmt.Println(tr("status.empty.ledger"))
 		return
 	}
 	windows := loadScanWindows(events)
 	if len(windows) == 0 {
-		fmt.Println("fabi: no scans recorded — run `fabi scan`")
+		fmt.Println(tr("status.empty.scans"))
 		return
 	}
 	latest := windows[len(windows)-1]
