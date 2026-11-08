@@ -126,6 +126,15 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 
 	// Doctor recommendations — the actionable part of the honest eye.
 	recs := computeRecommendations(events, windows, latest)
+	var reclaim int64
+	for _, r := range recs {
+		if r.class == "remove" {
+			reclaim += r.reclaim
+		}
+	}
+	if reclaim > 0 {
+		b.WriteString("  reclaimable: ~" + formatBytes(reclaim) + "\n")
+	}
 	if len(recs) > 0 {
 		b.WriteString("\n" + tr("doctor.title") + "\n")
 		for _, r := range recs {
