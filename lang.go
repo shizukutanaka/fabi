@@ -162,6 +162,11 @@ var messages = map[string]map[string]string{
 		"uninstall.apply":       "run with --yes to apply: fabi uninstall --yes",
 		"uninstall.none":        "nothing installed — no launcher found",
 		"serve.loopback":        "(loopback only — other agents can call fabi now)",
+		"route.ok":              "verdict:     LOCAL OK — %.0f tok/s ≥ %.0f needed, %.1fs ≤ %.1fs",
+		"route.possible":        "verdict:     LOCAL POSSIBLE — %.1fs vs %.1fs target (%.0f× slow);",
+		"route.tooslow":         "verdict:     LOCAL TOO SLOW — %.1fs vs %.1fs; cloud or downgrade",
+		"doctor.investigate":    "INVESTIGATE — provenance gaps",
+		"doctor.footer":         "deletion is always manual — evidence first, action never automatic",
 	},
 	"ja": {
 		"tagline":               "fabi — あなたのPCのAI資産を見る正直な目",
@@ -276,6 +281,11 @@ var messages = map[string]map[string]string{
 		"uninstall.apply":       "適用するには --yes で実行: fabi uninstall --yes",
 		"uninstall.none":        "インストールなし — ランチャーが見つかりません",
 		"serve.loopback":        "(ループバックのみ — 他のエージェントがfabiを呼べます)",
+		"route.ok":              "verdict:     LOCAL OK — %.0f tok/s ≥ %.0f必要, %.1fs ≤ %.1fs",
+		"route.possible":        "verdict:     LOCAL可能 — %.1fs vs %.1fs目標(%.0f×遅い);",
+		"route.tooslow":         "verdict:     LOCAL遅すぎ — %.1fs vs %.1fs; クラウドまたはダウングレード",
+		"doctor.investigate":    "INVESTIGATE — 来歴ギャップ",
+		"doctor.footer":         "削除は常に手動 — 証拠が先、アクションは自動でない",
 	},
 	"zh": {
 		"tagline":               "fabi — 您的 PC AI 资产的诚实之眼",

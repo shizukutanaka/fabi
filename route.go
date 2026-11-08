@@ -162,16 +162,13 @@ func runRoute(taskName string) {
 		fmt.Println(tr("route.nofit"))
 		fmt.Println(tr("route.nofit.hint"))
 	case latency <= tp.latencyS:
-		fmt.Printf("verdict:     LOCAL OK — %.0f tok/s ≥ %.0f needed, %.1fs ≤ %.1fs\n",
-			toks, latTok, latency, tp.latencyS)
+		fmt.Println(trf("route.ok", toks, latTok, latency, tp.latencyS))
 	case latency <= tp.latencyS*3:
-		fmt.Printf("verdict:     LOCAL POSSIBLE — %.1fs vs %.1fs target (%.0f× slow);\n"+
-			"             speculative decoding / draft model may close the gap\n",
-			latency, tp.latencyS, latency/tp.latencyS)
+		fmt.Println(trf("route.possible", latency, tp.latencyS, latency/tp.latencyS))
+		fmt.Println("             speculative decoding / draft model may close the gap")
 	default:
-		fmt.Printf("verdict:     LOCAL TOO SLOW — %.1fs vs %.1fs; cloud or downgrade\n"+
-			"             → OLLAMA_HOST=<host>:11434 routes to a remote engine\n",
-			latency, tp.latencyS)
+		fmt.Println(trf("route.tooslow", latency, tp.latencyS))
+		fmt.Println(tr("route.nofit.hint"))
 	}
 
 	l.emit("route.evaluated", map[string]any{
@@ -202,7 +199,7 @@ func runRoute(taskName string) {
 	}
 	if len(latestM) > 0 {
 		fmt.Println()
-		fmt.Println("measured local models (real tok/s, `run --sweep`):")
+		fmt.Println(tr("route.measured"))
 		var rows []mrow
 		for _, m := range latestM {
 			rows = append(rows, m)

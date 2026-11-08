@@ -160,7 +160,7 @@ func ledgerStats(l *ledger) {
 			total += c
 		}
 		if total == 0 {
-			fmt.Println("  none")
+			fmt.Println(tr("list.none"))
 		}
 	}
 }

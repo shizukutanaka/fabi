@@ -607,7 +607,7 @@ func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, late
 	}
 
 	if len(investigate) > 0 {
-		fmt.Println("INVESTIGATE — provenance gaps")
+		fmt.Println(tr("doctor.investigate"))
 		for _, r := range investigate {
 			fmt.Printf("  [%s] %s\n", r.confidence, r.target)
 			for _, line := range strings.Split(r.detail, "\n") {
@@ -619,7 +619,7 @@ func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, late
 
 	fmt.Println("─────────────────────────────────────────────")
 	fmt.Printf("recommendations: %d new, %d unchanged\n", emitted, unchanged)
-	fmt.Println("deletion is always manual — evidence first, action never automatic")
+	fmt.Println(tr("doctor.footer"))
 	fmt.Println()
 	fmt.Println("next:   fabi why <target> — see the evidence behind a recommendation")
 	fmt.Println("        fabi report       — the full estate statement")
