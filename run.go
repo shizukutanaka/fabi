@@ -522,17 +522,24 @@ func runSweep() {
 		}
 	}
 	if len(models) == 0 {
-		fmt.Println(tr("sweep.nomodels"))
+		if jsonOut {
+			fmt.Println(`{"endpoint": "` + ollamaBase + `", "results": []}`)
+		} else {
+			fmt.Println(tr("sweep.nomodels"))
+		}
 		return
 	}
 
 	l := openLedger()
 	defer l.close()
 
-	fmt.Println()
-	fmt.Println(tr("sweep.title"))
-	fmt.Println("─────────────────────────────────────────────")
+	if !jsonOut {
+		fmt.Println()
+		fmt.Println(tr("sweep.title"))
+		fmt.Println("─────────────────────────────────────────────")
+	}
 	const canned = "Count from one to ten."
+	var jresults []map[string]any
 	for _, m := range models {
 		// Warmup — cold-load latency pollutes the first sample (asiai/MLPerf).
 		execPrompt(m.name, "warmup")
@@ -551,13 +558,27 @@ func runSweep() {
 			okCount++
 		}
 		if okCount == 0 {
-			fmt.Printf("  %-18s %.1f GB   FAILED\n", m.name, float64(m.size)/1e9)
+			if jsonOut {
+				jresults = append(jresults, map[string]any{
+					"model": m.name, "gb": float64(m.size) / 1e9, "ok": false,
+				})
+			} else {
+				fmt.Printf("  %-18s %.1f GB   FAILED\n", m.name, float64(m.size)/1e9)
+			}
 			continue
 		}
 		toks := median(toksS)
 		ttft := median(ttftS)
-		fmt.Printf("  %-18s %.1f GB   %5.1f tok/s  ttft %4.0fms  (%.1fs, %d samples)\n",
-			m.name, float64(m.size)/1e9, toks, ttft, wall.Seconds(), okCount)
+		if jsonOut {
+			jresults = append(jresults, map[string]any{
+				"model": m.name, "gb": float64(m.size) / 1e9, "ok": true,
+				"tok_s": toks, "ttft_ms": ttft,
+				"wall_s": wall.Seconds(), "samples": okCount,
+			})
+		} else {
+			fmt.Printf("  %-18s %.1f GB   %5.1f tok/s  ttft %4.0fms  (%.1fs, %d samples)\n",
+				m.name, float64(m.size)/1e9, toks, ttft, wall.Seconds(), okCount)
+		}
 		l.emit("inference.measured", map[string]any{
 			"endpoint": ollamaBase, "model": m.name, "op": "sweep-median",
 			"tok_s": toks, "ttft_ms": ttft, "samples": okCount,
@@ -567,8 +588,15 @@ func runSweep() {
 	// Cooldown — return VRAM to baseline (bastion pattern: don't leave
 	// the estate changed after measurement).
 	runUnload(nil)
-	fmt.Println()
-	fmt.Println(tr("sweep.done"))
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"endpoint": ollamaBase, "results": jresults,
+		}, "", "  ")
+		fmt.Println(string(out))
+	} else {
+		fmt.Println()
+		fmt.Println(tr("sweep.done"))
+	}
 }
 
 // median of a small sample set — honest central value, not a lucky run.
