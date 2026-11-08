@@ -168,6 +168,8 @@ var messages = map[string]map[string]string{
 		"doctor.investigate":    "INVESTIGATE — provenance gaps",
 		"doctor.footer":         "deletion is always manual — evidence first, action never automatic",
 		"doctor.next":           "next:   fabi why <target> — see the evidence behind a recommendation",
+		"estate.tools":          "  AI tools     %d running, %d installed-idle",
+		"estate.verified":       "  VERIFIED: %d flagged item(s) absent in latest scan — ~%s proven reclaimed",
 	},
 	"ja": {
 		"tagline":               "fabi — あなたのPCのAI資産を見る正直な目",
@@ -288,6 +290,8 @@ var messages = map[string]map[string]string{
 		"doctor.investigate":    "INVESTIGATE — 来歴ギャップ",
 		"doctor.footer":         "削除は常に手動 — 証拠が先、アクションは自動でない",
 		"doctor.next":           "次:     fabi why <target> — 推奨の背後の証拠を見る",
+		"estate.tools":          "  AIツール    %d実行中, %dインストール済み遊休",
+		"estate.verified":       "  検証済み: %d件が最新スキャンで不在 — ~%sが証明された回収",
 	},
 	"zh": {
 		"tagline":               "fabi — 您的 PC AI 资产的诚实之眼",

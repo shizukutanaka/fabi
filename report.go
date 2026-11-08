@@ -465,7 +465,7 @@ func runReport() {
 	fmt.Println()
 
 	fmt.Println(tr("report.estate"))
-	fmt.Printf("  AI tools     %d running, %d installed-idle\n", latest.running, latest.installed)
+	fmt.Println(trf("estate.tools", latest.running, latest.installed))
 	fmt.Printf("  services     %d answering on localhost\n", latest.services)
 	fmt.Printf("  models       %d entries, %s on disk\n", latest.models, formatBytes(latest.modelBytes))
 	fmt.Printf("  GPU          %s\n", gpuLine)
@@ -545,8 +545,8 @@ func runReport() {
 		fmt.Printf("  reclaimable flagged: ~%s (awaiting manual review)\n", formatBytes(reclaimFlagged))
 	}
 	if verifiedCount > 0 {
-		fmt.Printf("  VERIFIED: %d flagged item(s) absent in latest scan — ~%s proven reclaimed\n",
-			verifiedCount, formatBytes(verifiedReclaim))
+		fmt.Println(trf("estate.verified",
+			verifiedCount, formatBytes(verifiedReclaim)))
 	} else {
 		fmt.Println(tr("report.verified.none"))
 	}
