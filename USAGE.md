@@ -91,6 +91,19 @@ fabi update     # compares your version to the latest GitHub release
 fabi never auto-downloads — it reports the delta and the URL;
 you replace the binary. Deny-by-default holds even for itself.
 
+## Language
+
+Output comes in 10 languages: en/ja/zh/es/de/fr/ko/pt/ru/it.
+Detection order: `FABI_LANG` > `LANG` > `LC_ALL` > OS UI language > en.
+
+```sh
+fabi lang   # shows detected language, its source, supported list
+            # and how to override (set FABI_LANG=<code>)
+```
+
+A new language is just data — add `lang_<code>.go` with the
+message map and detection works automatically.
+
 ## Troubleshooting
 
 | Symptom | Honest answer |
