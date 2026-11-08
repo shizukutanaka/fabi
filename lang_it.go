@@ -227,6 +227,7 @@ func init() {
 		"run.prompt":            "prompt:   %s",
 		"scan.dups":             "  duplicati: %d nomi, ~%s recuperabile",
 		"scan.runtimes":         "RUNTIME / INFRA (%d)",
+		"sec.packages":          "PACCHETTI — installazioni IA (%d)",
 		"scan.timing":           "tempo scansione: %d ms | fabi RSS: %s | RAM: %s / %s usata",
 		"sec.models.sub":        "  file con dimensione: %d | manifest/altro: %d",
 		"serve.listen":          "fabi serve — http://127.0.0.1:%s",

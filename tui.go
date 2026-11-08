@@ -48,7 +48,7 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 	var running, installed, services, hidden, models int
 	var gpuUtil, gpuTemp, vramUsed, vramTotal, lastToks float64
 	var lastModel string
-	var toolsRun, toolsIdle, modelsList, svcList []findingRec
+	var toolsRun, toolsIdle, modelsList, svcList, rtList, pkgList []findingRec
 	for _, f := range latest.findings {
 		switch {
 		case f.kind == "tool" && f.running:
@@ -66,6 +66,10 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 		case f.kind == "model":
 			models++
 			modelsList = append(modelsList, f)
+		case f.kind == "runtime":
+			rtList = append(rtList, f)
+		case f.kind == "package":
+			pkgList = append(pkgList, f)
 		}
 	}
 	for i := len(events) - 1; i >= 0; i-- {
@@ -117,6 +121,18 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 	if len(svcList) > 0 {
 		b.WriteString(trf("sec.services", len(svcList)) + "\n")
 		for _, f := range svcList {
+			b.WriteString("  · " + f.name + " — " + f.detail + "\n")
+		}
+	}
+	if len(rtList) > 0 {
+		b.WriteString(trf("scan.runtimes", len(rtList)) + "\n")
+		for _, f := range rtList {
+			b.WriteString("  · " + f.name + " — " + f.detail + "\n")
+		}
+	}
+	if len(pkgList) > 0 {
+		b.WriteString(trf("sec.packages", len(pkgList)) + "\n")
+		for _, f := range pkgList {
 			b.WriteString("  · " + f.name + " — " + f.detail + "\n")
 		}
 	}
