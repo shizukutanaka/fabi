@@ -115,4 +115,5 @@ func runStatus() {
 		fmt.Printf(" | loaded %d (%.1f GB)", n, float64(vram)/1e9)
 	}
 	fmt.Println(stale)
+	fmt.Println(tr("status.hint"))
 }

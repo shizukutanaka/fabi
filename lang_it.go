@@ -231,6 +231,7 @@ func init() {
 		"sec.models.sub":        "  file con dimensione: %d | manifest/altro: %d",
 		"serve.listen":          "fabi serve — http://127.0.0.1:%s",
 		"status.stale":          " ⚠ dati di %.0f ore fa — esegui `fabi scan`",
+		"status.hint":           "cruscotti: fabi tui (terminale) · fabi serve → /ui (browser)",
 		"uninstall.failed":      "fabi: disinstallazione fallita: %v",
 		"unload.each":           "  scaricato %s (%.1f GB)",
 		"watch.every":           "fabi watch — scansiona ogni %s (Ctrl+C per fermare)",
