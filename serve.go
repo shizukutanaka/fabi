@@ -688,7 +688,8 @@ function card(t,d){return '<div class=card>'+t+(d?'<div class=dim>'+d+'</div>':'
  const ms=await J('/models');
  m.innerHTML=(ms.models||[]).map(x=>card('<b>'+x.name+'</b> <span class=pill>'+(x.size_gb||'').toFixed?.(1)+'GB</span>')).join('')||'<div class=dim>(none)</div>';
  const d=await J('/doctor');
- r.innerHTML=(d.recommendations||[]).map(x=>card('<span class=pill>'+x.class+'</span> <b>'+x.target+'</b><pre>'+x.detail+'</pre>')).join('')||'<div class=dim>(none)</div>';
+ const act=(c,t)=>({idle:'fabi unload '+t,remove:'fabi report',investigate:'fabi scan'})[c]||'fabi auto';
+ r.innerHTML=(d.recommendations||[]).map(x=>card('<span class=pill>'+x.class+'</span> <b>'+x.target+'</b><pre>'+x.detail+'</pre><div class=dim>action: '+act(x.class,x.target)+'</div>')).join('')||'<div class=dim>(none)</div>';
  // Scan history — the ledger's time dimension as a bar sparkline.
  const h=await J('/ledger?kind=report.generated&n=30');
  const ev=(h.events||[]).reverse();
