@@ -29,6 +29,15 @@ type ledgerEvent struct {
 // ledgerDir resolves the data dir: FABI_HOME env overrides ~/.fabi
 // (lets the estate move to a drive with space — the disk where the
 // binaries live needn't be the disk where the ledger lives).
+// dataDirForDisplay — the resolved ledger dir for `fabi lang` display.
+func dataDirForDisplay() string {
+	d, err := ledgerDir()
+	if err != nil || d == "" {
+		return "~/.fabi"
+	}
+	return d
+}
+
 func ledgerDir() (string, error) {
 	if d := os.Getenv("FABI_HOME"); d != "" {
 		return d, nil

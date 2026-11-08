@@ -230,7 +230,7 @@ func main() {
 		if jsonOut {
 			out, _ := json.MarshalIndent(map[string]any{
 				"detected": code, "source": src, "supported": langs,
-				"override": "FABI_LANG=<code>",
+				"override": "FABI_LANG=<code>", "data_dir": dataDirForDisplay(),
 			}, "", "  ")
 			fmt.Println(string(out))
 			return
@@ -238,6 +238,7 @@ func main() {
 		fmt.Println("detected:", code, "(source:", src+")")
 		fmt.Println("supported:", strings.Join(langs, " "))
 		fmt.Println("override:  set FABI_LANG=<code> — e.g. set FABI_LANG=en")
+		fmt.Println("data dir:  " + dataDirForDisplay() + "  (override: FABI_HOME=<dir>)")
 	default:
 		usage()
 		os.Exit(2)
