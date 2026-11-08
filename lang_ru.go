@@ -122,5 +122,13 @@ func init() {
 		"sec.tools.inst":        "AI-ИНСТРУМЕНТЫ — установлены, не работают (%d)",
 		"sec.services":          "СЕРВИСЫ на localhost (%d)",
 		"sec.models":            "МОДЕЛИ — %d записей, %s на диске",
+		"status.line":           "fabi: %d активных / %d простаивает | %d служб(%d скрытых) | %d моделей | gpu %.0f%% %.0f°C %.0f/%.0fGiB",
+		"report.trend.hdr":      "ТЕНДЕНЦИЯ (%d сканов)",
+		"diff.hdr":              "FABI DIFF — %s → %s (%d сканов назад)",
+		"doctor.empty":          "FABI DOCTOR — журнал пуст. Сначала выполните `fabi scan`",
+		"goal.hdr":              "FABI GOAL — %q",
+		"route.hdr":             "FABI ROUTE — %s",
+		"pattern.hdr":           "FABI PATTERNS — добавления в ~/.fabi/patterns.json",
+		"ledger.nodb":           "FABI ЖУРНАЛ — нет базы данных. Сначала выполните `fabi scan`",
 	}
 }

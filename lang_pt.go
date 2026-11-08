@@ -122,5 +122,13 @@ func init() {
 		"sec.tools.inst":        "FERRAMENTAS IA — instaladas, sem executar (%d)",
 		"sec.services":          "SERVIÇOS respondendo em localhost (%d)",
 		"sec.models":            "MODELOS — %d entradas, %s em disco",
+		"status.line":           "fabi: %d ativos / %d ociosos | %d svc(%d ocultos) | %d modelos | gpu %.0f%% %.0f°C %.0f/%.0fGiB",
+		"report.trend.hdr":      "TENDÊNCIA (%d scans)",
+		"diff.hdr":              "FABI DIFF — %s → %s (%d scans atrás)",
+		"doctor.empty":          "FABI DOCTOR — o ledger está vazio. Execute `fabi scan` primeiro",
+		"goal.hdr":              "FABI GOAL — %q",
+		"route.hdr":             "FABI ROUTE — %s",
+		"pattern.hdr":           "FABI PATTERNS — adições em ~/.fabi/patterns.json",
+		"ledger.nodb":           "FABI LEDGER — sem banco de dados. Execute `fabi scan` primeiro",
 	}
 }
