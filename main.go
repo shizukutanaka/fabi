@@ -175,8 +175,43 @@ func main() {
 		}
 		runUpdate()
 	case "help", "-h", "--help":
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			}
+		}
+		if jsonOut {
+			names := []string{"scan", "doctor", "report", "selftest", "watch",
+				"ledger", "route", "goal", "install", "uninstall", "status",
+				"run", "serve", "unload", "auto", "pattern", "diff", "why",
+				"update", "version", "lang", "help"}
+			var cmds []map[string]any
+			for _, n := range names {
+				cmds = append(cmds, map[string]any{
+					"name": n, "description": tr("cmd." + n),
+				})
+			}
+			out, _ := json.MarshalIndent(map[string]any{
+				"version": version, "commands": cmds,
+			}, "", "  ")
+			fmt.Println(string(out))
+			return
+		}
 		usage()
 	case "version", "--version", "-v":
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			}
+		}
+		if jsonOut {
+			out, _ := json.MarshalIndent(map[string]any{
+				"version": version, "os": runtime.GOOS,
+				"arch": runtime.GOARCH, "lang": detectLang(),
+			}, "", "  ")
+			fmt.Println(string(out))
+			return
+		}
 		fmt.Println("fabi", version, runtime.GOOS+"/"+runtime.GOARCH, "lang:"+detectLang())
 	case "lang":
 		code, src := detectLangSource()

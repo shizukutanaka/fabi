@@ -900,7 +900,7 @@ func runSelfTest() {
 			{"unload", "--json"}, {"auto", "--json"}, {"pattern", "--json"},
 			{"ledger", "events", "-n", "1", "--json"},
 			{"install", "--json"}, {"uninstall", "--json"},
-			{"lang", "--json"},
+			{"lang", "--json"}, {"version", "--json"}, {"help", "--json"},
 			// selftest --json excluded — it would recurse into itself.
 		}
 		var bad []string
