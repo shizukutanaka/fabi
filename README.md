@@ -28,6 +28,8 @@ fabi unload     free VRAM — unload loaded models (real control action)
 fabi auto       apply safe recs only — idle unload, user-triggered (Automation seed)
 fabi pattern    extend detection via data — add/list user patterns (Marketplace seed)
 fabi update     honest update check — compares to github releases (no auto-install)
+nLocalized output: `FABI_LANG`/`LANG`/`LC_ALL` env or Windows UI language —
+en/ja/zh/es/de/fr/ko on entry surfaces; add a language by adding data in `lang.go`.
 ```
 
 Remote engines: `OLLAMA_HOST=<host>:11434` routes run/goal/serve to a

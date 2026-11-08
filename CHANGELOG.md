@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- **global scale groundwork** — i18n skeleton with 7 languages
+  (en/ja/zh/es/de/fr/ko): `FABI_LANG`/`LANG`/`LC_ALL` detection plus
+  Windows `GetUserDefaultUILanguage`; localized entry surfaces
+  (tagline, first-run, hints, update, usage, status, doctor frames);
+  missing keys surface as `tr:key` rather than empty output (L2);
+  6-arch builds added (windows/arm64, linux/arm64); `fabi help`
+  exits 0
+- **`fabi update` + `GET /update`** — honest version check via OS
+  curl (no auto-install, deny-by-default holds); the only outbound
+  call fabi makes, user-invoked only
+- **`--json` contract everywhere** — scan/status/report/doctor/diff/
+  why/ledger all emit machine-readable JSON; selftest verifies all 7
+- **packaging** — `packaging/gen.sh` regenerates winget/scoop/
+  homebrew manifests per release; release workflow auto-builds
+  6 targets + SHA256 + commits manifests back
+- **winget fix** — LicenseUrl `main`→`master` (PR #472788 was closed:
+  unsigned CLA + 404); resubmission guide in `packaging/winget/`
+- **docs** — SECURITY.md, USAGE.md, CONTRIBUTING.md, issue/PR
+  templates
+- **selftest** — 30 PASS: +semverLess, +i18n honest fallback,
+  +every --json flag valid
+
 - **`fabi ledger import` / `POST /import`** — multi-PC estate merging:
   dedupe on ts|kind|payload, `ledger.imported` provenance events with
   `first_id..last_id` ranges; derived views (doctor/report/why/diff)
