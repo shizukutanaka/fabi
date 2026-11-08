@@ -111,7 +111,7 @@ func ledgerStats(l *ledger) {
 	}
 
 	fmt.Println()
-	fmt.Println("FABI LEDGER — the single truth")
+	fmt.Println(tr("ledger.title"))
 	fmt.Println("─────────────────────────────────────────────")
 	dir, _ := ledgerDir()
 	if st, err := os.Stat(filepath.Join(dir, "ledger.db")); err == nil {
@@ -125,7 +125,7 @@ func ledgerStats(l *ledger) {
 			time.UnixMilli(maxTs).Format("2006-01-02 15:04"))
 	}
 	fmt.Println()
-	fmt.Println("by kind:")
+	fmt.Println(tr("ledger.bykind"))
 	rows, err := l.db.Query("SELECT kind, COUNT(*) FROM events GROUP BY kind ORDER BY COUNT(*) DESC")
 	if err == nil {
 		defer rows.Close()
@@ -141,7 +141,7 @@ func ledgerStats(l *ledger) {
 	// machines live here too. scan.started carries goos — count scans
 	// per OS so a merged estate still shows where each piece came from.
 	fmt.Println()
-	fmt.Println("scans by os:")
+	fmt.Println(tr("ledger.byos"))
 	srows, err := l.db.Query(
 		`SELECT json_extract(payload,'$.goos'), COUNT(*) FROM events
 		 WHERE kind='scan.started' GROUP BY 1`)

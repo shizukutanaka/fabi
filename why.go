@@ -117,9 +117,9 @@ func runWhy(args []string) {
 		fmt.Printf("  recommendation: [%s] %s\n", best.class, best.detail)
 		fmt.Printf("  confidence: %s\n\n", best.conf)
 		if len(best.ids) == 0 {
-			fmt.Println("  evidence: (heuristic — no event refs stored)")
+			fmt.Println(tr("why.heuristic"))
 		} else {
-			fmt.Println("  evidence — ledger events that justify this:")
+			fmt.Println(tr("why.evidence"))
 			for _, id := range best.ids {
 				e, ok := byID[id]
 				if !ok {
@@ -153,6 +153,6 @@ func runWhy(args []string) {
 		n++
 	}
 	if n == 0 {
-		fmt.Println("  nothing in the ledger mentions this")
+		fmt.Println(tr("why.nothing"))
 	}
 }

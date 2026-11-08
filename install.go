@@ -30,14 +30,14 @@ func runInstall(args []string) {
 	}
 
 	fmt.Println()
-	fmt.Println("FABI INSTALL — dry run")
+	fmt.Println(tr("install.title"))
 	fmt.Println("─────────────────────────────────────────────")
 	fmt.Println("this will place a launcher so `fabi watch` runs at logon:")
 	fmt.Println()
 	fmt.Printf("  write: %s\n", cmd)
 	fmt.Printf("  contents: \"%s\" watch\n", exe)
 	fmt.Println()
-	fmt.Println("run with --yes to apply:")
+	fmt.Println(tr("install.apply"))
 	fmt.Printf("  fabi install --yes\n")
 	fmt.Println("undo later:")
 	fmt.Printf("  fabi uninstall\n")

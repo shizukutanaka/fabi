@@ -97,7 +97,7 @@ func runRun(args []string) {
 		}
 	}
 	if len(models) == 0 {
-		fmt.Println("fabi run — no live generative model found.")
+		fmt.Println(tr("run.nomodel"))
 		fmt.Println("(checked ollama " + ollamaBase + " — start `ollama serve` or pull a model)")
 		return
 	}
@@ -119,11 +119,11 @@ func runRun(args []string) {
 	}
 
 	fmt.Println()
-	fmt.Println("FABI RUN — real execution, real measurement")
+	fmt.Println(tr("run.title"))
 	fmt.Println("─────────────────────────────────────────────")
 	fmt.Printf("model:   %s (%.1f GB)\n", best, float64(sizes[best])/1e9)
 	fmt.Printf("prompt:  %s\n", trunc(prompt, 80))
-	fmt.Println("running...")
+	fmt.Println(tr("run.running"))
 	fmt.Println()
 
 	r, toks, wall, err := execPromptCtx(best, prompt, numCtx)
@@ -137,7 +137,7 @@ func runRun(args []string) {
 		return
 	}
 
-	fmt.Println("response:")
+	fmt.Println(tr("run.response"))
 	fmt.Println("  " + trunc(strings.TrimSpace(r.Response), 400))
 	fmt.Println()
 	fmt.Printf("measured: %d tokens in %.1fs = %.1f tok/s · ttft %.0f ms (prefill %d tok)",
@@ -358,7 +358,7 @@ func runUnload(args []string) {
 		} `json:"models"`
 	}
 	if err := json.Unmarshal(body, &ps); err != nil || len(ps.Models) == 0 {
-		fmt.Println("fabi unload: nothing loaded — 0 VRAM held by models")
+		fmt.Println(tr("unload.none"))
 		return
 	}
 	l := openLedger()
@@ -422,7 +422,7 @@ func runAuto() {
 		} `json:"models"`
 	}
 	if err := json.Unmarshal(body, &ps); err != nil || len(ps.Models) == 0 {
-		fmt.Println("fabi auto: nothing loaded — estate is clean")
+		fmt.Println(tr("auto.nothing"))
 		l.emit("auto.skipped", map[string]any{"reason": "no models loaded"})
 		return
 	}

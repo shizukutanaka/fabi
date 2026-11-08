@@ -86,7 +86,7 @@ func runDiff(args []string) {
 		time.UnixMilli(latest.startTs).Format("15:04"), back)
 	fmt.Println("─────────────────────────────────────────────")
 	if len(added) == 0 && len(removed) == 0 {
-		fmt.Println("  no changes — estate is identical")
+		fmt.Println(tr("diff.none"))
 		return
 	}
 	for _, f := range added {
