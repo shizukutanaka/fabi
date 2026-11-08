@@ -82,7 +82,7 @@ func runWhy(args []string) {
 		out, _ := json.MarshalIndent(map[string]any{
 			"target": best.target, "class": best.class,
 			"detail": best.detail, "confidence": best.conf,
-			"evidence": ev,
+			"action": whyAction(best.class, best.target), "evidence": ev,
 		}, "", "  ")
 		fmt.Println(string(out))
 		return
@@ -135,16 +135,7 @@ func runWhy(args []string) {
 		}
 		fmt.Println()
 		// The action to close the observe→recommend→act loop, per class.
-		switch best.class {
-		case "idle":
-			fmt.Println(trf("why.action", "fabi unload "+best.target, "fabi auto"))
-		case "remove":
-			fmt.Println(trf("why.action", "fabi report", "manual removal (L9)"))
-		case "investigate":
-			fmt.Println(trf("why.action", "fabi scan", "fabi watch"))
-		default:
-			fmt.Println(trf("why.action", "fabi auto", "fabi scan"))
-		}
+		fmt.Println(trf("why.action", whyAction(best.class, best.target), "fabi auto"))
 		return
 	}
 
@@ -167,5 +158,20 @@ func runWhy(args []string) {
 	}
 	if n == 0 {
 		fmt.Println(tr("why.nothing"))
+	}
+}
+
+// whyAction — the command that closes the observe→recommend→act loop
+// for a recommendation class. Shared by `fabi why` text and --json.
+func whyAction(class, target string) string {
+	switch class {
+	case "idle":
+		return "fabi unload " + target
+	case "remove":
+		return "fabi report (then manual removal — L9)"
+	case "investigate":
+		return "fabi scan"
+	default:
+		return "fabi auto"
 	}
 }
