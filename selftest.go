@@ -898,6 +898,8 @@ func runSelfTest() {
 			{"goal", "summarize", "--json"}, {"route", "summarize", "--json"},
 			{"run", "--json", "test"}, {"run", "--compare", "t", "--json"},
 			{"unload", "--json"}, {"auto", "--json"}, {"pattern", "--json"},
+			{"ledger", "events", "-n", "1", "--json"},
+			{"install", "--json"}, {"uninstall", "--json"},
 			// selftest --json excluded — it would recurse into itself.
 		}
 		var bad []string
