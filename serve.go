@@ -90,6 +90,8 @@ func serveConn(conn net.Conn) {
 	}
 
 	switch {
+	case method == "GET" && (path == "/ui" || path == "/ui/"):
+		writeHTML(conn, 200, uiHTML)
 	case method == "GET" && path == "/status":
 		writeJSON(conn, 200, statusJSON())
 	case method == "GET" && path == "/models":
@@ -647,6 +649,58 @@ func serveImport(conn net.Conn, body string) {
 	writeJSON(conn, 200, map[string]any{
 		"imported": imported, "duplicates_skipped": dup, "malformed": bad,
 	})
+}
+
+// uiHTML — the embedded dashboard. Single file, no external assets,
+// loopback-only. Fetches the JSON endpoints and renders them.
+const uiHTML = `<!doctype html><meta charset=utf-8><title>fabi</title>
+<style>
+body{font:14px/1.5 system-ui,sans-serif;background:#0d1117;color:#c9d1d9;margin:0;padding:1.5rem;max-width:52rem}
+h1{font-size:1rem;color:#58a6ff;border-bottom:1px solid #21262d;padding-bottom:.4rem}
+h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:#8b949e;margin:1.4rem 0 .4rem}
+.card{background:#161b22;border:1px solid #21262d;border-radius:8px;padding:.8rem 1rem;margin-bottom:.6rem}
+.num{font-weight:600;color:#d2a8ff}
+.dim{color:#8b949e;font-size:.85rem}
+.pill{display:inline-block;padding:.1rem .5rem;border-radius:99px;background:#21262d;font-size:.75rem}
+.ok{color:#3fb950}.warn{color:#d29922}.bad{color:#f85149}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:.2rem .4rem;font-size:.85rem;border-bottom:1px solid #21262d}
+th{color:#8b949e;font-weight:500}
+pre{white-space:pre-wrap;word-break:break-all;margin:0}
+button{background:#21262d;color:#c9d1d9;border:1px solid #30363d;border-radius:6px;padding:.3rem .8rem;font:inherit;cursor:pointer}
+button:hover{border-color:#58a6ff}
+</style>
+<h1>fabi — the honest eye on this PC's AI estate</h1>
+<div id=s></div>
+<h2>AI tools</h2><div id=t></div>
+<h2>Models</h2><div id=m></div>
+<h2>Recommendations</h2><div id=r></div>
+<h2>Control</h2>
+<div class=card><button onclick="do('unload')">unload idle models</button>
+<button onclick="do('auto')">fabi auto (safe only)</button><div id=c></div></div>
+<h2>Raw</h2><div id=x></div>
+<script>
+const J = async p => (await fetch(p)).json();
+function card(t,d){return '<div class=card>'+t+(d?'<div class=dim>'+d+'</div>':'')+'</div>'}
+(async()=>{
+ const st=await J('/status');
+ s.innerHTML=card('<span class=num>'+st.tools_running+'</span> running · <span class=num>'+st.tools_installed+'</span> installed · <span class=num>'+st.models+'</span> models · gpu '+st.gpu_util+'% '+st.vram_gib_used+'/'+st.vram_gib_total+'GiB', st.stale||'');
+ const ms=await J('/models');
+ m.innerHTML=(ms.models||[]).map(x=>card('<b>'+x.name+'</b> <span class=pill>'+(x.size_gb||'').toFixed?.(1)+'GB</span>')).join('')||'<div class=dim>(none)</div>';
+ const d=await J('/doctor');
+ r.innerHTML=(d.recommendations||[]).map(x=>card('<span class=pill>'+x.class+'</span> <b>'+x.target+'</b><pre>'+x.detail+'</pre>')).join('')||'<div class=dim>(none)</div>';
+ x.innerHTML='<div class=dim><pre>'+JSON.stringify(st,null,2)+'</pre></div>';
+})();
+async function do(p){
+ if(!confirm(p+' — are you sure?'))return;
+ c.innerHTML='<div class=dim>running…</div>';
+ const r=await (await fetch('/'+p,{method:'POST'})).json();
+ c.innerHTML=card(JSON.stringify(r));
+}
+</script>`
+
+func writeHTML(conn net.Conn, status int, html string) {
+	fmt.Fprintf(conn, "HTTP/1.1 %d OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s",
+		status, len(html), html)
 }
 
 func writeJSON(conn net.Conn, status int, v any) {
