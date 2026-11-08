@@ -146,10 +146,10 @@ func runGoal(args []string) {
 		r.task = tn
 		if !jsonOut {
 			if tp.modelClass == "img" {
-				fmt.Printf("  %-12s %3s class | diffusion | %s\n", tn, tp.modelClass, r.verdict)
+				fmt.Println(trf("goal.row.diff", tn, tp.modelClass, r.verdict))
 			} else {
-				fmt.Printf("  %-12s %3s class | %.0f tok/s → %.1fs vs %.1fs | %s\n",
-					tn, tp.modelClass, r.toks, r.latency, tp.latencyS, r.verdict)
+				fmt.Println(trf("goal.row.toks",
+					tn, tp.modelClass, r.toks, r.latency, tp.latencyS, r.verdict))
 			}
 		}
 		if r.verdict == "LOCAL OK" {
@@ -226,8 +226,8 @@ func runGoalTask(l *ledger, goal string, tasks []string) {
 			fmt.Println(trf("goal.failed", err))
 			break
 		}
-		fmt.Printf("   %.1f tok/s, %.1fs | %s\n", toks, wall.Seconds(),
-			trunc(strings.TrimSpace(r.Response), 200))
+		fmt.Println(trf("goal.step.result", toks, wall.Seconds(),
+			trunc(strings.TrimSpace(r.Response), 200)))
 		l.emit("task.executed", map[string]any{
 			"ok": true, "model": model, "task": tn, "goal": goal,
 			"step": executed + 1, "eval_count": r.EvalCount,

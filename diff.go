@@ -90,10 +90,10 @@ func runDiff(args []string) {
 		return
 	}
 	for _, f := range added {
-		fmt.Printf("  + %-9s %s — %s\n", f.kind, f.name, trunc(f.detail, 50))
+		fmt.Println(trf("diff.added", f.kind, f.name, trunc(f.detail, 50)))
 	}
 	for _, f := range removed {
-		fmt.Printf("  - %-9s %s — %s\n", f.kind, f.name, trunc(f.detail, 50))
+		fmt.Println(trf("diff.removed", f.kind, f.name, trunc(f.detail, 50)))
 	}
 	fmt.Println(trf("diff.delta", len(added), len(removed)))
 }
