@@ -423,6 +423,15 @@ func runSelfTest() {
 			if failed > 0 {
 				status = "FAIL"
 			}
+			// /ui is the embedded dashboard — returns text/html, not JSON.
+			// The frontend surface is part of the API contract.
+			stU, bU, errU := rawHTTP("127.0.0.1:11435", "GET", "/ui", "", 5*time.Second)
+			if errU == nil && stU == 200 && strings.Contains(string(bU), "<title>fabi</title>") {
+				measured += " + /ui"
+			} else {
+				status = "FAIL"
+				measured += " + /ui failed"
+			}
 			// POST /run with no model must fail honestly — a JSON error,
 			// not a crash or a hang. The error path is part of the API.
 			st4, b4, err4 := rawHTTP("127.0.0.1:11435", "POST", "/run",
