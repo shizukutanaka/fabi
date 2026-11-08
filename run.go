@@ -336,25 +336,42 @@ func runCompare(prompt string) {
 		}
 	}
 
-	fmt.Println()
-	fmt.Println(tr("compare.title"))
-	fmt.Println("─────────────────────────────────────────────")
-	fmt.Printf("prompt: %s\nscheduler picks (fastest/smallest): %s\n\n", prompt, pick)
+	if !jsonOut {
+		fmt.Println()
+		fmt.Println(tr("compare.title"))
+		fmt.Println("─────────────────────────────────────────────")
+		fmt.Printf("prompt: %s\nscheduler picks (fastest/smallest): %s\n\n", prompt, pick)
+	}
 
 	var winner string
 	var winnerToks float64
+	var jresults []map[string]any
 	for _, m := range t.Models {
 		_, toks, wall, err := execPrompt(m.Name, prompt)
 		if err != nil {
-			fmt.Printf("  %-18s %.1f GB   FAILED %v\n", m.Name, float64(m.Size)/1e9, err)
+			if jsonOut {
+				jresults = append(jresults, map[string]any{
+					"model": m.Name, "ok": false, "error": err.Error(),
+				})
+			} else {
+				fmt.Printf("  %-18s %.1f GB   FAILED %v\n", m.Name, float64(m.Size)/1e9, err)
+			}
 			continue
 		}
-		mark := ""
-		if m.Name == pick {
-			mark = "  ← scheduler's choice"
+		if jsonOut {
+			jresults = append(jresults, map[string]any{
+				"model": m.Name, "gb": float64(m.Size) / 1e9, "ok": true,
+				"tok_s": toks, "wall_s": wall.Seconds(),
+				"scheduler_pick": m.Name == pick,
+			})
+		} else {
+			mark := ""
+			if m.Name == pick {
+				mark = "  ← scheduler's choice"
+			}
+			fmt.Printf("  %-18s %.1f GB   %5.1f tok/s  (%.1fs)%s\n",
+				m.Name, float64(m.Size)/1e9, toks, wall.Seconds(), mark)
 		}
-		fmt.Printf("  %-18s %.1f GB   %5.1f tok/s  (%.1fs)%s\n",
-			m.Name, float64(m.Size)/1e9, toks, wall.Seconds(), mark)
 		if toks > winnerToks {
 			winnerToks, winner = toks, m.Name
 		}
@@ -362,6 +379,15 @@ func runCompare(prompt string) {
 			"endpoint": ollamaBase, "model": m.Name, "op": "compare",
 			"tok_s": toks, "ok": true,
 		})
+	}
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"prompt": prompt, "scheduler_pick": pick,
+			"winner": winner, "winner_tok_s": winnerToks,
+			"scheduler_right": winner == pick, "results": jresults,
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
 	}
 	fmt.Println()
 	if winner == pick {

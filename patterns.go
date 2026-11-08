@@ -86,6 +86,11 @@ func runPattern(args []string) {
 	}
 
 	if len(args) == 0 || args[0] == "list" {
+		if jsonOut {
+			out, _ := json.MarshalIndent(user, "", "  ")
+			fmt.Println(string(out))
+			return
+		}
 		fmt.Println("FABI PATTERNS — user additions in ~/.fabi/patterns.json")
 		fmt.Println("─────────────────────────────────────────────")
 		empty := true

@@ -127,7 +127,15 @@ func main() {
 		}
 		runAuto()
 	case "pattern":
-		runPattern(os.Args[2:])
+		var pargs []string
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			} else {
+				pargs = append(pargs, a)
+			}
+		}
+		runPattern(pargs)
 	case "diff":
 		var dargs []string
 		for _, a := range os.Args[2:] {
