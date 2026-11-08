@@ -926,6 +926,24 @@ func runSelfTest() {
 			measured, status)
 	}
 
+	// --- Claim: the TUI dashboard renders —
+	// `fabi tui` loops forever; run it briefly and check it paints the
+	// header + status line before being stopped — falsified if it
+	// crashes or outputs nothing.
+	{
+		exe, _ := os.Executable()
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		out, _ := exec.CommandContext(ctx, exe, "tui", "300ms").Output()
+		cancel()
+		measured := "no output"
+		status := "FAIL"
+		if strings.Contains(string(out), "FABI TUI") && strings.Contains(string(out), "fabi:") {
+			measured = "dashboard painted header + status line"
+			status = "PASS"
+		}
+		add("tui dashboard renders", "paint before kill", measured, status)
+	}
+
 	// --- Claim: i18n falls back to English honestly —
 	// tr() must return English for missing keys/languages and
 	// localized strings for covered ones — falsified if a key
