@@ -91,5 +91,16 @@ func init() {
 		"cmd.pattern":           "estende a deteção com dados — adiciona/lista padrões (semente Marketplace)",
 		"cmd.why":               "explica uma recomendação — mostra a cadeia de evidência",
 		"cmd.version":           "imprime a versão",
+		"run.nomodel.hint":      "(ollama %s verificado — inicia `ollama serve` ou descarrega um modelo)",
+		"run.usage":             "usage: fabi run \"<prompt>\"",
+		"compare.title":         "FABI COMPARE — a escolha do planeador importou?",
+		"compare.noengine":      "fabi run --compare: ollama inalcançável",
+		"compare.nomodels":      "fabi run --compare: sem modelos",
+		"unload.noengine":       "fabi unload: ollama inalcançável em %s",
+		"auto.down":             "fabi auto: sem info de modelos carregados (ollama em baixo) — nada a fazer",
+		"auto.inuse":            "fabi auto: todos os modelos carregados em uso — nada seguro a fazer",
+		"sweep.nomodels":        "fabi run --sweep: sem modelos ativos em nenhum motor",
+		"sweep.title":           "FABI SWEEP — tok/s medidos por modelo (aquecimento + mediana de 3)",
+		"sweep.done":            "medianas medidas no ledger — arrefecimento descarregou todos os modelos",
 	}
 }

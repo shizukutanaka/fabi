@@ -98,11 +98,11 @@ func runRun(args []string) {
 	}
 	if len(models) == 0 {
 		fmt.Println(tr("run.nomodel"))
-		fmt.Println("(checked ollama " + ollamaBase + " — start `ollama serve` or pull a model)")
+		fmt.Println(trf("run.nomodel.hint", ollamaBase))
 		return
 	}
 	if prompt == "" {
-		fmt.Println("usage: fabi run \"<prompt>\"")
+		fmt.Println(tr("run.usage"))
 		fmt.Println("models: " + strings.Join(models, ", "))
 		return
 	}
@@ -287,12 +287,12 @@ func runCompare(prompt string) {
 	}
 	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
 	if err != nil || st != 200 {
-		fmt.Println("fabi run --compare: ollama not reachable")
+		fmt.Println(tr("compare.noengine"))
 		return
 	}
 	var t ollamaTags
 	if err := json.Unmarshal(body, &t); err != nil || len(t.Models) == 0 {
-		fmt.Println("fabi run --compare: no models")
+		fmt.Println(tr("compare.nomodels"))
 		return
 	}
 	l := openLedger()
@@ -308,7 +308,7 @@ func runCompare(prompt string) {
 	}
 
 	fmt.Println()
-	fmt.Println("FABI COMPARE — did the scheduler's choice matter?")
+	fmt.Println(tr("compare.title"))
 	fmt.Println("─────────────────────────────────────────────")
 	fmt.Printf("prompt: %s\nscheduler picks (fastest/smallest): %s\n\n", prompt, pick)
 
@@ -348,7 +348,7 @@ func runCompare(prompt string) {
 func runUnload(args []string) {
 	st, body, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second)
 	if err != nil || st != 200 {
-		fmt.Println("fabi unload: ollama not reachable on " + ollamaBase)
+		fmt.Println(trf("unload.noengine", ollamaBase))
 		return
 	}
 	var ps struct {
@@ -411,7 +411,7 @@ func runAuto() {
 	defer l.close()
 	st, body, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second)
 	if err != nil || st != 200 {
-		fmt.Println("fabi auto: no loaded-model info (ollama down) — nothing to do")
+		fmt.Println(tr("auto.down"))
 		l.emit("auto.skipped", map[string]any{"reason": "ollama unreachable"})
 		return
 	}
@@ -454,7 +454,7 @@ func runAuto() {
 		acted++
 	}
 	if acted == 0 {
-		fmt.Println("fabi auto: all loaded models are in use — nothing safe to do")
+		fmt.Println(tr("auto.inuse"))
 		l.emit("auto.skipped", map[string]any{"reason": "all loaded models in use"})
 	} else {
 		fmt.Printf("fabi auto: %d idle model(s) unloaded — safe action only\n", acted)
@@ -493,7 +493,7 @@ func runSweep() {
 		}
 	}
 	if len(models) == 0 {
-		fmt.Println("fabi run --sweep: no live models on any engine")
+		fmt.Println(tr("sweep.nomodels"))
 		return
 	}
 
@@ -501,7 +501,7 @@ func runSweep() {
 	defer l.close()
 
 	fmt.Println()
-	fmt.Println("FABI SWEEP — measured tok/s per model (warmup + median of 3)")
+	fmt.Println(tr("sweep.title"))
 	fmt.Println("─────────────────────────────────────────────")
 	const canned = "Count from one to ten."
 	for _, m := range models {
@@ -539,7 +539,7 @@ func runSweep() {
 	// the estate changed after measurement).
 	runUnload(nil)
 	fmt.Println()
-	fmt.Println("measured medians in ledger — cooldown unloaded all models")
+	fmt.Println(tr("sweep.done"))
 }
 
 // median of a small sample set — honest central value, not a lucky run.

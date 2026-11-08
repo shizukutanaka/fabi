@@ -91,5 +91,16 @@ func init() {
 		"cmd.pattern":           "estende il rilevamento via dati — aggiungi/elenca pattern utente (seme Marketplace)",
 		"cmd.why":               "spiega una raccomandazione — mostra la catena di prove",
 		"cmd.version":           "stampa la versione",
+		"run.nomodel.hint":      "(ollama %s verificato — avvia `ollama serve` o scarica un modello)",
+		"run.usage":             "usage: fabi run \"<prompt>\"",
+		"compare.title":         "FABI COMPARE — la scelta dello scheduler è servita?",
+		"compare.noengine":      "fabi run --compare: ollama non raggiungibile",
+		"compare.nomodels":      "fabi run --compare: nessun modello",
+		"unload.noengine":       "fabi unload: ollama non raggiungibile su %s",
+		"auto.down":             "fabi auto: nessuna info sui modelli caricati (ollama giù) — niente da fare",
+		"auto.inuse":            "fabi auto: tutti i modelli caricati sono in uso — niente di sicuro da fare",
+		"sweep.nomodels":        "fabi run --sweep: nessun modello attivo su nessun motore",
+		"sweep.title":           "FABI SWEEP — tok/s misurati per modello (riscaldamento + mediana di 3)",
+		"sweep.done":            "mediane misurate nel ledger — raffreddamento ha scaricato tutti i modelli",
 	}
 }

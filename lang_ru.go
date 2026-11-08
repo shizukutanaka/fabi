@@ -91,5 +91,16 @@ func init() {
 		"cmd.pattern":           "расширяет обнаружение данными — добавить/показать паттерны (зерно Marketplace)",
 		"cmd.why":               "объясняет рекомендацию — показывает цепочку доказательств",
 		"cmd.version":           "печатает версию",
+		"run.nomodel.hint":      "(проверен ollama %s — запустите `ollama serve` или скачайте модель)",
+		"run.usage":             "usage: fabi run \"<prompt>\"",
+		"compare.title":         "FABI COMPARE — выбор планировщика имел значение?",
+		"compare.noengine":      "fabi run --compare: ollama недоступен",
+		"compare.nomodels":      "fabi run --compare: нет моделей",
+		"unload.noengine":       "fabi unload: ollama недоступен на %s",
+		"auto.down":             "fabi auto: нет данных о загруженных моделях (ollama выключен) — делать нечего",
+		"auto.inuse":            "fabi auto: все загруженные модели заняты — безопасных действий нет",
+		"sweep.nomodels":        "fabi run --sweep: нет активных моделей ни на одном движке",
+		"sweep.title":           "FABI SWEEP — измеренные tok/s на модель (разогрев + медиана из 3)",
+		"sweep.done":            "измеренные медианы в реестре — охлаждение выгрузило все модели",
 	}
 }
