@@ -216,7 +216,7 @@ func runDoctor() {
 		if st.installedWindows >= 5 {
 			conf = "medium"
 		}
-		detail := fmt.Sprintf("installed in %d/%d scans, running 0/%d — %s",
+		detail := trf("rec.idle.detail",
 			st.installedWindows, len(windows), len(windows), st.latest.detail)
 		recs = append(recs, recommendation{
 			class: "idle", target: key, detail: detail,
@@ -249,7 +249,7 @@ func runDoctor() {
 			recs = append(recs, recommendation{
 				class:  "investigate",
 				target: strings.ToLower(f.name),
-				detail: fmt.Sprintf("%s\n    cleanup: wsl --unregister %s",
+				detail: trf("rec.wsl.cleanup",
 					f.detail, strings.TrimPrefix(f.name, "WSL distro: ")),
 				confidence: "medium — registration exists, disk image gone",
 				evidence:   []int64{f.id},
@@ -276,7 +276,7 @@ func runDoctor() {
 				susEv = append(susEv, f.id)
 			}
 		}
-		detail := fmt.Sprintf("%.0f MiB unattributed VRAM", gapMiB)
+		detail := trf("rec.vram.gap", gapMiB)
 		// Correlate with loaded models — some of the "ghost" burn is
 		// just resident weights. /api/ps knows what ollama holds.
 		var loadedVRAM int64
@@ -599,7 +599,7 @@ func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, late
 	}
 
 	if len(idle) > 0 {
-		fmt.Printf("IDLE — installed, never observed running (%d scans of history)\n", nScans)
+		fmt.Println(trf("doctor.idle.hdr", nScans))
 		for _, r := range idle {
 			fmt.Printf("  [%s] %s — %s\n", r.confidence, r.target, r.detail)
 		}
