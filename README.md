@@ -30,8 +30,11 @@ fabi unload     free VRAM — unload loaded models (real control action)
 fabi auto       apply safe recs only — idle unload, user-triggered (Automation seed)
 fabi pattern    extend detection via data — add/list user patterns (Marketplace seed)
 fabi update     honest update check — compares to github releases (no auto-install)
-nLocalized output: `FABI_LANG`/`LANG`/`LC_ALL` env or Windows UI language —
-en/ja/zh/es/de/fr/ko on entry surfaces; add a language by adding data in `lang.go`.
+fabi lang       detected language + supported list + how to override
+
+Localized output: 10 languages (en/ja/zh/es/de/fr/ko/pt/ru/it) via
+`FABI_LANG`/`LANG`/`LC_ALL` env or Windows UI language — all user-facing
+surfaces; add a language by adding a `lang_<code>.go` data file.
 ```
 
 Remote engines: `OLLAMA_HOST=<host>:11434` routes run/goal/serve to a
