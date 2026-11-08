@@ -377,7 +377,11 @@ func runCompare(prompt string) {
 func runUnload(args []string) {
 	st, body, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second)
 	if err != nil || st != 200 {
-		fmt.Println(trf("unload.noengine", ollamaBase))
+		if jsonOut {
+			fmt.Printf(`{"ok":false,"error":"engine unreachable: %s"}`+"\n", ollamaBase)
+		} else {
+			fmt.Println(trf("unload.noengine", ollamaBase))
+		}
 		return
 	}
 	var ps struct {
@@ -387,12 +391,17 @@ func runUnload(args []string) {
 		} `json:"models"`
 	}
 	if err := json.Unmarshal(body, &ps); err != nil || len(ps.Models) == 0 {
-		fmt.Println(tr("unload.none"))
+		if jsonOut {
+			fmt.Println(`{"ok":true,"freed_gb":0,"models":[]}`)
+		} else {
+			fmt.Println(tr("unload.none"))
+		}
 		return
 	}
 	l := openLedger()
 	defer l.close()
 	var freed int64
+	var unloaded []string
 	all := len(args) == 0 || args[0] == "--all"
 	for _, m := range ps.Models {
 		if !all && len(args) > 0 && m.Name != args[0] {
@@ -401,13 +410,24 @@ func runUnload(args []string) {
 		payload, _ := json.Marshal(map[string]any{"model": m.Name, "keep_alive": 0})
 		rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 10*time.Second)
 		freed += m.SizeVRAM
-		fmt.Printf("  unloaded %s (%.1f GB)\n", m.Name, float64(m.SizeVRAM)/1e9)
+		unloaded = append(unloaded, m.Name)
+		if !jsonOut {
+			fmt.Printf("  unloaded %s (%.1f GB)\n", m.Name, float64(m.SizeVRAM)/1e9)
+		}
 		l.emit("model.unloaded", map[string]any{
 			"model": m.Name, "vram_freed": m.SizeVRAM,
 		})
 	}
-	fmt.Printf("\nfabi unload: %.1f GB VRAM freed (%d model(s))\n",
-		float64(freed)/1e9, len(ps.Models))
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"ok": true, "freed_gb": float64(freed) / 1e9,
+			"models": unloaded, "count": len(unloaded),
+		}, "", "  ")
+		fmt.Println(string(out))
+	} else {
+		fmt.Printf("\nfabi unload: %.1f GB VRAM freed (%d model(s))\n",
+			float64(freed)/1e9, len(ps.Models))
+	}
 }
 
 // loadedModels returns how many models currently hold VRAM and the
@@ -440,7 +460,11 @@ func runAuto() {
 	defer l.close()
 	st, body, err := rawHTTP(ollamaBase, "GET", "/api/ps", "", 3*time.Second)
 	if err != nil || st != 200 {
-		fmt.Println(tr("auto.down"))
+		if jsonOut {
+			fmt.Println(`{"ok":false,"skipped":"ollama unreachable"}`)
+		} else {
+			fmt.Println(tr("auto.down"))
+		}
 		l.emit("auto.skipped", map[string]any{"reason": "ollama unreachable"})
 		return
 	}
@@ -451,7 +475,11 @@ func runAuto() {
 		} `json:"models"`
 	}
 	if err := json.Unmarshal(body, &ps); err != nil || len(ps.Models) == 0 {
-		fmt.Println(tr("auto.nothing"))
+		if jsonOut {
+			fmt.Println(`{"ok":true,"skipped":"no models loaded","actions":[]}`)
+		} else {
+			fmt.Println(tr("auto.nothing"))
+		}
 		l.emit("auto.skipped", map[string]any{"reason": "no models loaded"})
 		return
 	}
@@ -469,18 +497,38 @@ func runAuto() {
 	}
 	cutoff := time.Now().Add(-15 * time.Minute).UnixMilli()
 	var acted int
+	var freed int64
+	var kept, unloaded []string
 	for _, m := range ps.Models {
 		if lastUse[m.Name] > cutoff {
-			fmt.Printf("  keep  %s (used recently)\n", m.Name)
+			if !jsonOut {
+				fmt.Printf("  keep  %s (used recently)\n", m.Name)
+			}
+			kept = append(kept, m.Name)
 			continue
 		}
 		payload, _ := json.Marshal(map[string]any{"model": m.Name, "keep_alive": 0})
 		rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 10*time.Second)
-		fmt.Printf("  idle  %s → unloaded (%.1f GB freed)\n", m.Name, float64(m.SizeVRAM)/1e9)
+		if !jsonOut {
+			fmt.Printf("  idle  %s → unloaded (%.1f GB freed)\n", m.Name, float64(m.SizeVRAM)/1e9)
+		}
 		l.emit("model.unloaded", map[string]any{
 			"model": m.Name, "vram_freed": m.SizeVRAM, "via": "auto",
 		})
+		unloaded = append(unloaded, m.Name)
+		freed += m.SizeVRAM
 		acted++
+	}
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"ok": true, "unloaded": unloaded, "kept": kept,
+			"freed_gb": float64(freed) / 1e9, "acted": acted,
+		}, "", "  ")
+		fmt.Println(string(out))
+		if acted == 0 {
+			l.emit("auto.skipped", map[string]any{"reason": "all loaded models in use"})
+		}
+		return
 	}
 	if acted == 0 {
 		fmt.Println(tr("auto.inuse"))

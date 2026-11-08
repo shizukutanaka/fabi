@@ -105,8 +105,21 @@ func main() {
 	case "serve":
 		runServe()
 	case "unload":
-		runUnload(os.Args[2:])
+		var uargs []string
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			} else {
+				uargs = append(uargs, a)
+			}
+		}
+		runUnload(uargs)
 	case "auto":
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			}
+		}
 		runAuto()
 	case "pattern":
 		runPattern(os.Args[2:])
