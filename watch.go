@@ -80,16 +80,28 @@ func runWatch(args []string) {
 
 	runScan(time.Now(), true)
 	measureLiveInference()
+	emitUIState()
 	for {
 		select {
 		case <-tick.C:
 			runScan(time.Now(), true)
 			measureLiveInference()
+			emitUIState()
 		case <-sig:
 			fmt.Println("\n" + tr("watch.stopped"))
 			return
 		}
 	}
+}
+
+// emitUIState records a consolidated status snapshot per watch tick —
+// one event kind a dashboard can poll instead of many endpoints.
+func emitUIState() {
+	l := openLedger()
+	defer l.close()
+	l.emit("ui.state", map[string]any{
+		"ts": time.Now().UnixMilli(), "state": statusJSON(),
+	})
 }
 
 // measureLiveInference adds real tok/s to the timeseries — a canned
