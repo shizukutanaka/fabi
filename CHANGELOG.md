@@ -2,15 +2,26 @@
 
 ## Unreleased
 
-- **global scale groundwork** — i18n skeleton with 7 languages
-  (en/ja/zh/es/de/fr/ko/pt/ru/it): `FABI_LANG`/`LANG`/`LC_ALL` detection plus
-  Windows `GetUserDefaultUILanguage`; localized entry surfaces
-  (tagline, first-run, hints, update, usage, status, doctor frames);
-  missing keys surface as `tr:key` rather than empty output (L2);
-  6-arch builds added (windows/arm64, linux/arm64); `fabi help`
-  exits 0
-- **selftest** — 30 PASS: +i18n honest fallback, +every --json
-  flag valid
+- **full i18n** — 124 keys × 10 languages
+  (en/ja/zh/es/de/fr/ko/pt/ru/it), audited to zero unlocalized
+  literals: `FABI_LANG`/`LANG`/`LC_ALL` + Windows
+  `GetUserDefaultUILanguage`; per-language `lang_<code>.go` data
+  files; every user-facing surface localized — bare fabi, all
+  22 help descriptions, update, status, doctor, scan, report,
+  ledger, diff, why, run, sweep, compare, unload, auto, install,
+  uninstall, goal, route (incl. verdicts), watch, serve; missing
+  keys surface as `tr:key` rather than empty output (L2)
+- **`--json` contract complete** — all 11 data commands:
+  +`goal` (task decomposition + verdicts), +`route` (physics
+  verdict), +`run` (measured inference); all emit pure JSON,
+  11/11 falsified
+- **API parity complete** — `GET /route?task=` (14 endpoints);
+  every data command reachable via HTTP
+- **6-arch** — windows/arm64 + linux/arm64; CI cross-compiles
+  all 6 release targets every push; `fabi version` shows os/arch
+- **docs** — README.ja.md, USAGE.ja.md; `fabi help` exits 0
+- **selftest** — 31 PASS: +i18n honest fallback, +language
+  detection, +every --json flag valid (11 commands)
 
 ## v0.0.6 — 2026-11-07
 
