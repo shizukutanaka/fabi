@@ -30,7 +30,7 @@ func runServe() {
 		return
 	}
 	fmt.Println(trf("serve.listen", servePort))
-	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff|/why|/route · POST /run|/goal|/unload|/scan|/pattern|/import")
+	fmt.Println("endpoints: GET /status|/models|/ledger|/doctor|/pattern|/diff|/why|/route · POST /run|/goal|/unload|/scan|/pattern|/import · /ui dashboard")
 	fmt.Println(tr("serve.loopback"))
 	for {
 		conn, err := ln.Accept()
