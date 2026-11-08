@@ -13,11 +13,18 @@ import (
 var langCode = detectLang()
 
 func detectLang() string {
+	l, _ := detectLangSource()
+	return l
+}
+
+// detectLangSource returns the detected code and where it came from,
+// so `fabi lang` can show the user how their language was chosen.
+func detectLangSource() (string, string) {
 	for _, e := range []string{"FABI_LANG", "LANG", "LC_ALL"} {
 		v := os.Getenv(e)
 		if len(v) >= 2 {
 			if _, ok := messages[v[:2]]; ok {
-				return v[:2]
+				return v[:2], e + "=" + v
 			}
 		}
 	}
@@ -25,10 +32,10 @@ func detectLang() string {
 	// only honor it if we actually have strings for it.
 	if l := osDefaultLang(); l != "" {
 		if _, ok := messages[l]; ok {
-			return l
+			return l, "OS UI language"
 		}
 	}
-	return "en"
+	return "en", "fallback"
 }
 
 // tr returns the localized string for key — English fallback, then

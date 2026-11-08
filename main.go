@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -175,6 +177,16 @@ func main() {
 		usage()
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version, runtime.GOOS+"/"+runtime.GOARCH, "lang:"+detectLang())
+	case "lang":
+		code, src := detectLangSource()
+		var langs []string
+		for k := range messages {
+			langs = append(langs, k)
+		}
+		sort.Strings(langs)
+		fmt.Println("detected:", code, "(source:", src+")")
+		fmt.Println("supported:", strings.Join(langs, " "))
+		fmt.Println("override:  set FABI_LANG=<code> — e.g. set FABI_LANG=en")
 	default:
 		usage()
 		os.Exit(2)
