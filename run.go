@@ -316,12 +316,20 @@ func runCompare(prompt string) {
 	}
 	st, body, err := rawHTTP(ollamaBase, "GET", "/api/tags", "", 3*time.Second)
 	if err != nil || st != 200 {
-		fmt.Println(tr("compare.noengine"))
+		if jsonOut {
+			fmt.Println(`{"ok":false,"error":"ollama not reachable"}`)
+		} else {
+			fmt.Println(tr("compare.noengine"))
+		}
 		return
 	}
 	var t ollamaTags
 	if err := json.Unmarshal(body, &t); err != nil || len(t.Models) == 0 {
-		fmt.Println(tr("compare.nomodels"))
+		if jsonOut {
+			fmt.Println(`{"ok":false,"error":"no models","results":[]}`)
+		} else {
+			fmt.Println(tr("compare.nomodels"))
+		}
 		return
 	}
 	l := openLedger()

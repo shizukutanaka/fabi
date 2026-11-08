@@ -896,7 +896,9 @@ func runSelfTest() {
 			{"doctor", "--json"}, {"diff", "--json"}, {"update", "--json"},
 			{"ledger", "stats", "--json"}, {"why", "gpu", "--json"},
 			{"goal", "summarize", "--json"}, {"route", "summarize", "--json"},
-			{"run", "--json", "test"},
+			{"run", "--json", "test"}, {"run", "--compare", "t", "--json"},
+			{"unload", "--json"}, {"auto", "--json"}, {"pattern", "--json"},
+			// selftest --json excluded — it would recurse into itself.
 		}
 		var bad []string
 		for _, c := range cmds {
