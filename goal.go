@@ -123,15 +123,17 @@ func runGoal(args []string) {
 	}
 
 	fmt.Println()
-	fmt.Printf("FABI GOAL — %q\n", goal)
-	fmt.Println("─────────────────────────────────────────────")
-	fmt.Printf("tasks (%d): %s\n", len(tasks), strings.Join(tasks, ", "))
-	if gpuName != "" {
-		fmt.Printf("hardware: %s — %.0f GiB VRAM\n", gpuName, vramMiB/1024)
-	} else {
-		fmt.Println(tr("goal.nogpu"))
+	if !jsonOut {
+		fmt.Printf("FABI GOAL — %q\n", goal)
+		fmt.Println("─────────────────────────────────────────────")
+		fmt.Printf("tasks (%d): %s\n", len(tasks), strings.Join(tasks, ", "))
+		if gpuName != "" {
+			fmt.Printf("hardware: %s — %.0f GiB VRAM\n", gpuName, vramMiB/1024)
+		} else {
+			fmt.Println(tr("goal.nogpu"))
+		}
+		fmt.Println()
 	}
-	fmt.Println()
 
 	ok := 0
 	var jtasks []map[string]any

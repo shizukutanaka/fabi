@@ -61,8 +61,12 @@ func main() {
 		runLedgerCmd(os.Args[2:])
 	case "route":
 		arg := ""
-		if len(os.Args) > 2 {
-			arg = os.Args[2]
+		for _, a := range os.Args[2:] {
+			if a == "--json" {
+				jsonOut = true
+			} else {
+				arg = a
+			}
 		}
 		runRoute(arg)
 	case "goal":

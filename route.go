@@ -104,22 +104,24 @@ func runRoute(taskName string) {
 	latency := float64(tp.outTokens) / toks
 	fitVRAM := float64(resident)/1048576 <= vramMiB
 
-	fmt.Println()
-	fmt.Printf("FABI ROUTE — %s\n", taskName)
-	fmt.Println("─────────────────────────────────────────────")
-	fmt.Printf("task:        %s → %d out tokens in %.1f s = %.0f tok/s needed\n",
-		tp.desc, tp.outTokens, tp.latencyS, latTok)
-	fmt.Printf("model class: %s (%.1f GB resident)\n", tp.modelClass, float64(resident)/1e9)
-	if gpuName == "" {
-		fmt.Println("hardware:    no GPU found in ledger — run `fabi scan` first")
-	} else {
-		fmt.Printf("hardware:    %s — %.0f GiB VRAM, ~%.0f GB/s\n",
-			gpuName, vramMiB/1024, bw)
+	if !jsonOut {
+		fmt.Println()
+		fmt.Printf("FABI ROUTE — %s\n", taskName)
+		fmt.Println("─────────────────────────────────────────────")
+		fmt.Printf("task:        %s → %d out tokens in %.1f s = %.0f tok/s needed\n",
+			tp.desc, tp.outTokens, tp.latencyS, latTok)
+		fmt.Printf("model class: %s (%.1f GB resident)\n", tp.modelClass, float64(resident)/1e9)
+		if gpuName == "" {
+			fmt.Println("hardware:    no GPU found in ledger — run `fabi scan` first")
+		} else {
+			fmt.Printf("hardware:    %s — %.0f GiB VRAM, ~%.0f GB/s\n",
+				gpuName, vramMiB/1024, bw)
+		}
+		fmt.Println()
+		fmt.Println(tr("route.physics"))
+		fmt.Printf("  %.0f GB/s ÷ %.1f GB = %.0f tok/s (decode, #48)\n",
+			bw, float64(resident)/1e9, toks)
 	}
-	fmt.Println()
-	fmt.Println(tr("route.physics"))
-	fmt.Printf("  %.0f GB/s ÷ %.1f GB = %.0f tok/s (decode, #48)\n",
-		bw, float64(resident)/1e9, toks)
 
 	// Calibration: physics is an upper bound — real decode pays KV cache,
 	// attention and contention overhead. If the ledger has measured runs,
@@ -140,7 +142,7 @@ func runRoute(taskName string) {
 			}
 		}
 	}
-	if len(ratios) > 0 {
+	if len(ratios) > 0 && !jsonOut {
 		sort.Float64s(ratios)
 		med := ratios[len(ratios)/2]
 		cal := toks * med
@@ -148,27 +150,66 @@ func runRoute(taskName string) {
 			cal, med, len(ratios))
 	}
 	if gpuName == "" {
-		fmt.Println(tr("route.nolocal"))
+		if jsonOut {
+			out, _ := json.MarshalIndent(map[string]any{
+				"task": taskName, "model_class": tp.modelClass,
+				"verdict": "NO LOCAL GPU", "tok_s": toks,
+				"latency_s": latency, "target_s": tp.latencyS,
+			}, "", "  ")
+			fmt.Println(string(out))
+		} else {
+			fmt.Println(tr("route.nolocal"))
+		}
 		return
 	}
-	fmt.Printf("  latency:   %d tok ÷ %.0f tok/s = %.1f s (target %.1f s)\n",
-		tp.outTokens, toks, latency, tp.latencyS)
-	fmt.Printf("  VRAM:      %.1f GB needed vs %.0f GiB available → %v\n",
-		float64(resident)/1e9, vramMiB/1024, fitVRAM)
-	fmt.Println()
+	if !jsonOut {
+		fmt.Printf("  latency:   %d tok ÷ %.0f tok/s = %.1f s (target %.1f s)\n",
+			tp.outTokens, toks, latency, tp.latencyS)
+		fmt.Printf("  VRAM:      %.1f GB needed vs %.0f GiB available → %v\n",
+			float64(resident)/1e9, vramMiB/1024, fitVRAM)
+		fmt.Println()
+	}
 
+	verdict := ""
 	switch {
 	case !fitVRAM:
-		fmt.Println(tr("route.nofit"))
-		fmt.Println(tr("route.nofit.hint"))
+		verdict = "DOESN'T FIT"
+		if !jsonOut {
+			fmt.Println(tr("route.nofit"))
+			fmt.Println(tr("route.nofit.hint"))
+		}
 	case latency <= tp.latencyS:
-		fmt.Println(trf("route.ok", toks, latTok, latency, tp.latencyS))
+		verdict = "LOCAL OK"
+		if !jsonOut {
+			fmt.Println(trf("route.ok", toks, latTok, latency, tp.latencyS))
+		}
 	case latency <= tp.latencyS*3:
-		fmt.Println(trf("route.possible", latency, tp.latencyS, latency/tp.latencyS))
-		fmt.Println("             speculative decoding / draft model may close the gap")
+		verdict = "LOCAL POSSIBLE"
+		if !jsonOut {
+			fmt.Println(trf("route.possible", latency, tp.latencyS, latency/tp.latencyS))
+			fmt.Println("             speculative decoding / draft model may close the gap")
+		}
 	default:
-		fmt.Println(trf("route.tooslow", latency, tp.latencyS))
-		fmt.Println(tr("route.nofit.hint"))
+		verdict = "LOCAL TOO SLOW"
+		if !jsonOut {
+			fmt.Println(trf("route.tooslow", latency, tp.latencyS))
+			fmt.Println(tr("route.nofit.hint"))
+		}
+	}
+	if jsonOut {
+		out, _ := json.MarshalIndent(map[string]any{
+			"task": taskName, "model_class": tp.modelClass,
+			"gpu": gpuName, "vram_mib": vramMiB, "bandwidth_gbps": bw,
+			"tok_s": toks, "latency_s": latency, "target_s": tp.latencyS,
+			"fit_vram": fitVRAM, "verdict": verdict,
+		}, "", "  ")
+		fmt.Println(string(out))
+		l.emit("route.evaluated", map[string]any{
+			"task": taskName, "model_class": tp.modelClass,
+			"gpu": gpuName, "vram_mib": vramMiB, "bandwidth_gbps": bw,
+			"tok_s": toks, "latency_s": latency, "fit_vram": fitVRAM,
+		})
+		return
 	}
 
 	l.emit("route.evaluated", map[string]any{
