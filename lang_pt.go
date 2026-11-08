@@ -239,5 +239,6 @@ func init() {
 		"why.norec.raw":         "WHY %s — sem recomendação; observações brutas:",
 		"why.rec":               "  recomendação: [%s] %s",
 		"why.usage":             "uso: fabi why <nome> [--json] — explica uma recomendação/descoberta",
+		"why.action":            "ação: %s — ou aplique só os seguros: %s",
 	}
 }

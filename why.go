@@ -133,6 +133,18 @@ func runWhy(args []string) {
 					e.kind, trunc(fmt.Sprint(p), 60))
 			}
 		}
+		fmt.Println()
+		// The action to close the observe→recommend→act loop, per class.
+		switch best.class {
+		case "idle":
+			fmt.Println(trf("why.action", "fabi unload "+best.target, "fabi auto"))
+		case "remove":
+			fmt.Println(trf("why.action", "fabi report", "manual removal (L9)"))
+		case "investigate":
+			fmt.Println(trf("why.action", "fabi scan", "fabi watch"))
+		default:
+			fmt.Println(trf("why.action", "fabi auto", "fabi scan"))
+		}
 		return
 	}
 

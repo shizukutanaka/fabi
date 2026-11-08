@@ -192,6 +192,7 @@ var messages = map[string]map[string]string{
 		"list.none":             "  (none)",
 		"diff.need2":            "fabi diff — need at least 2 scans (run `fabi scan` twice)",
 		"why.usage":             "usage: fabi why <name> [--json] — explain a recommendation/finding",
+		"why.action":            "action: %s — or apply the safe subset: %s",
 		"diff.none":             "  no changes — estate is identical",
 		"ledger.title":          "FABI LEDGER — the single truth",
 		"ledger.empty":          "FABI LEDGER — no database yet. Run `fabi scan` first.",
@@ -431,6 +432,7 @@ var messages = map[string]map[string]string{
 		"list.none":             "  (なし)",
 		"diff.need2":            "fabi diff — 2回以上のスキャンが必要(`fabi scan` を2回実行)",
 		"why.usage":             "usage: fabi why <名前> [--json] — 推奨/発見の説明",
+		"why.action":            "次: %s — 安全なものだけなら: %s",
 		"diff.none":             "  変化なし — 資産は同一",
 		"ledger.title":          "FABI LEDGER — 唯一の真実",
 		"ledger.empty":          "FABI LEDGER — DBがまだありません。まず `fabi scan` を実行",
@@ -780,6 +782,7 @@ var messages = map[string]map[string]string{
 		"watch.every":           "fabi watch — 每 %s 扫描一次 (Ctrl+C 停止)",
 		"why.norec.raw":         "WHY %s — 无推荐;原始观察:",
 		"why.usage":             "用法: fabi why <名称> [--json] — 解释推荐/发现",
+		"why.action":            "操作: %s — 或只应用安全项: %s",
 	},
 	"es": {
 		"tagline":               "fabi — el ojo honesto sobre los activos de IA de tu PC",
@@ -1017,6 +1020,7 @@ var messages = map[string]map[string]string{
 		"watch.every":           "fabi watch — escanea cada %s (Ctrl+C para detener)",
 		"why.norec.raw":         "WHY %s — sin recomendación; observaciones crudas:",
 		"why.usage":             "uso: fabi why <nombre> [--json] — explica una recomendación/hallazgo",
+		"why.action":            "acción: %s — o aplica solo lo seguro: %s",
 	},
 	"de": {
 		"tagline":               "fabi — das ehrliche Auge auf dem KI-Bestand deines PCs",
@@ -1254,6 +1258,7 @@ var messages = map[string]map[string]string{
 		"watch.every":           "fabi watch — scannt alle %s (Ctrl+C zum Stoppen)",
 		"why.norec.raw":         "WHY %s — keine Empfehlung; rohe Beobachtungen:",
 		"why.usage":             "Verwendung: fabi why <Name> [--json] — erklärt eine Empfehlung/Entdeckung",
+		"why.action":            "Aktion: %s — oder nur die sicheren: %s",
 	},
 	"fr": {
 		"tagline":               "fabi — l'œil honnête sur les actifs IA de votre PC",
@@ -1491,6 +1496,7 @@ var messages = map[string]map[string]string{
 		"watch.every":           "fabi watch — scanne toutes les %s (Ctrl+C pour arrêter)",
 		"why.norec.raw":         "WHY %s — pas de recommandation ; observations brutes :",
 		"why.usage":             "usage : fabi why <nom> [--json] — explique une recommandation/découverte",
+		"why.action":            "action : %s — ou appliquez seulement les sûrs : %s",
 	},
 	"ko": {
 		"tagline":               "fabi — PC의 AI 자산을 보는 정직한 눈",
@@ -1728,5 +1734,6 @@ var messages = map[string]map[string]string{
 		"watch.every":           "fabi watch — %s마다 스캔 (Ctrl+C로 중지)",
 		"why.norec.raw":         "WHY %s — 권장 없음; 원시 관측:",
 		"why.usage":             "사용법: fabi why <이름> [--json] — 권장/발견 설명",
+		"why.action":            "작업: %s — 안전한 것만 적용: %s",
 	},
 }
