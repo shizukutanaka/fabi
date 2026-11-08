@@ -621,7 +621,7 @@ func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, late
 	fmt.Printf("recommendations: %d new, %d unchanged\n", emitted, unchanged)
 	fmt.Println(tr("doctor.footer"))
 	fmt.Println()
-	fmt.Println("next:   fabi why <target> — see the evidence behind a recommendation")
+	fmt.Println(tr("doctor.next"))
 	fmt.Println("        fabi report       — the full estate statement")
 	fmt.Println("        fabi auto         — apply only safe idle-model unloads")
 }

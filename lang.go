@@ -167,6 +167,7 @@ var messages = map[string]map[string]string{
 		"route.tooslow":         "verdict:     LOCAL TOO SLOW — %.1fs vs %.1fs; cloud or downgrade",
 		"doctor.investigate":    "INVESTIGATE — provenance gaps",
 		"doctor.footer":         "deletion is always manual — evidence first, action never automatic",
+		"doctor.next":           "next:   fabi why <target> — see the evidence behind a recommendation",
 	},
 	"ja": {
 		"tagline":               "fabi — あなたのPCのAI資産を見る正直な目",
@@ -286,6 +287,7 @@ var messages = map[string]map[string]string{
 		"route.tooslow":         "verdict:     LOCAL遅すぎ — %.1fs vs %.1fs; クラウドまたはダウングレード",
 		"doctor.investigate":    "INVESTIGATE — 来歴ギャップ",
 		"doctor.footer":         "削除は常に手動 — 証拠が先、アクションは自動でない",
+		"doctor.next":           "次:     fabi why <target> — 推奨の背後の証拠を見る",
 	},
 	"zh": {
 		"tagline":               "fabi — 您的 PC AI 资产的诚实之眼",

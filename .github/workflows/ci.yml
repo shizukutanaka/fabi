@@ -22,6 +22,14 @@ jobs:
           echo "binary: $size bytes"
           [ "$size" -lt 10485760 ]
         shell: bash
+      - name: cross-compile all 6 release targets
+        run: |
+          for t in windows/amd64 windows/arm64 linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+            GOOS="${t%/*}" GOARCH="${t#*/}" go build -ldflags="-s -w" -o /tmp/fabi-x .
+          done
+          echo "6/6 targets compile"
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
       - name: selftest on ${{ matrix.os }}
         run: ./fabi${{ matrix.os == 'windows-latest' && '.exe' || '' }} selftest
         shell: bash
