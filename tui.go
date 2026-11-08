@@ -123,5 +123,14 @@ func renderTUI(events []ledgerEvent, windows []scanWindow) {
 			b.WriteString("  · " + f.name + " — " + f.detail + "\n")
 		}
 	}
+
+	// Doctor recommendations — the actionable part of the honest eye.
+	recs := computeRecommendations(events, windows, latest)
+	if len(recs) > 0 {
+		b.WriteString("\n" + tr("doctor.title") + "\n")
+		for _, r := range recs {
+			b.WriteString("  [" + r.class + "] " + r.target + "\n")
+		}
+	}
 	fmt.Print(b.String())
 }

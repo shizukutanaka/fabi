@@ -113,6 +113,188 @@ func runDoctor() {
 	}
 	latest := windows[len(windows)-1]
 
+	recs := computeRecommendations(events, windows, latest)
+
+	// --- Emit recommendations back to the ledger ---
+	// Dedupe: don't re-emit a recommendation identical to the latest open one.
+	latestRec := map[string]map[string]any{}
+	for _, e := range l.events("doctor.recommendation") {
+		var p map[string]any
+		if err := json.Unmarshal([]byte(e.payload), &p); err == nil {
+			if t, ok := p["target"].(string); ok {
+				latestRec[t] = p
+			}
+		}
+	}
+	var emitted, unchanged, reclaimTotal int64
+	for _, r := range recs {
+		if prev, ok := latestRec[r.target]; ok &&
+			strOf(prev, "class") == r.class &&
+			strOf(prev, "detail") == r.detail {
+			unchanged++
+			continue
+		}
+		l.emit("doctor.recommendation", map[string]any{
+			"class":         r.class,
+			"target":        r.target,
+			"detail":        r.detail,
+			"confidence":    r.confidence,
+			"reclaim_bytes": r.reclaim,
+			"evidence_ids":  r.evidence,
+		})
+		emitted++
+		if r.class == "remove" {
+			reclaimTotal += r.reclaim
+		}
+	}
+
+	// --json: recommendations as a machine-readable array — the
+	// actionable output scripts consume.
+	if jsonOut {
+		var arr []map[string]any
+		for _, r := range recs {
+			arr = append(arr, map[string]any{
+				"class":         r.class,
+				"target":        r.target,
+				"detail":        r.detail,
+				"confidence":    r.confidence,
+				"reclaim_bytes": r.reclaim,
+				"evidence_ids":  r.evidence,
+			})
+		}
+		out, _ := json.MarshalIndent(map[string]any{
+			"recommendations": arr,
+			"emitted":         emitted,
+			"unchanged":       unchanged,
+			"reclaim_total":   reclaimTotal,
+		}, "", "  ")
+		fmt.Println(string(out))
+		return
+	}
+
+	printDoctor(recs, len(events), len(windows), reclaimTotal, latest, emitted, unchanged)
+}
+
+func strOf(m map[string]any, k string) string {
+	if v, ok := m[k].(string); ok {
+		return v
+	}
+	return ""
+}
+
+func numOf(m map[string]any, k string) float64 {
+	if v, ok := m[k].(float64); ok {
+		return v
+	}
+	return 0
+}
+
+func orPath(p string) string {
+	if p == "" {
+		return "(path not recorded — pre-path ledger event)"
+	}
+	return p
+}
+
+func lastN(ids []int64, n int) []int64 {
+	if len(ids) <= n {
+		return ids
+	}
+	return ids[len(ids)-n:]
+}
+
+// sameContent verifies two paths hold byte-identical files via sha256.
+// Empty paths or unreadable files → not identical (never recommend removal).
+func sameContent(a, b string) bool {
+	if a == "" || b == "" {
+		return false
+	}
+	ha, hb := fileSHA256(a), fileSHA256(b)
+	return ha != "" && ha == hb
+}
+
+func fileSHA256(p string) string {
+	f, err := os.Open(p)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, latest scanWindow, emitted, unchanged int64) {
+	fmt.Println()
+	fmt.Println(tr("doctor.title"))
+	fmt.Println("─────────────────────────────────────────────")
+	fmt.Println(trf("doctor.ledgerline",
+		nEvents, nScans, len(latest.findings)))
+	fmt.Println()
+
+	if len(recs) == 0 {
+		fmt.Println(tr("doctor.none"))
+	}
+
+	var remove, idle, investigate []recommendation
+	for _, r := range recs {
+		switch r.class {
+		case "remove":
+			remove = append(remove, r)
+		case "idle":
+			idle = append(idle, r)
+		case "investigate":
+			investigate = append(investigate, r)
+		}
+	}
+
+	if len(remove) > 0 {
+		fmt.Println(trf("doctor.remove.hdr", formatBytes(reclaim)))
+		for _, r := range remove {
+			fmt.Printf("  [%s] %s\n", r.confidence, r.target)
+			for _, line := range strings.Split(r.detail, "\n") {
+				fmt.Printf("      %s\n", line)
+			}
+			fmt.Println(trf("doctor.evidence", r.evidence))
+		}
+		fmt.Println(tr("doctor.note"))
+		fmt.Println()
+	}
+
+	if len(idle) > 0 {
+		fmt.Println(trf("doctor.idle.hdr", nScans))
+		for _, r := range idle {
+			fmt.Printf("  [%s] %s — %s\n", r.confidence, r.target, r.detail)
+		}
+		fmt.Println()
+	}
+
+	if len(investigate) > 0 {
+		fmt.Println(tr("doctor.investigate"))
+		for _, r := range investigate {
+			fmt.Printf("  [%s] %s\n", r.confidence, r.target)
+			for _, line := range strings.Split(r.detail, "\n") {
+				fmt.Printf("      %s\n", line)
+			}
+		}
+		fmt.Println()
+	}
+
+	fmt.Println("─────────────────────────────────────────────")
+	fmt.Println(trf("doctor.recs.count", emitted, unchanged))
+	fmt.Println(tr("doctor.footer"))
+	fmt.Println()
+	fmt.Println(tr("doctor.next"))
+	fmt.Println(tr("doctor.hint.report"))
+	fmt.Println(tr("doctor.hint.auto"))
+}
+
+// computeRecommendations runs the 8 evidence rules over scan history
+// and returns the recommendations — shared by `fabi doctor` (prints + emits)
+// and `fabi tui` (renders). No evidence → no recommendation (SPEC #78).
+func computeRecommendations(events []ledgerEvent, windows []scanWindow, latest scanWindow) []recommendation {
 	var recs []recommendation
 
 	// --- Rule 1: duplicate models in latest scan ---
@@ -442,179 +624,5 @@ func runDoctor() {
 			}
 		}
 	}
-
-	// --- Emit recommendations back to the ledger ---
-	// Dedupe: don't re-emit a recommendation identical to the latest open one.
-	latestRec := map[string]map[string]any{}
-	for _, e := range l.events("doctor.recommendation") {
-		var p map[string]any
-		if err := json.Unmarshal([]byte(e.payload), &p); err == nil {
-			if t, ok := p["target"].(string); ok {
-				latestRec[t] = p
-			}
-		}
-	}
-	var emitted, unchanged, reclaimTotal int64
-	for _, r := range recs {
-		if prev, ok := latestRec[r.target]; ok &&
-			strOf(prev, "class") == r.class &&
-			strOf(prev, "detail") == r.detail {
-			unchanged++
-			continue
-		}
-		l.emit("doctor.recommendation", map[string]any{
-			"class":         r.class,
-			"target":        r.target,
-			"detail":        r.detail,
-			"confidence":    r.confidence,
-			"reclaim_bytes": r.reclaim,
-			"evidence_ids":  r.evidence,
-		})
-		emitted++
-		if r.class == "remove" {
-			reclaimTotal += r.reclaim
-		}
-	}
-
-	// --json: recommendations as a machine-readable array — the
-	// actionable output scripts consume.
-	if jsonOut {
-		var arr []map[string]any
-		for _, r := range recs {
-			arr = append(arr, map[string]any{
-				"class":         r.class,
-				"target":        r.target,
-				"detail":        r.detail,
-				"confidence":    r.confidence,
-				"reclaim_bytes": r.reclaim,
-				"evidence_ids":  r.evidence,
-			})
-		}
-		out, _ := json.MarshalIndent(map[string]any{
-			"recommendations": arr,
-			"emitted":         emitted,
-			"unchanged":       unchanged,
-			"reclaim_total":   reclaimTotal,
-		}, "", "  ")
-		fmt.Println(string(out))
-		return
-	}
-
-	printDoctor(recs, len(events), len(windows), reclaimTotal, latest, emitted, unchanged)
-}
-
-func strOf(m map[string]any, k string) string {
-	if v, ok := m[k].(string); ok {
-		return v
-	}
-	return ""
-}
-
-func numOf(m map[string]any, k string) float64 {
-	if v, ok := m[k].(float64); ok {
-		return v
-	}
-	return 0
-}
-
-func orPath(p string) string {
-	if p == "" {
-		return "(path not recorded — pre-path ledger event)"
-	}
-	return p
-}
-
-func lastN(ids []int64, n int) []int64 {
-	if len(ids) <= n {
-		return ids
-	}
-	return ids[len(ids)-n:]
-}
-
-// sameContent verifies two paths hold byte-identical files via sha256.
-// Empty paths or unreadable files → not identical (never recommend removal).
-func sameContent(a, b string) bool {
-	if a == "" || b == "" {
-		return false
-	}
-	ha, hb := fileSHA256(a), fileSHA256(b)
-	return ha != "" && ha == hb
-}
-
-func fileSHA256(p string) string {
-	f, err := os.Open(p)
-	if err != nil {
-		return ""
-	}
-	defer f.Close()
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return ""
-	}
-	return hex.EncodeToString(h.Sum(nil))
-}
-
-func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, latest scanWindow, emitted, unchanged int64) {
-	fmt.Println()
-	fmt.Println(tr("doctor.title"))
-	fmt.Println("─────────────────────────────────────────────")
-	fmt.Println(trf("doctor.ledgerline",
-		nEvents, nScans, len(latest.findings)))
-	fmt.Println()
-
-	if len(recs) == 0 {
-		fmt.Println(tr("doctor.none"))
-	}
-
-	var remove, idle, investigate []recommendation
-	for _, r := range recs {
-		switch r.class {
-		case "remove":
-			remove = append(remove, r)
-		case "idle":
-			idle = append(idle, r)
-		case "investigate":
-			investigate = append(investigate, r)
-		}
-	}
-
-	if len(remove) > 0 {
-		fmt.Println(trf("doctor.remove.hdr", formatBytes(reclaim)))
-		for _, r := range remove {
-			fmt.Printf("  [%s] %s\n", r.confidence, r.target)
-			for _, line := range strings.Split(r.detail, "\n") {
-				fmt.Printf("      %s\n", line)
-			}
-			fmt.Println(trf("doctor.evidence", r.evidence))
-		}
-		fmt.Println(tr("doctor.note"))
-		fmt.Println()
-	}
-
-	if len(idle) > 0 {
-		fmt.Println(trf("doctor.idle.hdr", nScans))
-		for _, r := range idle {
-			fmt.Printf("  [%s] %s — %s\n", r.confidence, r.target, r.detail)
-		}
-		fmt.Println()
-	}
-
-	if len(investigate) > 0 {
-		fmt.Println(tr("doctor.investigate"))
-		for _, r := range investigate {
-			fmt.Printf("  [%s] %s\n", r.confidence, r.target)
-			for _, line := range strings.Split(r.detail, "\n") {
-				fmt.Printf("      %s\n", line)
-			}
-		}
-		fmt.Println()
-	}
-
-	fmt.Println("─────────────────────────────────────────────")
-	fmt.Println(trf("doctor.recs.count", emitted, unchanged))
-	fmt.Println(tr("doctor.footer"))
-	fmt.Println()
-	fmt.Println(tr("doctor.next"))
-	fmt.Println(tr("doctor.hint.report"))
-	fmt.Println(tr("doctor.hint.auto"))
+	return recs
 }
