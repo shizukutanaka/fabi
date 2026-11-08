@@ -132,8 +132,8 @@ func runRun(args []string) {
 		fmt.Println()
 		fmt.Println(tr("run.title"))
 		fmt.Println("─────────────────────────────────────────────")
-		fmt.Printf("model:   %s (%.1f GB)\n", best, float64(sizes[best])/1e9)
-		fmt.Printf("prompt:  %s\n", trunc(prompt, 80))
+		fmt.Println(trf("run.model.hdr", best, float64(sizes[best])/1e9))
+		fmt.Println(trf("run.prompt", trunc(prompt, 80)))
 		fmt.Println(tr("run.running"))
 		fmt.Println()
 	}
@@ -148,7 +148,7 @@ func runRun(args []string) {
 			}, "", "  ")
 			fmt.Println(string(out))
 		} else {
-			fmt.Printf("failed: %v\n", err)
+			fmt.Println(trf("run.failed", err))
 		}
 		l.emit("task.executed", map[string]any{
 			"ok": false, "model": best, "error": err.Error(),
@@ -168,8 +168,8 @@ func runRun(args []string) {
 		fmt.Println(tr("run.response"))
 		fmt.Println("  " + trunc(strings.TrimSpace(r.Response), 400))
 		fmt.Println()
-		fmt.Printf("measured: %d tokens in %.1fs = %.1f tok/s · ttft %.0f ms (prefill %d tok)",
-			r.EvalCount, wall.Seconds(), toks, r.ttftMs, r.PromptEvalCount)
+		fmt.Print(trf("run.measured",
+			r.EvalCount, wall.Seconds(), toks, r.ttftMs, r.PromptEvalCount))
 		fmt.Println("  [M]")
 		fmt.Println()
 	}
@@ -348,7 +348,7 @@ func runCompare(prompt string) {
 		fmt.Println()
 		fmt.Println(tr("compare.title"))
 		fmt.Println("─────────────────────────────────────────────")
-		fmt.Printf("prompt: %s\nscheduler picks (fastest/smallest): %s\n\n", prompt, pick)
+		fmt.Println(trf("compare.pick", prompt, pick))
 	}
 
 	var winner string
@@ -362,7 +362,7 @@ func runCompare(prompt string) {
 					"model": m.Name, "ok": false, "error": err.Error(),
 				})
 			} else {
-				fmt.Printf("  %-18s %.1f GB   FAILED %v\n", m.Name, float64(m.Size)/1e9, err)
+				fmt.Println(trf("compare.row.fail", m.Name, float64(m.Size)/1e9, err))
 			}
 			continue
 		}
@@ -377,8 +377,8 @@ func runCompare(prompt string) {
 			if m.Name == pick {
 				mark = "  ← scheduler's choice"
 			}
-			fmt.Printf("  %-18s %.1f GB   %5.1f tok/s  (%.1fs)%s\n",
-				m.Name, float64(m.Size)/1e9, toks, wall.Seconds(), mark)
+			fmt.Println(trf("compare.row",
+				m.Name, float64(m.Size)/1e9, toks, wall.Seconds(), mark))
 		}
 		if toks > winnerToks {
 			winnerToks, winner = toks, m.Name
@@ -399,9 +399,9 @@ func runCompare(prompt string) {
 	}
 	fmt.Println()
 	if winner == pick {
-		fmt.Printf("verdict: scheduler was RIGHT — %s is measured fastest\n", pick)
+		fmt.Println(trf("compare.right", pick))
 	} else {
-		fmt.Printf("verdict: scheduler was WRONG — %s (%.1f) beats %s\n", winner, winnerToks, pick)
+		fmt.Println(trf("compare.wrong", winner, winnerToks, pick))
 	}
 }
 
@@ -446,7 +446,7 @@ func runUnload(args []string) {
 		freed += m.SizeVRAM
 		unloaded = append(unloaded, m.Name)
 		if !jsonOut {
-			fmt.Printf("  unloaded %s (%.1f GB)\n", m.Name, float64(m.SizeVRAM)/1e9)
+			fmt.Println(trf("unload.each", m.Name, float64(m.SizeVRAM)/1e9))
 		}
 		l.emit("model.unloaded", map[string]any{
 			"model": m.Name, "vram_freed": m.SizeVRAM,
@@ -459,8 +459,8 @@ func runUnload(args []string) {
 		}, "", "  ")
 		fmt.Println(string(out))
 	} else {
-		fmt.Printf("\nfabi unload: %.1f GB VRAM freed (%d model(s))\n",
-			float64(freed)/1e9, len(ps.Models))
+		fmt.Println(trf("unload.summary",
+			float64(freed)/1e9, len(ps.Models)))
 	}
 }
 
