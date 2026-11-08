@@ -24,12 +24,17 @@ func detectLang() string {
 	return "en"
 }
 
-// tr returns the localized string for key, English fallback.
+// tr returns the localized string for key — English fallback, then
+// the key itself as last resort so a missing string is VISIBLE
+// rather than silently empty (L2: gaps must be shown, not hidden).
 func tr(key string) string {
 	if s, ok := messages[langCode][key]; ok {
 		return s
 	}
-	return messages["en"][key]
+	if s, ok := messages["en"][key]; ok {
+		return s
+	}
+	return "tr:" + key
 }
 
 func trf(key string, args ...any) string {

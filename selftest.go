@@ -910,6 +910,34 @@ func runSelfTest() {
 			measured, status)
 	}
 
+	// --- Claim: i18n falls back to English honestly —
+	// tr() must return English for missing keys/languages and
+	// localized strings for covered ones — falsified if a key
+	// goes missing silently or a wrong string leaks across langs.
+	{
+		bad := []string{}
+		if tr("definitely.missing.key") != "tr:definitely.missing.key" {
+			bad = append(bad, "hidden missing key")
+		}
+		for k := range messages["en"] {
+			if tr(k) == "" {
+				bad = append(bad, "en:"+k)
+			}
+		}
+		for lang, m := range messages {
+			for k := range m {
+				if messages["en"][k] == "" {
+					bad = append(bad, lang+":"+k+" no-en")
+				}
+			}
+		}
+		measured := fmt.Sprintf("%d langs, %d keys, %d gaps",
+			len(messages), len(messages["en"]), len(bad))
+		status := passIf(len(bad) == 0)
+		add("i18n honest fallback", "localized strings are data",
+			measured, status)
+	}
+
 	// --- Claim: version comparison is correct —
 	// `fabi update` decides "newer release" via semverLess — falsified
 	// if it orders known version pairs wrong.
