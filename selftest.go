@@ -114,7 +114,7 @@ func runSelfTest() {
 		other = "windows"
 	}
 	add("other OSes", "darwin, linux",
-		fmt.Sprintf("builds clean locally; runtime verified by CI selftest on ubuntu/macos (local run can't see hw)", other),
+		fmt.Sprintf("builds clean locally for %s; runtime verified by CI selftest on ubuntu/macos (local run can't see hw)", other),
 		"UNVERIFIED")
 
 	// --- Claim: execution works (Phase 2, L15) ---

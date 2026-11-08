@@ -77,3 +77,46 @@ func TestBandwidthForGPU(t *testing.T) {
 		t.Errorf("unknown bandwidth = %f, want 200 default", bw)
 	}
 }
+
+// whyAction — the command that closes the observe→recommend→act loop.
+// Every class must map to a concrete command, not an empty string.
+func TestWhyAction(t *testing.T) {
+	cases := map[string]string{
+		"idle":        "fabi unload ollama",
+		"remove":      "fabi report (then manual removal — L9)",
+		"investigate": "fabi scan",
+		"info":        "fabi auto",
+		"unknown":     "fabi auto", // falls through to the safe default
+	}
+	for class, want := range cases {
+		if got := whyAction(class, "ollama"); got != want {
+			t.Errorf("whyAction(%q) = %q, want %q", class, got, want)
+		}
+	}
+}
+
+// computeRecommendations — the 8 evidence rules over scan history.
+// No findings → no recommendations; dup models → a remove rec.
+func TestComputeRecommendations(t *testing.T) {
+	// Empty estate produces no recommendations (no evidence).
+	windows := []scanWindow{{findings: nil}}
+	if recs := computeRecommendations(nil, windows, windows[0]); len(recs) != 0 {
+		t.Errorf("empty estate produced %d recs, want 0", len(recs))
+	}
+	// Two identical-name models in the latest scan → a remove rec.
+	findings := []findingRec{
+		{kind: "model", name: "qwen2", size: 100, path: "/a"},
+		{kind: "model", name: "qwen2", size: 100, path: "/b"},
+	}
+	w := []scanWindow{{findings: findings}}
+	recs := computeRecommendations(nil, w, w[0])
+	var found bool
+	for _, r := range recs {
+		if r.class == "remove" || r.class == "investigate" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("dup models produced no rec, got %v", recs)
+	}
+}
