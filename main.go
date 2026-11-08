@@ -20,15 +20,15 @@ func main() {
 		}
 		l.close()
 		if scans == 0 {
-			fmt.Println("fabi — the honest eye on your PC's AI estate")
+			fmt.Println(tr("tagline"))
 			fmt.Println()
-			fmt.Println("  Run `fabi scan` to see what's here.")
-			fmt.Println("  Run `fabi help` for all commands.")
+			fmt.Println(tr("firstrun.scan"))
+			fmt.Println(tr("firstrun.help"))
 			return
 		}
 		runStatus()
 		fmt.Println()
-		fmt.Println("commands: scan · doctor · run · serve · help")
+		fmt.Println(tr("hint.commands"))
 		return
 	}
 	switch os.Args[1] {
@@ -106,6 +106,8 @@ func main() {
 		runWhy(os.Args[2:])
 	case "update":
 		runUpdate()
+	case "help", "-h", "--help":
+		usage()
 	case "version", "--version", "-v":
 		fmt.Println("fabi", version)
 	default:
@@ -115,10 +117,10 @@ func main() {
 }
 
 func usage() {
-	fmt.Println("fabi — the honest eye on your PC's AI estate")
-	fmt.Println("usage: fabi <command>")
+	fmt.Println(tr("tagline"))
+	fmt.Println(tr("usage.line"))
 	fmt.Println()
-	fmt.Println("commands:")
+	fmt.Println(tr("usage.cmds"))
 	fmt.Println("  scan     detect AI tools, models, hardware; write ledger; print report")
 	fmt.Println("  doctor   evidence-based recommendations from ledger history")
 	fmt.Println("  report   monthly statement — estate trend + reclaimable, measured")

@@ -37,22 +37,23 @@ func updateCheck() (cur, latest, url string, behind bool, err error) {
 func runUpdate() {
 	cur, latest, url, behind, err := updateCheck()
 	if err != nil {
-		fmt.Println("fabi update —", err)
+		fmt.Println(trf("update.err", err))
 		return
 	}
 	fmt.Println()
-	fmt.Println("FABI UPDATE — honest version check")
+	fmt.Println(tr("update.title"))
 	fmt.Println("─────────────────────────────────────────────")
-	fmt.Printf("  running:  v%s\n", cur)
-	fmt.Printf("  latest:   v%s\n", latest)
+	fmt.Printf("%s  v%s\n", tr("update.running"), cur)
+	fmt.Printf("%s  v%s\n", tr("update.latest"), latest)
 	switch {
 	case behind:
-		fmt.Printf("\n  → newer release available: %s\n", url)
-		fmt.Println("  download & replace — fabi never auto-installs")
+		fmt.Println()
+		fmt.Println(trf("update.behind", url))
+		fmt.Println(tr("update.noauto"))
 	case cur == latest:
-		fmt.Println("  → up to date")
+		fmt.Println(tr("update.uptodate"))
 	default:
-		fmt.Println("  → ahead of latest release (dev build)")
+		fmt.Println(tr("update.ahead"))
 	}
 	if l := openLedger(); l.db != nil {
 		l.emit("update.checked", map[string]any{

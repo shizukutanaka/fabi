@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 OUT="release/$(go version | awk '{print $3}' | tr -d go)-$(date +%Y%m%d)"
 mkdir -p "$OUT"
 
-targets=(windows/amd64 linux/amd64 darwin/amd64 darwin/arm64)
+targets=(windows/amd64 windows/arm64 linux/amd64 linux/arm64 darwin/amd64 darwin/arm64)
 for t in "${targets[@]}"; do
   os="${t%/*}"; arch="${t#*/}"
   bin="fabi-${os}-${arch}"

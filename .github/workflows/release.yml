@@ -18,7 +18,7 @@ jobs:
       - name: build 4 targets + checksums
         run: |
           mkdir -p dist
-          for t in windows/amd64 linux/amd64 darwin/amd64 darwin/arm64; do
+          for t in windows/amd64 windows/arm64 linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
             os="${t%/*}"; arch="${t#*/}"
             bin="fabi-${os}-${arch}"
             [ "$os" = windows ] && bin="${bin}.exe"

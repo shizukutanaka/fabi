@@ -13,7 +13,9 @@ BASE="https://github.com/$REPO/releases/download/v$VER"
 sha() { grep "fabi-$1\$" "$SUMS" | awk '{print $1}'; }
 
 WIN=$(sha windows-amd64.exe)
+WARM=$(sha windows-arm64.exe)
 LIN=$(sha linux-amd64)
+LARM=$(sha linux-arm64)
 DAMD=$(sha darwin-amd64)
 DARM=$(sha darwin-arm64)
 
@@ -28,6 +30,10 @@ cat > scoop/fabi.json <<EOF
         "64bit": {
             "url": "$BASE/fabi-windows-amd64.exe#/fabi.exe",
             "hash": "$WIN"
+        },
+        "arm64": {
+            "url": "$BASE/fabi-windows-arm64.exe#/fabi.exe",
+            "hash": "$WARM"
         }
     },
     "bin": "fabi.exe",
@@ -36,6 +42,9 @@ cat > scoop/fabi.json <<EOF
         "architecture": {
             "64bit": {
                 "url": "$BASE/fabi-windows-amd64.exe#/fabi.exe"
+            },
+            "arm64": {
+                "url": "$BASE/fabi-windows-arm64.exe#/fabi.exe"
             }
         }
     }
@@ -67,6 +76,9 @@ class Fabi < Formula
     if Hardware::CPU.intel?
       url "$BASE/fabi-linux-amd64"
       sha256 "$LIN"
+    else
+      url "$BASE/fabi-linux-arm64"
+      sha256 "$LARM"
     end
   end
 
@@ -103,6 +115,9 @@ Installers:
   - Architecture: x64
     InstallerUrl: $BASE/fabi-windows-amd64.exe
     InstallerSha256: $WIN
+  - Architecture: arm64
+    InstallerUrl: $BASE/fabi-windows-arm64.exe
+    InstallerSha256: $WARM
 ManifestType: installer
 ManifestVersion: 1.9.0
 EOF
