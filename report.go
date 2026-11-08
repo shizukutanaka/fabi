@@ -264,7 +264,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 		}
 	}
 	fmt.Println(trf("sec.models", len(r.Models), formatBytes(r.ModelBytes)))
-	fmt.Printf("  sized files: %d | manifests/other: %d\n", sized, unsized)
+	fmt.Println(trf("sec.models.sub", sized, unsized))
 	if r.DupModels > 0 {
 		fmt.Printf("  duplicates: %d names, ~%s reclaimable\n", r.DupModels, formatBytes(r.DupBytes))
 	}
