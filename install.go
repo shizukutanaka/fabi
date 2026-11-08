@@ -44,8 +44,8 @@ func runInstall(args []string) {
 	fmt.Println("─────────────────────────────────────────────")
 	fmt.Println(tr("install.will"))
 	fmt.Println()
-	fmt.Printf("  write: %s\n", cmd)
-	fmt.Printf("  contents: \"%s\" watch\n", exe)
+	fmt.Println(trf("install.write", cmd))
+	fmt.Println(trf("install.contents", exe))
 	fmt.Println()
 	fmt.Println(tr("install.apply"))
 	fmt.Printf("  fabi install --yes\n")
@@ -74,7 +74,7 @@ func installStartup(exe, cmd string) {
 	} else {
 		fmt.Println(trf("install.wrote", cmd))
 		fmt.Println(tr("install.willrun"))
-		fmt.Println("verify:  dir \"%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\"")
+		fmt.Println("verify:  dir \"%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\"") // path — intentional
 	}
 	l.emit("install.action", map[string]any{"ok": true, "path": cmd})
 }
@@ -95,7 +95,7 @@ func runUninstall(args []string) {
 		fmt.Println()
 		fmt.Println(tr("uninstall.title"))
 		fmt.Println("─────────────────────────────────────────────")
-		fmt.Printf("  delete: %s\n", cmd)
+		fmt.Println(trf("install.delete", cmd))
 		fmt.Println(tr("uninstall.keep"))
 		fmt.Println()
 		fmt.Println(tr("uninstall.apply"))

@@ -141,7 +141,7 @@ func runPattern(args []string) {
 		return
 	}
 	activePatterns = nil // reload on next use
-	fmt.Printf("added %s = %s → ~/.fabi/patterns.json (next scan picks it up)\n", field, value)
+	fmt.Println(trf("pattern.added", field, value))
 }
 
 // installPatternPack fetches a community pattern pack (JSON with the
@@ -155,7 +155,7 @@ func installPatternPack(url, path string, user *patternSet) {
 	}
 	out, err := exec.Command("curl", "-sfL", "--max-time", "15", url).Output()
 	if err != nil {
-		fmt.Printf("fabi pattern install: fetch failed — %v\n", err)
+		fmt.Println(trf("pattern.fetchfail", err))
 		return
 	}
 	var pack patternSet
@@ -176,7 +176,7 @@ func installPatternPack(url, path string, user *patternSet) {
 		len(pack.Ports) + len(pack.ScanDirs) + len(pack.ModelRoots) +
 		len(pack.PkgAITools) + len(pack.PkgRuntimes)
 	if n == 0 {
-		fmt.Println("fabi pattern install: pack was empty — nothing merged")
+		fmt.Println(tr("pattern.pacitempty"))
 		return
 	}
 	b, _ := json.MarshalIndent(user, "", "  ")
@@ -185,5 +185,5 @@ func installPatternPack(url, path string, user *patternSet) {
 		return
 	}
 	activePatterns = nil
-	fmt.Printf("installed pack: %d entries merged → ~/.fabi/patterns.json\n", n)
+	fmt.Println(trf("pattern.packmerged", n))
 }

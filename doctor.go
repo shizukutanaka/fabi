@@ -585,7 +585,7 @@ func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, late
 			for _, line := range strings.Split(r.detail, "\n") {
 				fmt.Printf("      %s\n", line)
 			}
-			fmt.Printf("      evidence: events %v\n", r.evidence)
+			fmt.Println(trf("doctor.evidence", r.evidence))
 		}
 		fmt.Println(tr("doctor.note"))
 		fmt.Println()
@@ -615,6 +615,6 @@ func printDoctor(recs []recommendation, nEvents, nScans int, reclaim int64, late
 	fmt.Println(tr("doctor.footer"))
 	fmt.Println()
 	fmt.Println(tr("doctor.next"))
-	fmt.Println("        fabi report       — the full estate statement")
-	fmt.Println("        fabi auto         — apply only safe idle-model unloads")
+	fmt.Println(tr("doctor.hint.report"))
+	fmt.Println(tr("doctor.hint.auto"))
 }

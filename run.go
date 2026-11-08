@@ -113,7 +113,7 @@ func runRun(args []string) {
 	}
 	if prompt == "" {
 		fmt.Println(tr("run.usage"))
-		fmt.Println("models: " + strings.Join(models, ", "))
+		fmt.Println(tr("run.models") + strings.Join(models, ", "))
 		return
 	}
 
@@ -536,7 +536,7 @@ func runAuto() {
 	for _, m := range ps.Models {
 		if lastUse[m.Name] > cutoff {
 			if !jsonOut {
-				fmt.Printf("  keep  %s (used recently)\n", m.Name)
+				fmt.Println(trf("auto.keep", m.Name))
 			}
 			kept = append(kept, m.Name)
 			continue
@@ -544,7 +544,7 @@ func runAuto() {
 		payload, _ := json.Marshal(map[string]any{"model": m.Name, "keep_alive": 0})
 		rawHTTP(ollamaBase, "POST", "/api/generate", string(payload), 10*time.Second)
 		if !jsonOut {
-			fmt.Printf("  idle  %s → unloaded (%.1f GB freed)\n", m.Name, float64(m.SizeVRAM)/1e9)
+			fmt.Println(trf("auto.idle", m.Name, float64(m.SizeVRAM)/1e9))
 		}
 		l.emit("model.unloaded", map[string]any{
 			"model": m.Name, "vram_freed": m.SizeVRAM, "via": "auto",
@@ -568,7 +568,7 @@ func runAuto() {
 		fmt.Println(tr("auto.inuse"))
 		l.emit("auto.skipped", map[string]any{"reason": "all loaded models in use"})
 	} else {
-		fmt.Printf("fabi auto: %d idle model(s) unloaded — safe action only\n", acted)
+		fmt.Println(trf("auto.summary", acted))
 	}
 }
 

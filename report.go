@@ -212,9 +212,9 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 	fmt.Println()
 	fmt.Println(tr("scan.title"))
 	fmt.Println("─────────────────────────────────────────────")
-	fmt.Printf("scan time: %d ms | fabi RSS: %s | RAM: %s / %s used\n",
+	fmt.Println(trf("scan.timing",
 		elapsed.Milliseconds(), formatBytes(int64(r.FabiRSS)),
-		formatBytes(int64(r.RamUsed)), formatBytes(int64(r.RamTotal)))
+		formatBytes(int64(r.RamUsed)), formatBytes(int64(r.RamTotal))))
 	fmt.Println()
 
 	fmt.Println(trf("sec.probes", len(results)))
@@ -266,7 +266,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 	fmt.Println(trf("sec.models", len(r.Models), formatBytes(r.ModelBytes)))
 	fmt.Println(trf("sec.models.sub", sized, unsized))
 	if r.DupModels > 0 {
-		fmt.Printf("  duplicates: %d names, ~%s reclaimable\n", r.DupModels, formatBytes(r.DupBytes))
+		fmt.Println(trf("scan.dups", r.DupModels, formatBytes(r.DupBytes)))
 	}
 	// show first few model names for the "numbers on screen" law
 	shown := 0
@@ -290,7 +290,7 @@ func printReport(r *Report, results []ProbeResult, elapsed time.Duration) {
 	}
 
 	if len(r.Runtimes) > 0 {
-		fmt.Printf("RUNTIMES / INFRA (%d)\n", len(r.Runtimes))
+		fmt.Println(trf("scan.runtimes", len(r.Runtimes)))
 		for _, rt := range r.Runtimes {
 			fmt.Printf("  %-28s %s\n", rt.Name, rt.Detail)
 		}
@@ -458,17 +458,17 @@ func runReport() {
 	fmt.Println()
 	fmt.Println(tr("report.title"))
 	fmt.Println("─────────────────────────────────────────────")
-	fmt.Printf("period: %s → %s (%d scans, %.1f days)\n",
+	fmt.Println(trf("report.period",
 		time.UnixMilli(first.ts).Format("2006-01-02 15:04"),
 		time.UnixMilli(latest.ts).Format("2006-01-02 15:04"),
-		len(aggs), days)
+		len(aggs), days))
 	fmt.Println()
 
 	fmt.Println(tr("report.estate"))
 	fmt.Println(trf("estate.tools", latest.running, latest.installed))
-	fmt.Printf("  services     %d answering on localhost\n", latest.services)
-	fmt.Printf("  models       %d entries, %s on disk\n", latest.models, formatBytes(latest.modelBytes))
-	fmt.Printf("  GPU          %s\n", gpuLine)
+	fmt.Println(trf("report.services", latest.services))
+	fmt.Println(trf("report.models", latest.models, formatBytes(latest.modelBytes)))
+	fmt.Println(trf("report.gpu", gpuLine))
 	fmt.Println()
 
 	fmt.Println(trf("report.trend.hdr", len(aggs)))
@@ -542,7 +542,7 @@ func runReport() {
 		fmt.Println("    " + strings.Join(parts, " · "))
 	}
 	if reclaimFlagged > 0 {
-		fmt.Printf("  reclaimable flagged: ~%s (awaiting manual review)\n", formatBytes(reclaimFlagged))
+		fmt.Println(trf("report.reclaimable", formatBytes(reclaimFlagged)))
 	}
 	if verifiedCount > 0 {
 		fmt.Println(trf("estate.verified",
@@ -570,9 +570,9 @@ func runReport() {
 		}
 	}
 	if unloadN > 0 {
-		fmt.Printf("  control: %d VRAM release(s) — %s freed%s\n",
+		fmt.Println(trf("report.control",
 			unloadN, formatBytes(vramFreed),
-			map[bool]string{true: fmt.Sprintf(" (%d via auto)", unloadVia)}[unloadVia > 0])
+			map[bool]string{true: fmt.Sprintf(" (%d via auto)", unloadVia)}[unloadVia > 0]))
 	}
 
 	// Executions: goal chains and prompts actually run — the execution
