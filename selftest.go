@@ -410,7 +410,7 @@ func runSelfTest() {
 			// honest "no evidence", not an endpoint failure. Use a real
 			// target so the check exercises the evidence path.
 			gets := []string{"/models", "/ledger", "/doctor", "/diff",
-				"/why?target=gpu", "/pattern", "/findings"}
+				"/why?target=gpu", "/pattern", "/findings", "/lang"}
 			failed := 0
 			for _, g := range gets {
 				st3, b3, err3 := rawHTTP("127.0.0.1:11435", "GET", g, "", 5*time.Second)
