@@ -445,6 +445,7 @@ func uiLabelsJSON() map[string]any {
 		"noMeasure": tr("ui.nomeasure"), "estate": tr("ui.estate"),
 		"history": tr("ui.history"), "inference": tr("ui.inference"),
 		"control": tr("ui.control"), "detected": langCode, "title": tr("ui.title"),
+		"tools": tr("ui.tools"),
 	}
 }
 
@@ -778,7 +779,7 @@ function card(t,d){return '<div class=card>'+t+(d?'<div class=dim>'+d+'</div>':'
 // Localized labels — the same tr() engine the CLI uses, served by /lang.
 const L = await (await fetch('/lang')).json();
 hl.textContent=L.title;
-ht.textContent=L.estate.replace(/\/[^/]*$/,'').trim().split('/')[0]+' / AI tools';
+ht.textContent=L.tools;
 hm.textContent=L.models.replace(/%.*/,'').trim();
 hg.textContent=L.estate; hr.textContent=L.recs;
 hh.textContent=L.history; hi.textContent=L.inference; hc.textContent=L.control;

@@ -252,6 +252,7 @@ func init() {
 		"ui.watch.stopped":      "fabi watch fermato",
 		"ui.action":             "azione",
 		"ui.title":              "fabi — l'occhio onesto sul patrimonio IA di questo PC",
+		"ui.tools":              "Strumenti IA",
 		"ui.none":               "(nessuno)",
 		"ui.noscans":            "(nessuna scansione — esegui fabi scan)",
 		"ui.nomeasure":          "(nessuna misurazione — esegui fabi run / fabi watch)",

@@ -252,6 +252,7 @@ func init() {
 		"ui.watch.stopped":      "fabi watch остановлен",
 		"ui.action":             "действие",
 		"ui.title":              "fabi — честный взгляд на ИИ-активы этого ПК",
+		"ui.tools":              "ИИ-инструменты",
 		"ui.none":               "(нет)",
 		"ui.noscans":            "(сканов нет — запустите fabi scan)",
 		"ui.nomeasure":          "(измерений нет — запустите fabi run / fabi watch)",
