@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+Development since v0.0.7 (`main.go` version is `0.0.8-dev`):
+graceful Ctrl+C for `fabi serve` and `fabi tui`, the version shown
+in the TUI header, and added route/goal physics test coverage.
+
+## v0.0.7 — 2026-11-08
+
+Corresponds to git tag `v0.0.7` and the
+[GitHub Release v0.0.7](https://github.com/shizukutanaka/fabi/releases/tag/v0.0.7)
+(prebuilt binaries for windows/linux/darwin × amd64/arm64, plus
+`SHA256SUMS.txt`). The entries below — previously listed under
+Unreleased — shipped in this release, together with the three
+front ends (CLI, `fabi tui`, and the `fabi serve` `/ui` dashboard):
+
+- **`fabi tui`** — live terminal dashboard (status/tools/models/
+  recommendations) sharing the doctor engine with the CLI and `/ui`
+- **serve** — SSE `GET /events` (dashboards refresh on ledger events
+  instead of polling), `GET /findings`, and watch-daemon liveness
+  shown in `fabi status`, the TUI, and `/ui`
 - **full i18n** — 233 keys × 10 languages
   (en/ja/zh/es/de/fr/ko/pt/ru/it), audited to zero unlocalized
   literals: `FABI_LANG`/`LANG`/`LC_ALL` + Windows

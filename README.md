@@ -9,6 +9,48 @@ all on one append-only ledger.
 Not an LLM. Not a launcher. The layer that makes every AI tool visible —
 including the ones hiding.
 
+## Download (prebuilt binaries)
+
+No Go toolchain needed — grab a single binary from
+[GitHub Releases](https://github.com/shizukutanaka/fabi/releases)
+(latest: [v0.0.7](https://github.com/shizukutanaka/fabi/releases/tag/v0.0.7)):
+
+| OS / arch | Asset |
+|---|---|
+| Windows x64 | `fabi-windows-amd64.exe` |
+| Windows ARM64 | `fabi-windows-arm64.exe` |
+| Linux x64 | `fabi-linux-amd64` |
+| Linux ARM64 | `fabi-linux-arm64` |
+| macOS Intel | `fabi-darwin-amd64` |
+| macOS Apple Silicon | `fabi-darwin-arm64` |
+
+1. Download the asset for your OS/arch plus `SHA256SUMS.txt` from the
+   same release.
+2. Verify the checksum (below) before running it.
+3. Run it: on Windows, rename to `fabi.exe` if you like and run
+   `fabi.exe scan`. On Linux/macOS, `chmod +x fabi-<os>-<arch>` and
+   rename it to `fabi` (e.g. `mv fabi-linux-amd64 fabi`), then
+   `./fabi scan`.
+
+Verify with SHA-256 — the hash printed must match the line for your
+asset in `SHA256SUMS.txt`:
+
+```sh
+# Linux
+sha256sum fabi-linux-amd64
+# macOS
+shasum -a 256 fabi-darwin-arm64
+```
+
+```powershell
+# Windows (PowerShell)
+Get-FileHash .\fabi-windows-amd64.exe -Algorithm SHA256
+```
+
+Already have fabi? `fabi update` checks GitHub Releases for a newer
+version (check only — no auto-install). To build from source instead,
+see [Build](#build) below.
+
 ## Commands
 
 ```text
