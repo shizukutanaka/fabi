@@ -415,7 +415,15 @@ func runSelfTest() {
 			for _, g := range gets {
 				st3, b3, err3 := rawHTTP("127.0.0.1:11435", "GET", g, "", 5*time.Second)
 				var v any
-				if err3 != nil || st3 != 200 || json.Unmarshal(b3, &v) != nil {
+				if err3 != nil || json.Unmarshal(b3, &v) != nil {
+					failed++
+					continue
+				}
+				// /why's 404 is the documented honest "no evidence"
+				// answer (see the claim comment above), not an endpoint
+				// failure — it must still return valid JSON, which the
+				// unmarshal above enforced.
+				if st3 != 200 && !(strings.HasPrefix(g, "/why") && st3 == 404) {
 					failed++
 				}
 			}
