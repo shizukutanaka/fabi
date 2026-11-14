@@ -652,7 +652,16 @@ func statusJSON() map[string]any {
 	events := l.allEvents()
 	windows := loadScanWindows(events)
 	if len(windows) == 0 {
-		return map[string]any{"error": "no scans yet"}
+		// Keep the documented shape (API.md) in every state: consumers
+		// read the count fields unconditionally, so a bare error map
+		// renders as undefined values. The error key stays for anyone
+		// keying on it, alongside the truthful zero counts.
+		return map[string]any{
+			"error":   "no scans yet",
+			"running": 0, "installed_idle": 0,
+			"services": 0, "models": 0,
+			"scans": 0, "version": version, "gpu": "",
+		}
 	}
 	latest := windows[len(windows)-1]
 	var running, installed, services, models int
@@ -798,9 +807,10 @@ bs.textContent=L.scan; bu.textContent=L.unload; ba.textContent=L.auto;
 const none=L.none;
 async function tick(){
  const st=await J('/status');
- s.innerHTML=card('<span class=num>'+st.tools_running+'</span> '+L.running+' · <span class=num>'+st.tools_installed+'</span> '+L.installed+' · <span class=num>'+st.models+'</span> '+plain(L.models)+' · gpu '+st.gpu_util+'% '+st.vram_gib_used+'/'+st.vram_gib_total+'GiB'+(st.gpu?' <span class=dim>'+st.gpu+'</span>':'')+' <span class=dim>· '+L.refreshed+' '+new Date().toLocaleTimeString()+'</span>', st.stale||'');
+ if(st.error){s.innerHTML=card(L.noScans,'');}
+ else s.innerHTML=card('<span class=num>'+st.running+'</span> '+L.running+' · <span class=num>'+st.installed_idle+'</span> '+L.installed+' · <span class=num>'+st.models+'</span> '+plain(L.models)+(st.gpu?' · <span class=dim>'+st.gpu+'</span>':'')+' <span class=dim>· '+L.refreshed+' '+new Date().toLocaleTimeString()+'</span>', '');
  const ms=await J('/models');
- m.innerHTML=(ms.models||[]).map(x=>card('<b>'+x.name+'</b> <span class=pill>'+(x.size_gb||'').toFixed?.(1)+'GB</span>')).join('')||'<div class=dim>'+none+'</div>';
+ m.innerHTML=(ms.models||[]).map(x=>card('<b>'+x+'</b>')).join('')||'<div class=dim>'+none+'</div>';
  const d=await J('/doctor');
  const act=(c,t)=>({idle:'fabi unload '+t,remove:'fabi report',investigate:'fabi scan'})[c]||'fabi auto';
  const rec=(d.recommendations||[]).filter(x=>x.class=='remove').reduce((a,x)=>a+(x.reclaim_bytes||0),0);
