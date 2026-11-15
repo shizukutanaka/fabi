@@ -59,6 +59,14 @@ fabi route X --json    # physics verdict
 fabi run "..." --json  # measured inference
 ```
 
+The text statement (`fabi report`) ends with one attribution line —
+`— fabi · https://github.com/shizukutanaka/fabi` — so a saved or shared
+statement still names the tool that made it. It is a plain line (delete
+it from a saved copy and nothing changes), and `FABI_NO_CREDIT=1`
+leaves it out entirely. Machine-readable output never carries it:
+`--json` is numbers only, and the ledger export stays pure JSONL so it
+re-imports with zero malformed lines.
+
 ## The Universal API
 
 `fabi serve` exposes the same surface on `127.0.0.1:11435` —

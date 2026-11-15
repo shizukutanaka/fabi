@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -603,4 +604,22 @@ func runReport() {
 	fmt.Println("─────────────────────────────────────────────")
 	fmt.Println(tr("report.numbers.line"))
 	fmt.Println(tr("report.savings.line"))
+	if c := statementCredit(); c != "" {
+		fmt.Println()
+		fmt.Println(c)
+	}
+}
+
+// statementCredit is the text statement's one-line attribution footer:
+// a statement saved or shared as text still names the tool that made it.
+// It appears only in the human-readable statement — never in --json
+// output and never in the ledger export, whose JSONL lines are a
+// machine-to-machine merge format where a non-JSON line would import
+// back as malformed. FABI_NO_CREDIT=1 leaves it out; it is one plain
+// line, so deleting it from a saved statement changes nothing else.
+func statementCredit() string {
+	if os.Getenv("FABI_NO_CREDIT") != "" {
+		return ""
+	}
+	return "— fabi · https://github.com/shizukutanaka/fabi"
 }
