@@ -759,7 +759,7 @@ func runSelfTest() {
 			defer os.RemoveAll(dir)
 			exe, _ := os.Executable()
 			target := filepath.Join(dir, "fabi-watch.cmd")
-			installStartup(exe, target)
+			installStartup(exe, target, false)
 			b, rerr := os.ReadFile(target)
 			ok := rerr == nil &&
 				strings.Contains(string(b), "watch") &&
@@ -962,6 +962,31 @@ func runSelfTest() {
 			status = "PASS"
 		}
 		add("tui dashboard renders", "paint before kill", measured, status)
+	}
+
+	// --- Claim: the tray face decides without the OS —
+	// `fabi watch --tray` shows the status one-liner as a tooltip and
+	// balloons on VRAM pressure. The decisions are pure (tray.go), so
+	// they are falsifiable headless on every OS: the line must fit
+	// the shell's tooltip budget, and the alert must fire exactly
+	// once per pressure crossing — never on a quiet sample.
+	{
+		s := traySnapshot{
+			HasScans: true, Running: 1, Installed: 2, Models: 3,
+			HasVRAM: true, VRAMUsedMiB: 15000, VRAMTotalMiB: 16384,
+		}
+		line := trayLine(s)
+		lineOK := len([]rune(line)) <= trayTipMax && strings.Contains(line, "VRAM")
+		now := time.Unix(1_700_000_000, 0)
+		st := vramAlert{}
+		_, quiet := vramAlertUpdate(st, 8000, 16384, now)
+		st, fired := vramAlertUpdate(st, 16000, 16384, now)
+		_, refired := vramAlertUpdate(st, 16000, 16384, now.Add(time.Minute))
+		alertOK := !quiet && fired && !refired
+		measured := fmt.Sprintf("line %d runes, alert fire-once=%v", len([]rune(line)), alertOK)
+		status := passIf(lineOK && alertOK)
+		add("tray line + VRAM alert are pure decisions",
+			"fits tooltip, fires once per crossing", measured, status)
 	}
 
 	// --- Claim: i18n falls back to English honestly —

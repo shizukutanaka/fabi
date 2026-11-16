@@ -6,6 +6,16 @@ Development since v0.0.7 (`main.go` version is `0.0.8-dev`):
 graceful Ctrl+C for `fabi serve` and `fabi tui`, the version shown
 in the TUI header, and added route/goal physics test coverage.
 
+- **`fabi watch --tray` + `fabi install --tray`** — a resident face
+  for people who never open a terminal (Windows): the status
+  one-liner as a system-tray tooltip, a balloon when VRAM passes
+  90% (edge-triggered, re-arms below 85%, 30 min cooldown), and a
+  Scan now / Quit menu. Built on the existing watch loop and the
+  Startup-folder install — no new command, no new dependency
+  (shell32/user32 via the existing golang.org/x/sys). All tray
+  decisions are pure functions with unit tests and a selftest claim;
+  other OSes print that the tray is Windows-only and run plain watch.
+
 ## v0.0.7 — 2026-11-08
 
 Corresponds to git tag `v0.0.7` and the

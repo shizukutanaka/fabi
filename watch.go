@@ -49,10 +49,16 @@ func printScanLine(all []Finding, vm vmStat, elapsed time.Duration) {
 }
 
 // runWatch loops: scan → sleep → scan. Interval default 5 min (spec).
+// With --tray, the loop also drives a resident tray face (Windows):
+// the status one-liner as a tooltip, a balloon on VRAM pressure,
+// and Scan now / Quit from the icon's menu.
 func runWatch(args []string) {
 	interval := 5 * time.Minute
+	wantTray := false
 	for i, a := range args {
 		switch a {
+		case "--tray":
+			wantTray = true
 		case "-i", "--interval":
 			if i+1 < len(args) {
 				if d, err := time.ParseDuration(args[i+1]); err == nil {
@@ -73,29 +79,51 @@ func runWatch(args []string) {
 
 	fmt.Println(trf("watch.every", interval))
 
+	var tray *trayHandle
+	var trayQuit <-chan struct{}
+	if wantTray {
+		tray = startTray()
+		if tray != nil {
+			trayQuit = tray.quitCh
+		}
+	}
+	alert := &vramAlert{}
+
 	// Graceful exit: close cleanly on Ctrl+C so the ledger isn't left mid-write.
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 	tick := time.NewTicker(interval)
 
-	runScan(time.Now(), true)
-	measureLiveInference()
-	emitUIState()
+	stop := func() {
+		// A final ui.state with stopped=true — dashboards can tell a
+		// graceful stop from a crash (a crash leaves a stale state).
+		l := openLedger()
+		l.emit("ui.state", map[string]any{
+			"ts": time.Now().UnixMilli(), "stopped": true,
+		})
+		l.close()
+		tray.close()
+		fmt.Println("\n" + tr("watch.stopped"))
+	}
+	beat := func() {
+		runScan(time.Now(), true)
+		measureLiveInference()
+		emitUIState()
+		refreshTray(tray, alert)
+	}
+
+	beat()
 	for {
 		select {
 		case <-tick.C:
-			runScan(time.Now(), true)
-			measureLiveInference()
-			emitUIState()
+			beat()
+		case <-trayScanNow:
+			beat()
+		case <-trayQuit:
+			stop()
+			return
 		case <-sig:
-			// A final ui.state with stopped=true — dashboards can tell a
-			// graceful stop from a crash (a crash leaves a stale state).
-			l := openLedger()
-			l.emit("ui.state", map[string]any{
-				"ts": time.Now().UnixMilli(), "stopped": true,
-			})
-			l.close()
-			fmt.Println("\n" + tr("watch.stopped"))
+			stop()
 			return
 		}
 	}

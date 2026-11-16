@@ -16,8 +16,31 @@ func startupCmdPath() string {
 		`Microsoft\Windows\Start Menu\Programs\Startup`, "fabi-watch.cmd")
 }
 
+// startupCommand is the command line the launcher runs. With
+// tray=true the logon launcher starts `fabi watch --tray` so the
+// tray icon appears at logon; the resident history function is the
+// same watch either way.
+func startupCommand(exe string, tray bool) string {
+	run := fmt.Sprintf("\"%s\" watch", exe)
+	if tray {
+		run += " --tray"
+	}
+	return run
+}
+
+// startupContent is the launcher body written to the Startup folder.
+func startupContent(exe string, tray bool) string {
+	return fmt.Sprintf("@echo off\r\nstart \"\" /min %s\r\n", startupCommand(exe, tray))
+}
+
 func runInstall(args []string) {
 	yes := hasYesFlag(args)
+	tray := false
+	for _, a := range args {
+		if a == "--tray" {
+			tray = true
+		}
+	}
 	exe, err := os.Executable()
 	if err != nil {
 		fmt.Println("fabi: cannot resolve own path:", err)
@@ -26,15 +49,19 @@ func runInstall(args []string) {
 	cmd := startupCmdPath()
 
 	if yes {
-		installStartup(exe, cmd)
+		installStartup(exe, cmd, tray)
 		return
 	}
 
+	apply := "fabi install --yes"
+	if tray {
+		apply = "fabi install --tray --yes"
+	}
 	if jsonOut {
 		out, _ := json.MarshalIndent(map[string]any{
 			"dry_run": true, "will_write": cmd,
-			"contents": fmt.Sprintf("\"%s\" watch", exe),
-			"apply":    "fabi install --yes", "undo": "fabi uninstall",
+			"contents": startupCommand(exe, tray),
+			"apply":    apply, "undo": "fabi uninstall",
 		}, "", "  ")
 		fmt.Println(string(out))
 		return
@@ -45,18 +72,18 @@ func runInstall(args []string) {
 	fmt.Println(tr("install.will"))
 	fmt.Println()
 	fmt.Println(trf("install.write", cmd))
-	fmt.Println(trf("install.contents", exe))
+	fmt.Println(trf("install.contents.line", startupCommand(exe, tray)))
 	fmt.Println()
 	fmt.Println(tr("install.apply"))
-	fmt.Printf("  fabi install --yes\n")
+	fmt.Printf("  %s\n", apply)
 	fmt.Println(tr("install.undo"))
 	fmt.Printf("  fabi uninstall\n")
 }
 
-func installStartup(exe, cmd string) {
+func installStartup(exe, cmd string, tray bool) {
 	l := openLedger()
 	defer l.close()
-	content := fmt.Sprintf("@echo off\r\nstart \"\" /min \"%s\" watch\r\n", exe)
+	content := startupContent(exe, tray)
 	if err := os.WriteFile(cmd, []byte(content), 0644); err != nil {
 		if jsonOut {
 			fmt.Printf(`{"ok":false,"error":"%v"}`+"\n", err)
@@ -66,9 +93,13 @@ func installStartup(exe, cmd string) {
 		l.emit("install.action", map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
+	runs := "fabi watch at logon"
+	if tray {
+		runs = "fabi watch --tray at logon"
+	}
 	if jsonOut {
 		out, _ := json.MarshalIndent(map[string]any{
-			"ok": true, "path": cmd, "runs": "fabi watch at logon",
+			"ok": true, "path": cmd, "runs": runs,
 		}, "", "  ")
 		fmt.Println(string(out))
 	} else {
@@ -76,7 +107,7 @@ func installStartup(exe, cmd string) {
 		fmt.Println(tr("install.willrun"))
 		fmt.Println("verify:  dir \"%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\"") // path — intentional
 	}
-	l.emit("install.action", map[string]any{"ok": true, "path": cmd})
+	l.emit("install.action", map[string]any{"ok": true, "path": cmd, "tray": tray})
 }
 
 func runUninstall(args []string) {
