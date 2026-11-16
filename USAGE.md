@@ -41,6 +41,15 @@ and execute what's feasible locally.
 `fabi auto` — applies only safe, reversible actions (idle unload).
 Records `auto.skipped` when it chooses not to act.
 
+**"I never open a terminal" (Windows)**
+`fabi install --tray --yes` — at logon, `fabi watch --tray` starts
+minimized and puts a fabi icon in the system tray. Hover it for the
+status one-liner (running / idle / models / VRAM); when VRAM passes
+90% a balloon warns you once (it re-arms below 85%). Right-click the
+icon for **Scan now** / **Quit**. Everything shown is the same ledger
+data as `fabi status` — nothing leaves the machine. On other OSes
+`--tray` says so and runs as plain `fabi watch`.
+
 ## Machine-readable
 
 Every major command takes `--json` — for scripts and monitoring:

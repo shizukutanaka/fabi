@@ -10,6 +10,25 @@ import (
 // fabi status — one-line machine health from the ledger.
 // The fastest possible answer: estate, gaps, and how old the data is.
 
+// latestGPUSample returns the newest GPU measurement (util %, temp °C,
+// VRAM used/total in MiB) recorded as a measurement.sampled event, or
+// zeros when no scan has sampled the GPU yet. Shared by `fabi status`
+// and the tray face of `fabi watch --tray` so both read the same truth.
+func latestGPUSample(events []ledgerEvent) (util, tempC, vramUsedMiB, vramTotalMiB float64) {
+	for i := len(events) - 1; i >= 0; i-- {
+		e := events[i]
+		if e.kind == "measurement.sampled" && strings.Contains(e.payload, "gpu_util") {
+			var p map[string]any
+			if err := json.Unmarshal([]byte(e.payload), &p); err == nil {
+				return numOf(p, "gpu_util"), numOf(p, "gpu_temp_c"),
+					numOf(p, "vram_used_mib"), numOf(p, "vram_total_mib")
+			}
+			break
+		}
+	}
+	return 0, 0, 0, 0
+}
+
 func runStatus() {
 	l := openLedger()
 	defer l.close()
@@ -46,19 +65,7 @@ func runStatus() {
 		}
 	}
 	// GPU util from latest measurement.sampled
-	for i := len(events) - 1; i >= 0; i-- {
-		e := events[i]
-		if e.kind == "measurement.sampled" && strings.Contains(e.payload, "gpu_util") {
-			var p map[string]any
-			if err := json.Unmarshal([]byte(e.payload), &p); err == nil {
-				gpuUtil = numOf(p, "gpu_util")
-				gpuTemp = numOf(p, "gpu_temp_c")
-				vramUsed = numOf(p, "vram_used_mib")
-				vramTotal = numOf(p, "vram_total_mib")
-			}
-			break
-		}
-	}
+	gpuUtil, gpuTemp, vramUsed, vramTotal = latestGPUSample(events)
 
 	// Latest measured inference (the heartbeat of execution).
 	var lastToks float64

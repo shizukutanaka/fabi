@@ -55,7 +55,7 @@ see [Build](#build) below.
 
 ```text
 fabi scan       detect AI tools, models, hardware → ledger → estate report
-fabi watch      periodic scan, timeseries (default 5 min) + inference heartbeat
+fabi watch      periodic scan, timeseries (default 5 min) + inference heartbeat (--tray: resident tray icon on Windows)
 fabi doctor     evidence-based recommendations (remove / idle / investigate)
 fabi report     statement — estate trend + measured inference stats
 fabi selftest   falsification engine — every spec claim gets a test
@@ -64,7 +64,7 @@ fabi diff       estate delta between scans (+appeared / -gone; N for N back)
 fabi why        explain a recommendation — show its evidence chain
 fabi route      physics + measured model verdict for a task
 fabi goal       purpose → task chain → per-task model scheduling (--run)
-fabi install    register fabi watch in Startup (fully reversible)
+fabi install    register fabi watch in Startup (fully reversible; --tray for the tray icon at logon)
 fabi status     one-line health: estate + GPU + tok/s + loaded models
 fabi run        execute on a live model (--model, --ctx, --sweep, --compare)
 fabi serve      JSON API :11435 (GET /status|/models|/ledger|/doctor|/diff|/why|/pattern · POST /run|/goal|/unload|/scan|/pattern|/import) + /ui dashboard
