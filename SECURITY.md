@@ -23,7 +23,12 @@ fabi inspects your local AI estate. By design:
 ## Known limits (honest)
 
 - The `fabi serve` API binds `127.0.0.1` only — it trusts whatever
-  local process can reach it. Don't expose the port.
+  local process can reach it. Don't expose the port. Web pages are
+  refused (`403`): the `Host` must be `127.0.0.1`/`localhost`/`[::1]`
+  on port 11435, a browser `Origin` must be the server itself, and
+  `Sec-Fetch-Site: cross-site`/`same-site` is rejected — so a site you
+  visit can't drive the API (CSRF) or read your ledger via DNS
+  rebinding. `fabi selftest` checks this (`serve refuses web pages`).
 - `OLLAMA_HOST` routes execution to a remote engine you configure —
   fabi trusts it as configured, but prompts still leave your machine
   in that case. Set it deliberately.

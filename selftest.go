@@ -495,6 +495,34 @@ func runSelfTest() {
 			if okPost < len(posts) {
 				status = "FAIL"
 			}
+			// "Loopback only" must also hold against the browser: a web
+			// page (CSRF) or a rebound hostname must be refused, while
+			// the /ui dashboard's own same-origin calls still work.
+			addr := "127.0.0.1:11435"
+			probes := []struct {
+				host    string
+				headers []string
+				method  string
+				path    string
+				want    int
+			}{
+				{"rebind.invalid:11435", nil, "GET", "/ledger", 403},
+				{addr, []string{"Origin: https://evil.invalid", "Sec-Fetch-Site: cross-site"}, "POST", "/pattern", 403},
+				{addr, []string{"Sec-Fetch-Site: cross-site"}, "GET", "/ledger", 403},
+				{addr, []string{"Origin: http://127.0.0.1:11435", "Sec-Fetch-Site: same-origin"}, "GET", "/status", 200},
+				{"localhost:11435", []string{"Origin: http://localhost:11435", "Sec-Fetch-Site: same-origin"}, "GET", "/lang", 200},
+			}
+			okIso := 0
+			for _, p := range probes {
+				st6, _, err6 := rawHTTPAs(addr, p.host, p.headers, p.method, p.path,
+					`{"url":"http://127.0.0.1:9/never-fetched"}`, 5*time.Second)
+				if err6 == nil && st6 == p.want {
+					okIso++
+				}
+			}
+			add("serve refuses web pages", "CSRF + DNS rebinding → 403, /ui ok",
+				fmt.Sprintf("%d/%d origin checks as expected", okIso, len(probes)),
+				passIf(okIso == len(probes)))
 			cmd.Process.Kill()
 			add("serve daemon actually serves", "spawn + query /status",
 				measured, status)

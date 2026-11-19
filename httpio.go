@@ -11,6 +11,12 @@ import (
 // rawHTTP is a minimal HTTP/1.1 client over a socket — replaces net/http
 // for loopback probes and saves ~1.5 MB of TLS+client stack from the binary.
 func rawHTTP(addr, method, path, body string, timeout time.Duration) (int, []byte, error) {
+	return rawHTTPAs(addr, addr, nil, method, path, body, timeout)
+}
+
+// rawHTTPAs is rawHTTP with an explicit Host header and extra header
+// lines — selftest uses it to send what a web page would send.
+func rawHTTPAs(addr, host string, headers []string, method, path, body string, timeout time.Duration) (int, []byte, error) {
 	conn, err := net.DialTimeout("tcp", addr, timeout)
 	if err != nil {
 		return 0, nil, err
@@ -19,7 +25,10 @@ func rawHTTP(addr, method, path, body string, timeout time.Duration) (int, []byt
 	conn.SetDeadline(time.Now().Add(timeout))
 
 	var req strings.Builder
-	fmt.Fprintf(&req, "%s %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n", method, path, addr)
+	fmt.Fprintf(&req, "%s %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n", method, path, host)
+	for _, h := range headers {
+		req.WriteString(h + "\r\n")
+	}
 	if body != "" {
 		fmt.Fprintf(&req, "Content-Type: application/json\r\nContent-Length: %d\r\n", len(body))
 	}
