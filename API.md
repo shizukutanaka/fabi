@@ -177,3 +177,8 @@ Physics-derived routing verdict — API parity with `fabi route <task>`.
 - Errors: `400` bad request, `404` unknown endpoint, `502` upstream
   (model/engine) failure.
 - Loopback only by design — no external exposure.
+- Browser requests from other origins get `403`: `Host` must be
+  `127.0.0.1`, `localhost` or `[::1]` on `11435`, and an `Origin`
+  header (browsers send it on POST) must be that same server. CLI
+  tools and agents that send no `Origin`/`Sec-Fetch-Site` are
+  unaffected; `GET /ui` itself may be opened from a link.

@@ -15,6 +15,14 @@ in the TUI header, and added route/goal physics test coverage.
   (shell32/user32 via the existing golang.org/x/sys). All tray
   decisions are pure functions with unit tests and a selftest claim;
   other OSes print that the tray is Windows-only and run plain watch.
+- **serve refuses web pages** — `fabi serve` now returns `403` when
+  the `Host` isn't loopback:11435 (DNS rebinding), when a browser
+  `Origin` isn't the server itself, or when `Sec-Fetch-Site` says
+  cross-site/same-site (CSRF). Before, any site the user opened could
+  `POST /pattern {"url":…}` to make fabi fetch a URL, or read
+  `/ledger` under a rebound hostname. CLI/agent clients and the `/ui`
+  dashboard are unaffected; new selftest claim `serve refuses web
+  pages` + `TestServeRequestAllowed`.
 
 ## v0.0.7 — 2026-11-08
 

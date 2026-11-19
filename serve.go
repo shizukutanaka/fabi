@@ -79,16 +79,36 @@ func serveConn(conn net.Conn) {
 		path = path[:i]
 	}
 
-	// Headers — we only need Content-Length for POST bodies.
+	// Headers — Content-Length for POST bodies; Host/Origin/
+	// Sec-Fetch-Site to tell local clients from web pages.
 	cl := 0
+	var host, origin, fetchSite string
 	for {
 		h, err := br.ReadString('\n')
 		if err != nil || h == "\r\n" || h == "\n" {
 			break
 		}
-		if strings.HasPrefix(strings.ToLower(h), "content-length:") {
-			fmt.Sscanf(strings.TrimSpace(h[15:]), "%d", &cl)
+		name, val, ok := strings.Cut(h, ":")
+		if !ok {
+			continue
 		}
+		val = strings.TrimSpace(val)
+		switch strings.ToLower(strings.TrimSpace(name)) {
+		case "content-length":
+			fmt.Sscanf(val, "%d", &cl)
+		case "host":
+			host = val
+		case "origin":
+			origin = val
+		case "sec-fetch-site":
+			fetchSite = val
+		}
+	}
+	if !serveRequestAllowed(method, path, host, origin, fetchSite) {
+		writeJSON(conn, 403, map[string]string{
+			"error": "refused: fabi serve answers loopback clients and its own /ui only (Host/Origin is not 127.0.0.1/localhost:" + servePort + ")",
+		})
+		return
 	}
 	maxCL := 1 << 20
 	if path == "/import" {
@@ -148,6 +168,50 @@ func serveConn(conn net.Conn) {
 	default:
 		writeJSON(conn, 404, map[string]string{"error": "unknown endpoint"})
 	}
+}
+
+// serveRequestAllowed keeps "loopback only" true against the browser.
+// Binding 127.0.0.1 stops other machines, but any web page the user
+// opens can still send requests to 127.0.0.1:11435 (CSRF) or reach it
+// under its own hostname via DNS rebinding — and /pattern {url} makes
+// fabi fetch a URL, /ledger returns the whole estate. So: the Host must
+// name loopback, an Origin (sent by browsers on POST/CORS) must be this
+// server, and Sec-Fetch-Site must not say cross-site. CLI tools and
+// agents send neither Origin nor Sec-Fetch-Site and are unaffected.
+// GET /ui is static HTML with no data, so a link to it may come from
+// any site; its own fetches are same-origin.
+func serveRequestAllowed(method, path, host, origin, fetchSite string) bool {
+	if host != "" && !isLoopbackHost(host, true) {
+		return false
+	}
+	if method == "GET" && (path == "/ui" || path == "/ui/") {
+		return true
+	}
+	if origin != "" {
+		h, ok := strings.CutPrefix(strings.ToLower(origin), "http://")
+		if !ok || !isLoopbackHost(h, false) {
+			return false
+		}
+	}
+	switch strings.ToLower(fetchSite) {
+	case "", "same-origin", "none":
+		return true
+	}
+	return false
+}
+
+// isLoopbackHost reports whether host[:port] names this server:
+// 127.0.0.1, localhost or [::1], on servePort (port optional only
+// when portOptional — a bare Host header from a hand-rolled client).
+func isLoopbackHost(hostport string, portOptional bool) bool {
+	h, port := strings.ToLower(hostport), ""
+	if i := strings.LastIndexByte(h, ':'); i >= 0 && !strings.HasSuffix(h, "]") {
+		h, port = h[:i], h[i+1:]
+	}
+	if port == "" && !portOptional || port != "" && port != servePort {
+		return false
+	}
+	return h == "127.0.0.1" || h == "localhost" || h == "[::1]"
 }
 
 // serveRoute — GET /route?task=summarize: physics verdict as JSON.
